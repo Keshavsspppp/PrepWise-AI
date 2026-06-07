@@ -1,0 +1,110 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+.venv/
+pip-wheel-metadata/
+*.egg-info/
+
+# Environment variables
+.env
+.env.*
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build/dist
+dist/
+build/
+
+# Database, uploads
+chroma_db/
+uploads/
+*.sqlite3
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# pip
+pip-selfcheck.json
+# ── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+
+# ── Virtual Environments ─────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env.bak
+
+# ── Environment Variables ────────────────────────────────────────────────────
+.env
+*.env.local
+
+# ── FastAPI / Uvicorn ────────────────────────────────────────────────────────
+*.log
+uvicorn.log
+
+# ── Uploaded Files ───────────────────────────────────────────────────────────
+uploads/
+*.pdf
+
+# ── ChromaDB Vector Store ────────────────────────────────────────────────────
+chroma_db/
+chromadb/
+
+# ── Sentence Transformers Model Cache ───────────────────────────────────────
+.cache/
+models/
+sentence_transformers/
+
+# ── HuggingFace Cache ─────────────────────────────────────────────────────────
+~/.cache/huggingface/
+
+# ── IDE & Editors ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ── MyPy ──────────────────────────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
