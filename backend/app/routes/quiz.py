@@ -1,17 +1,16 @@
-import os
 import json
 import logging
 import uuid
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from bson import ObjectId
 
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
 from app.core.rag import query_notes
-from app.core.config import settings
+from app.core.gemini import gemini_model
 import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
@@ -168,10 +167,7 @@ Retrieved Context:
     logger.info(f"Quiz Gen: Requesting {count} questions for user {user_id} using gemini-2.5-flash...")
 
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-flash")
-
-        response = model.generate_content(
+        response = gemini_model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.2,  # Low temperature for factual consistency
@@ -280,7 +276,6 @@ async def submit_quiz(
     questions = quiz["questions"]
     
     # 2. Evaluate answers
-    mcq_correct = 0
     total = len(questions)
     
     # Track which questions are MCQ and which are Short Answer
@@ -290,7 +285,7 @@ async def submit_quiz(
     for q in questions:
         q_id = q["question_id"]
         options = q["options"]
-        correct = q["correct_answer"]
+        q["correct_answer"]
         submitted = submissions.get(q_id, "").strip()
         
         is_mcq = len(options) > 0
@@ -359,10 +354,7 @@ Questions to grade:
 {json.dumps(grading_items, indent=2)}
 """
         try:
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            model = genai.GenerativeModel("gemini-2.5-flash")
-            
-            response = model.generate_content(
+            response = gemini_model.generate_content(
                 grading_prompt,
                 generation_config=genai.types.GenerationConfig(
                     temperature=0.0,
@@ -435,8 +427,7 @@ Difficulty: {quiz['difficulty']}
 
 Acknowledge their strengths, note weak areas if applicable, and recommend study focuses. Keep it encouraging and direct.
 """
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(feedback_prompt)
+        response = gemini_model.generate_content(feedback_prompt)
         feedback = response.text.strip()
     except Exception as e:
         logger.error(f"Quiz Submit: Feedback generation failed: {e}")

@@ -7,16 +7,15 @@ import json
 import uuid
 import logging
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from bson import ObjectId
 
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
 from app.core.rag import query_notes
-from app.core.config import settings
 import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
@@ -105,9 +104,8 @@ Context from Student Notes:
 Generate {count} questions now."""
 
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(
+        from app.core.gemini import gemini_model
+        response = gemini_model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.4,
@@ -123,14 +121,27 @@ Generate {count} questions now."""
 
     # Fallback generic questions if generation fails
     if not raw_questions:
-        raw_questions = [
+        fallback_templates = [
             {
                 "question": f"Can you explain the core concepts of {subject}?",
                 "question_type": "Conceptual",
-                "reference_answer": f"The core concepts of {subject} include fundamental principles, algorithms, and methodologies used in the field.",
+                "reference_answer": f"The core concepts of {subject} include fundamental principles, design patterns, and methodologies used in the field.",
                 "key_concepts": [subject, "fundamentals", "principles"]
+            },
+            {
+                "question": f"What are some key challenges or design tradeoffs when implementing systems or algorithms in {subject}?",
+                "question_type": "Conceptual",
+                "reference_answer": f"Key challenges in {subject} usually involve resource constraints, algorithmic complexity, performance scaling, and memory tradeoffs.",
+                "key_concepts": ["tradeoffs", "complexity", "resources"]
+            },
+            {
+                "question": f"Describe a real-world scenario where concepts of {subject} are actively applied.",
+                "question_type": "Application",
+                "reference_answer": f"Concepts of {subject} are used in software engineering, database design, networking, and system performance optimizations to ensure robust operations.",
+                "key_concepts": ["application", "real-world", "software"]
             }
-        ] * min(count, 3)
+        ]
+        raw_questions = [dict(fallback_templates[i]) for i in range(min(count, len(fallback_templates)))]
 
     questions = []
     for i, q in enumerate(raw_questions[:count]):
@@ -204,9 +215,8 @@ List 1-2 strengths if applicable.
 Provide a 1-sentence correctness_summary."""
 
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(
+        from app.core.gemini import gemini_model
+        response = gemini_model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.2,

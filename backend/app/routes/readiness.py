@@ -5,15 +5,14 @@ Predicts how prepared a student is for exams using a weighted multi-factor analy
 import json
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Any, Optional
+from typing import List, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends
 from bson import ObjectId
 
 from app.db.mongodb import get_db
 from app.routes.auth import get_current_user
-from app.core.config import settings
+from app.core.gemini import gemini_model
 import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
@@ -42,9 +41,12 @@ def get_exam_prediction(score: float) -> dict:
 
 
 def get_subject_status(score: float) -> str:
-    if score >= 81: return "Ready"
-    if score >= 61: return "Good"
-    if score >= 41: return "Needs Improvement"
+    if score >= 81:
+        return "Ready"
+    if score >= 61:
+        return "Good"
+    if score >= 41:
+        return "Needs Improvement"
     return "High Risk"
 
 
@@ -341,9 +343,7 @@ Each recommendation must be 1-2 concise sentences. Be specific, motivating, and 
 
     recommendations = []
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(
+        response = gemini_model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.6,

@@ -1,15 +1,14 @@
-import os
 import json
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Dict, Any
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from bson import ObjectId
 
 from app.db.mongodb import get_db
 from app.routes.auth import get_current_user
-from app.core.config import settings
+from app.core.gemini import gemini_model
 import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
@@ -153,9 +152,12 @@ async def calculate_profile(user_id: str, db) -> Dict[str, Any]:
     discipline_score = min(100, (notes_count * 10) + (ask_ai_count * 4) + (attempt_quiz_count * 8))
     
     # Baselines for new users to look realistic and encouraging
-    if consistency_score == 0: consistency_score = 65
-    if retention_score == 0: retention_score = 70
-    if discipline_score == 0: discipline_score = 75
+    if consistency_score == 0:
+        consistency_score = 65
+    if retention_score == 0:
+        retention_score = 70
+    if discipline_score == 0:
+        discipline_score = 75
 
     # Determine learning speed
     if retention_score >= 80:
@@ -322,10 +324,7 @@ Profile details:
 {metrics_summary}
 """
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        
-        response = model.generate_content(
+        response = gemini_model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.7,
@@ -390,7 +389,6 @@ async def get_dna_analytics(
     # 2. Build consistency timeline (last 7 days)
     # Mapping each day (e.g. "Mon", "Tue") to a boolean (whether they had any activity)
     consistency_timeline = []
-    days_map = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     
     # Calculate dates for last 7 days
     now = datetime.now()
@@ -467,7 +465,8 @@ async def get_dna_analytics(
 
     # Total unique active study days across all history
     total_sessions = len(active_days)
-    if total_sessions == 0: total_sessions = 1  # baseline
+    if total_sessions == 0:
+        total_sessions = 1  # baseline
 
     # Calculate mock study hours (average 45 minutes per study session)
     total_study_hours = round((total_sessions * 45) / 60, 1)

@@ -1,6 +1,8 @@
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.core.config import settings
+from bson import ObjectId
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,25 @@ async def connect_to_mongo():
     db_manager.db = db_manager.client[db_name]
     logger.info(f"Connected to MongoDB database: {db_name}")
 
+    # Create indexes on user_id to prevent full collection scans
+    try:
+        collections_to_index = [
+            "notes",
+            "quizzes",
+            "quiz_results",
+            "user_activities",
+            "topic_retention",
+            "revision_history",
+            "exam_readiness",
+            "viva_sessions",
+            "viva_results"
+        ]
+        for col in collections_to_index:
+            await db_manager.db[col].create_index([("user_id", 1)])
+        logger.info("Successfully configured MongoDB indexes for all collections.")
+    except Exception as idx_err:
+        logger.error(f"Error creating MongoDB indexes: {idx_err}")
+
 async def close_mongo_connection():
     """Close MongoDB connection."""
     if db_manager.client:
@@ -36,8 +57,7 @@ def get_db():
     """Dependency helper to get DB instance."""
     return db_manager.db
 
-from bson import ObjectId
-from datetime import datetime, timezone
+
 
 async def log_activity(db, user_id: str, activity_type: str):
     """Log user study activity for consistency tracking."""

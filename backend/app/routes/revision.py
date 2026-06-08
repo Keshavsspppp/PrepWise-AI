@@ -8,13 +8,13 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from bson import ObjectId
 
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
-from app.core.config import settings
+from app.core.gemini import gemini_model
 import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
@@ -515,7 +515,7 @@ async def recalculate_all_retention(
     user_id = current_user["_id"]
 
     # Re-seed from quiz history
-    docs = await seed_retention_from_quizzes(user_id, db)
+    await seed_retention_from_quizzes(user_id, db)
 
     # Fetch updated docs for Gemini context
     cursor = db["topic_retention"].find({"user_id": ObjectId(user_id)})
@@ -557,9 +557,7 @@ Topics:
 High-risk topics needing immediate attention: {', '.join(d['topic'] for d in high_risk) or 'None'}
 Medium-risk topics: {', '.join(d['topic'] for d in medium_risk) or 'None'}
 """
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(
+        response = gemini_model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.7,

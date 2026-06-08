@@ -6,6 +6,7 @@ import google.generativeai as genai
 from sentence_transformers import SentenceTransformer
 from fastapi import HTTPException
 from app.core.config import settings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 logger = logging.getLogger(__name__)
 
@@ -50,53 +51,21 @@ def extract_pdf_text(filepath: str) -> str:
 
 def chunk_text(text: str, chunk_size: int = 1000, chunk_overlap: int = 200) -> list[str]:
     """
-    Split text into chunks of maximum length chunk_size, with an overlap.
-    Tries to break chunks on punctuation or whitespace characters to maintain context.
+    Split text into chunks of maximum length chunk_size, with an overlap using LangChain splitter.
     """
+    if chunk_overlap >= chunk_size:
+        raise ValueError("chunk_overlap must be less than chunk_size")
+        
     if not text or not text.strip():
         return []
-    
-    chunks = []
-    text_len = len(text)
-    start = 0
-    
-    while start < text_len:
-        end = min(start + chunk_size, text_len)
         
-        # If we are not at the end of the text, try to find a smart break point
-        if end < text_len:
-            lookback = max(start, end - 150)  # Look back up to 150 characters
-            break_idx = -1
-            
-            # Look for sentence boundaries first: newline, period, question mark, exclamation mark
-            for idx in range(end - 1, lookback - 1, -1):
-                if text[idx] in ('\n', '.', '?', '!'):
-                    break_idx = idx + 1  # Include the character itself
-                    break
-            
-            # If no sentence boundary, look for space characters
-            if break_idx == -1:
-                for idx in range(end - 1, lookback - 1, -1):
-                    if text[idx] == ' ':
-                        break_idx = idx
-                        break
-            
-            # Apply break index if a valid one was found
-            if break_idx != -1:
-                end = break_idx
-        
-        chunk = text[start:end].strip()
-        if chunk:
-            chunks.append(chunk)
-            
-        # Calculate next start point using overlap
-        next_start = end - chunk_overlap
-        # Guarantee forward progress
-        if next_start >= end:
-            next_start = end - 1
-        start = max(next_start, start + 1)
-        
-    return chunks
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=["\n\n", "\n", ".", "?", "!", " ", ""]
+    )
+    chunks = splitter.split_text(text)
+    return [c.strip() for c in chunks if c.strip()]
 
 def index_note(user_id: str, note_id: str, filename: str, subject: str, filepath: str):
     """Extract, chunk, embed, and index a PDF note in ChromaDB."""
@@ -242,10 +211,8 @@ Answer:"""
     logger.info("RAG: Sending grounded context and question to Gemini...")
     
     try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        
-        response = model.generate_content(
+        from app.core.gemini import gemini_model
+        response = gemini_model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.0,  # 0.0 forces strict grounded outcomes

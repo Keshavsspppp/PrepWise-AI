@@ -18,6 +18,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
           console.error("Token verification failed:", error);
           localStorage.removeItem('token');
+          localStorage.removeItem('refresh_token');
           setUser(null);
         }
       }
@@ -31,8 +32,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await API.post('/auth/login', { email, password });
-      const { access_token } = response.data;
+      const { access_token, refresh_token } = response.data;
       localStorage.setItem('token', access_token);
+      localStorage.setItem('refresh_token', refresh_token);
       
       // Fetch user profile immediately
       const profileResponse = await API.get('/auth/profile');
@@ -61,6 +63,7 @@ export const AuthProvider = ({ children }) => {
   // Logout action
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
     setUser(null);
   };
 

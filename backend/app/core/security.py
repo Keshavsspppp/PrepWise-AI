@@ -38,3 +38,21 @@ def decode_access_token(token: str) -> dict | None:
         return payload
     except jwt.PyJWTError:
         return None
+
+def create_refresh_token(data: dict) -> str:
+    """Generate JWT Refresh Token (valid for 7 days)."""
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(days=7)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+    return encoded_jwt
+
+def decode_refresh_token(token: str) -> dict | None:
+    """Decode and validate a JWT refresh token."""
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        if payload.get("type") != "refresh":
+            return None
+        return payload
+    except jwt.PyJWTError:
+        return None

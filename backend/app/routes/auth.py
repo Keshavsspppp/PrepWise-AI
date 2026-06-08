@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordBearer
 from bson import ObjectId
 from datetime import datetime, timezone
 from app.db.mongodb import get_db
-from app.models.user import UserRegister, UserLogin, UserResponse, Token
-from app.core.security import get_password_hash, verify_password, create_access_token, decode_access_token
+from app.models.user import UserRegister, UserLogin, UserResponse, Token, RefreshRequest
+from app.core.security import get_password_hash, verify_password, create_access_token, decode_access_token, create_refresh_token, decode_refresh_token
 from app.core.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -82,11 +82,43 @@ async def login(request: Request, credentials: UserLogin, db=Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
         
-    # Generate access token
+    # Generate access and refresh tokens
     access_token = create_access_token(
         data={"sub": user_doc["email"], "user_id": str(user_doc["_id"])}
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token = create_refresh_token(
+        data={"sub": user_doc["email"], "user_id": str(user_doc["_id"])}
+    )
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+@router.post("/refresh", response_model=Token)
+@limiter.limit("5/minute")
+async def refresh(request: Request, payload: RefreshRequest, db=Depends(get_db)):
+    """Refresh JWT access token using refresh token."""
+    token_data = decode_refresh_token(payload.refresh_token)
+    if not token_data:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Generate new access and refresh tokens
+    new_access = create_access_token(
+        data={"sub": token_data["sub"], "user_id": token_data["user_id"]}
+    )
+    new_refresh = create_refresh_token(
+        data={"sub": token_data["sub"], "user_id": token_data["user_id"]}
+    )
+    return {
+        "access_token": new_access,
+        "refresh_token": new_refresh,
+        "token_type": "bearer"
+    }
 
 @router.get("/profile", response_model=UserResponse)
 async def get_profile(current_user: dict = Depends(get_current_user)):

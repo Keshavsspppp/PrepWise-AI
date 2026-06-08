@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest
+          if [ -f backend/requirements.txt ]; then
+            pip install -r backend/requirements.txt
+          fi
+
+      - name: Run Ruff Lint
+        run: |
+          ruff check backend/
+
+      - name: Run Pytest
+        env:
+          JWT_SECRET: "dummy-secret-key-at-least-thirty-two-bytes-long"
+          GEMINI_API_KEY: "dummy-gemini-api-key"
+          MONGO_URI: "mongodb://localhost:27017/studygenie"
+        run: |
+          cd backend
+          python -m pytest
