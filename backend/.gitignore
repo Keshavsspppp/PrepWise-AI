@@ -79,7 +79,7 @@ chromadb/
 
 # ── Sentence Transformers Model Cache ───────────────────────────────────────
 .cache/
-models/
+/models/
 sentence_transformers/
 
 # ── HuggingFace Cache ─────────────────────────────────────────────────────────
