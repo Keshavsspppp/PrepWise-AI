@@ -1,8 +1,9 @@
 import os
 import uuid
 import logging
+import asyncio
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, BackgroundTasks
 from fastapi.responses import FileResponse
 from bson import ObjectId
 from app.db.mongodb import get_db, log_activity
@@ -19,15 +20,44 @@ MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB in bytes
 # Ensure upload directory exists
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@router.post("/upload", status_code=status.HTTP_201_CREATED)
+async def bg_index_note(user_id: str, note_id: str, filename: str, subject: str, filepath: str, db):
+    """Background task to extract, chunk, embed, and index a PDF note."""
+    try:
+        # Since index_note is CPU/IO-bound and synchronous, run it in a separate thread
+        await asyncio.to_thread(
+            index_note,
+            user_id=user_id,
+            note_id=note_id,
+            filename=filename,
+            subject=subject,
+            filepath=filepath
+        )
+        # Log user study activity on success
+        await log_activity(db, user_id, "upload_note")
+    except Exception as e:
+        logger.error(f"Background indexing failed for note {note_id}: {e}")
+        # Rollback metadata from MongoDB
+        try:
+            await db["notes"].delete_one({"_id": ObjectId(note_id)})
+        except Exception as db_err:
+            logger.error(f"Failed to rollback note metadata for {note_id}: {db_err}")
+        # Rollback local file from disk
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except Exception as file_err:
+                logger.error(f"Failed to rollback note file {filepath}: {file_err}")
+
+@router.post("/upload", status_code=status.HTTP_202_ACCEPTED)
 async def upload_note(
     title: str = Form(...),
     subject: str = Form(...),
     file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = None,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
-    """Upload a study note (PDF) and store its metadata in MongoDB."""
+    """Upload a study note (PDF), store its metadata, and queue background indexing."""
     # 1. Validation: Check if it's a PDF
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(
@@ -88,29 +118,16 @@ async def upload_note(
             detail="Failed to save note metadata in database"
         )
         
-    # 6. Index PDF chunks in ChromaDB for search
-    try:
-        index_note(
-            user_id=current_user["_id"],
-            note_id=inserted_id,
-            filename=file.filename,
-            subject=subject,
-            filepath=filepath
-        )
-    except Exception as e:
-        logger.error(f"Failed to index note {inserted_id} in ChromaDB: {e}")
-        # Rollback: Clean up database entry
-        await db["notes"].delete_one({"_id": ObjectId(inserted_id)})
-        # Rollback: Clean up local file
-        if os.path.exists(filepath):
-            os.remove(filepath)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to process and index PDF: {str(e)}"
-        )
-        
-    # Log user activity
-    await log_activity(db, current_user["_id"], "upload_note")
+    # 6. Index PDF chunks in ChromaDB for search in the background to avoid blocking the event loop
+    background_tasks.add_task(
+        bg_index_note,
+        user_id=current_user["_id"],
+        note_id=inserted_id,
+        filename=file.filename,
+        subject=subject,
+        filepath=filepath,
+        db=db
+    )
         
     return {
         "id": inserted_id,
@@ -119,7 +136,8 @@ async def upload_note(
         "subject": subject,
         "filename": file.filename,
         "filesize": file_size,
-        "upload_date": note_doc["upload_date"].isoformat()
+        "upload_date": note_doc["upload_date"].isoformat(),
+        "status": "indexing"
     }
 
 
