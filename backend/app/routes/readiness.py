@@ -189,6 +189,19 @@ async def calculate_readiness(user_id: str, db) -> dict:
     return result
 
 
+# ─── Helper for Cache Invalidation ──────────────────────────────────────────
+
+def is_cache_stale(cached: dict) -> bool:
+    """Check if the cached readiness document is older than 24 hours."""
+    if not cached or "generated_at" not in cached:
+        return True
+    gen_at = cached["generated_at"]
+    if gen_at.tzinfo is None:
+        gen_at = gen_at.replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    return now - gen_at > timedelta(hours=24)
+
+
 # ─── API Endpoints ─────────────────────────────────────────────────────────────
 
 @router.get("/overall")
@@ -199,12 +212,14 @@ async def get_overall_readiness(
     """Return the cached or freshly calculated overall readiness score."""
     uid = current_user["_id"]
     cached = await db["exam_readiness"].find_one({"user_id": ObjectId(uid)})
-    if cached:
+    if cached and not is_cache_stale(cached):
         cached["_id"] = str(cached["_id"])
         cached["user_id"] = str(cached["user_id"])
         return cached
-    # Auto-calculate if not cached
+    # Auto-calculate if not cached or stale
     result = await calculate_readiness(uid, db)
+    existing_recs = cached.get("recommendations", []) if cached else []
+    result["recommendations"] = existing_recs
     await db["exam_readiness"].update_one(
         {"user_id": ObjectId(uid)},
         {"$set": {**result, "user_id": ObjectId(uid)}},
@@ -222,9 +237,16 @@ async def get_subject_readiness(
     """Return subject-wise readiness scores."""
     uid = current_user["_id"]
     cached = await db["exam_readiness"].find_one({"user_id": ObjectId(uid)})
-    if cached:
+    if cached and not is_cache_stale(cached):
         return cached.get("subject_scores", [])
     result = await calculate_readiness(uid, db)
+    existing_recs = cached.get("recommendations", []) if cached else []
+    result["recommendations"] = existing_recs
+    await db["exam_readiness"].update_one(
+        {"user_id": ObjectId(uid)},
+        {"$set": {**result, "user_id": ObjectId(uid)}},
+        upsert=True
+    )
     return result.get("subject_scores", [])
 
 
@@ -236,9 +258,16 @@ async def get_topic_readiness(
     """Return topic-wise readiness scores."""
     uid = current_user["_id"]
     cached = await db["exam_readiness"].find_one({"user_id": ObjectId(uid)})
-    if cached:
+    if cached and not is_cache_stale(cached):
         return cached.get("topic_scores", [])
     result = await calculate_readiness(uid, db)
+    existing_recs = cached.get("recommendations", []) if cached else []
+    result["recommendations"] = existing_recs
+    await db["exam_readiness"].update_one(
+        {"user_id": ObjectId(uid)},
+        {"$set": {**result, "user_id": ObjectId(uid)}},
+        upsert=True
+    )
     return result.get("topic_scores", [])
 
 

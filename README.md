@@ -28,7 +28,7 @@
 - **[Google Gemini 2.5 Flash](https://ai.google.dev/)** — LLM for answers, quiz, evaluation, recommendations
 - **[PyPDF](https://pypdf.readthedocs.io/)** — PDF text extraction
 - **[LangChain](https://www.langchain.com/)** — Text chunking pipeline
-- **JWT** — Authentication via `python-jose`
+- **JWT** — Authentication via `PyJWT`
 - **Pydantic v2** — Request/response validation
 
 ### Frontend
@@ -295,7 +295,7 @@ uvicorn[standard]
 motor
 pydantic[email]
 pydantic-settings
-python-jose[cryptography]
+pyjwt
 passlib[bcrypt]
 python-multipart
 pypdf

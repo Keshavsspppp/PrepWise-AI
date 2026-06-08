@@ -28,7 +28,7 @@ router = APIRouter(prefix="/viva", tags=["Mock Viva"])
 class StartVivaRequest(BaseModel):
     subject: str
     difficulty: str = "Medium"   # Easy | Medium | Hard
-    question_count: int = 5      # 5, 10
+    question_count: int = 5      # 5, 10, 15
 
 class AnswerRequest(BaseModel):
     viva_id: str

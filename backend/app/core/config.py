@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # RAG Config
-    GEMINI_API_KEY: str = "YOUR_GEMINI_API_KEY_HERE"
+    GEMINI_API_KEY: str = Field(...)
     CHROMA_PERSIST_DIR: str = "chroma_db"
 
     # CORS Config

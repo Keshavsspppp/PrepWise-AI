@@ -58,7 +58,7 @@ async def upload_note(
     db=Depends(get_db)
 ):
     """Upload a study note (PDF), store its metadata, and queue background indexing."""
-    # 1. Validation: Check if it's a PDF
+    # 1. Validation: Check if it's a PDF extension
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -76,14 +76,37 @@ async def upload_note(
             detail=f"File exceeds maximum size limit of 20MB. Uploaded: {file_size / (1024 * 1024):.2f}MB"
         )
         
-    # Reset read pointer in case we need it later (not strictly needed since we have contents, but good practice)
+    # Reset read pointer in case we need it later
     await file.seek(0)
+
+    # 3. Validate MIME type using python-magic
+    try:
+        import magic
+        mime_type = magic.from_buffer(contents[:2048], mime=True)
+        if mime_type != "application/pdf":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid file content. Only PDF files are allowed."
+            )
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        logger.warning(f"Could not perform MIME type verification using python-magic: {e}")
+
+    # 4. Sanitize original filename (Path Traversal Protection)
+    orig_filename = os.path.basename(file.filename)
+    name_part, ext_part = os.path.splitext(orig_filename)
+    # Strip non-alphanumeric characters from name_part
+    sanitized_name = "".join(c for c in name_part if c.isalnum())
+    if not sanitized_name:
+        sanitized_name = "uploaded_note"
+    safe_filename = f"{sanitized_name}.pdf"
     
-    # 3. Create unique filepath
-    unique_filename = f"{uuid.uuid4()}_{file.filename}"
+    # 5. Create unique filepath
+    unique_filename = f"{uuid.uuid4()}_{safe_filename}"
     filepath = os.path.join(UPLOAD_DIR, unique_filename)
     
-    # 4. Save file to local disk
+    # 6. Save file to local disk
     try:
         with open(filepath, "wb") as f:
             f.write(contents)
@@ -94,12 +117,12 @@ async def upload_note(
             detail="Failed to save file locally on server"
         )
         
-    # 5. Save metadata in MongoDB
+    # 7. Save metadata in MongoDB
     note_doc = {
         "user_id": ObjectId(current_user["_id"]),
         "title": title,
         "subject": subject,
-        "filename": file.filename,
+        "filename": safe_filename,
         "filepath": filepath,
         "filesize": file_size,
         "upload_date": datetime.now(timezone.utc)
@@ -118,12 +141,12 @@ async def upload_note(
             detail="Failed to save note metadata in database"
         )
         
-    # 6. Index PDF chunks in ChromaDB for search in the background to avoid blocking the event loop
+    # 8. Index PDF chunks in ChromaDB for search in the background to avoid blocking the event loop
     background_tasks.add_task(
         bg_index_note,
         user_id=current_user["_id"],
         note_id=inserted_id,
-        filename=file.filename,
+        filename=safe_filename,
         subject=subject,
         filepath=filepath,
         db=db
@@ -134,7 +157,7 @@ async def upload_note(
         "user_id": current_user["_id"],
         "title": title,
         "subject": subject,
-        "filename": file.filename,
+        "filename": safe_filename,
         "filesize": file_size,
         "upload_date": note_doc["upload_date"].isoformat(),
         "status": "indexing"

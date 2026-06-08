@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 from app.routes import auth, notes, ai, quiz, learning_dna, revision, readiness, viva
+from app.core.limiter import limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 import os
 
 
@@ -31,6 +34,10 @@ app = FastAPI(
     debug=settings.DEBUG,
     lifespan=lifespan
 )
+
+# Set up Rate Limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Set up CORS middleware to allow connections from React Vite frontend
 allowed_origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]

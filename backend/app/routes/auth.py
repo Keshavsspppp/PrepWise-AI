@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from bson import ObjectId
+from datetime import datetime, timezone
 from app.db.mongodb import get_db
 from app.models.user import UserRegister, UserLogin, UserResponse, Token
 from app.core.security import get_password_hash, verify_password, create_access_token, decode_access_token
+from app.core.limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -40,7 +42,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_d
     return user_doc
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserRegister, db=Depends(get_db)):
+@limiter.limit("3/minute")
+async def register(request: Request, user_data: UserRegister, db=Depends(get_db)):
     """Register a new user in MongoDB."""
     # Check if email exists
     existing_user = await db["users"].find_one({"email": user_data.email})
@@ -56,7 +59,7 @@ async def register(user_data: UserRegister, db=Depends(get_db)):
         "name": user_data.name,
         "email": user_data.email,
         "password": hashed_password,
-        "created_at": None # Or set datetime.utcnow()
+        "created_at": datetime.now(timezone.utc)
     }
     
     # Insert user
@@ -68,7 +71,8 @@ async def register(user_data: UserRegister, db=Depends(get_db)):
     return created_user
 
 @router.post("/login", response_model=Token)
-async def login(credentials: UserLogin, db=Depends(get_db)):
+@limiter.limit("5/minute")
+async def login(request: Request, credentials: UserLogin, db=Depends(get_db)):
     """Authenticate user and return JWT access token."""
     user_doc = await db["users"].find_one({"email": credentials.email})
     if not user_doc or not verify_password(credentials.password, user_doc["password"]):
