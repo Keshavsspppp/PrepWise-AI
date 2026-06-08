@@ -39,7 +39,6 @@ class QuestionResponse(BaseModel):
     question_id: str
     question: str
     options: List[str]
-    correct_answer: str
 
 class QuizGenerateResponse(BaseModel):
     quiz_id: str
@@ -225,15 +224,14 @@ Retrieved Context:
         await log_activity(db, user_id, "generate_quiz")
         
         # 4. Format and return response
-        # correct_answer is included in the QuestionsResponse as requested in the prompt
+        # correct_answer is stripped from QuestionsResponse for security
         return QuizGenerateResponse(
             quiz_id=quiz_id,
             questions=[
                 QuestionResponse(
                     question_id=q["question_id"],
                     question=q["question"],
-                    options=q["options"],
-                    correct_answer=q["correct_answer"]
+                    options=q["options"]
                 )
                 for q in formatted_questions
             ]
