@@ -1,151 +1,179 @@
-import React, { useState, useEffect } from 'react';
-import { Trash2, MessageSquare, Sparkles, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Trash2, Sparkles, Send, Bot, User } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
-import ChatWindow from '../components/ChatWindow';
-import ChatInput from '../components/ChatInput';
 import API from '../api/axios';
+
+const PROMPTS = [
+  { text: 'Explain Merge Sort.',              subject: 'DSA' },
+  { text: 'What is database normalization?',  subject: 'DBMS' },
+  { text: 'Explain deadlock in OS.',          subject: 'OS' },
+  { text: "What is Dijkstra's Algorithm?",    subject: 'DSA' },
+  { text: 'Explain TCP/IP model layers.',     subject: 'CN' },
+  { text: 'What is process scheduling?',      subject: 'OS' },
+];
+
+const Bubble = ({ msg }) => {
+  const isUser = msg.sender === 'user';
+  return (
+    <div style={{ display: 'flex', gap: '0.625rem', flexDirection: isUser ? 'row-reverse' : 'row', alignItems: 'flex-start' }}>
+      <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: 'var(--radius-sm)', background: isUser ? 'var(--amber-dim)' : 'var(--teal-dim)', border: `1px solid ${isUser ? 'var(--amber-border)' : 'var(--teal-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.25rem' }}>
+        {isUser ? <User size={12} style={{ color: 'var(--amber)' }} /> : <Bot size={12} style={{ color: 'var(--teal)' }} />}
+      </div>
+      <div style={{ maxWidth: '78%', display: 'flex', flexDirection: 'column', gap: '0.375rem', alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+        <div style={{
+          padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
+          background: isUser ? 'var(--amber)' : msg.error ? 'rgba(239,68,68,0.08)' : 'var(--bg-elevated)',
+          border: `1px solid ${isUser ? 'var(--amber)' : msg.error ? 'rgba(239,68,68,0.2)' : 'var(--border-strong)'}`,
+          color: isUser ? '#0a0a0f' : msg.error ? '#f87171' : 'var(--text-primary)',
+          fontSize: '0.9rem', lineHeight: 1.65,
+          borderTopRightRadius: isUser ? 'var(--radius-sm)' : 'var(--radius-md)',
+          borderTopLeftRadius: isUser ? 'var(--radius-md)' : 'var(--radius-sm)',
+        }}>
+          {msg.text}
+        </div>
+        {msg.sources?.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
+            {msg.sources.map((s, i) => (
+              <span key={i} className="badge badge-teal" style={{ fontSize: '0.65rem' }}>
+                📄 {typeof s === 'string' ? s : s.filename || s.source || 'Source'}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const Typing = () => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+    <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <Bot size={12} style={{ color: 'var(--teal)' }} />
+    </div>
+    <div style={{ display: 'flex', gap: '4px', padding: '0.625rem 0.875rem', background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-md)', borderTopLeftRadius: 'var(--radius-sm)' }}>
+      {[0, 1, 2].map(i => (
+        <span key={i} style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--text-muted)', animation: 'bounce-dot 1.2s ease-in-out infinite', animationDelay: `${i * 0.2}s` }} />
+      ))}
+    </div>
+  </div>
+);
 
 const AskAI = () => {
   const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('studygenie_chat_history');
-    return saved ? JSON.parse(saved) : [];
+    try { return JSON.parse(localStorage.getItem('prepwise_chat') || '[]'); } catch { return []; }
   });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const bottomRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Persist chat history
   useEffect(() => {
-    localStorage.setItem('studygenie_chat_history', JSON.stringify(messages));
+    localStorage.setItem('prepwise_chat', JSON.stringify(messages));
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const quickQuestions = [
-    { text: 'Explain Merge Sort.', subject: 'DSA' },
-    { text: 'What is normalization?', subject: 'DBMS' },
-    { text: 'Explain deadlock in OS.', subject: 'Operating Systems' },
-    { text: 'What is Dijkstra Algorithm?', subject: 'DSA' }
-  ];
-
-  const handleSendMessage = async (customQuestion = null) => {
-    const questionText = (customQuestion || input).trim();
-    if (!questionText) return;
-
-    // Clear main page error
-    setError('');
-
-    // Append User message
-    const userMessage = { sender: 'user', text: questionText };
-    setMessages((prev) => [...prev, userMessage]);
-    
-    if (!customQuestion) {
-      setInput(''); // clear input if it wasn't a template click
-    }
-
+  const send = async (text) => {
+    const q = (text || input).trim();
+    if (!q || loading) return;
+    setInput('');
+    setMessages(p => [...p, { sender: 'user', text: q }]);
     setLoading(true);
-
     try {
-      const response = await API.post('/ai/chat', { question: questionText });
-      
-      const aiMessage = {
-        sender: 'ai',
-        text: response.data.answer,
-        sources: response.data.sources || []
-      };
-      
-      setMessages((prev) => [...prev, aiMessage]);
+      const res = await API.post('/ai/chat', { question: q });
+      setMessages(p => [...p, { sender: 'ai', text: res.data.answer, sources: res.data.sources || [] }]);
     } catch (err) {
-      console.error('AI chat failed:', err);
-      let errMsg = 'Failed to generate answer from notes. Please try again.';
-      if (err.response && err.response.data && err.response.data.detail) {
-        errMsg = err.response.data.detail;
-      }
-      
-      const errorBubble = {
-        sender: 'ai',
-        text: errMsg,
-        error: true
-      };
-      
-      setMessages((prev) => [...prev, errorBubble]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClearChat = () => {
-    setMessages([]);
-    setError('');
-    localStorage.removeItem('studygenie_chat_history');
+      setMessages(p => [...p, { sender: 'ai', text: err.response?.data?.detail || 'Failed to get answer. Try again.', error: true }]);
+    } finally { setLoading(false); inputRef.current?.focus(); }
   };
 
   return (
     <DashboardLayout currentPage="AI Study Assistant">
-      <div className="flex flex-col h-[calc(100vh-12rem)] min-h-[480px]">
-        {/* Chat card */}
-        <div className="flex-1 bg-dark-card/60 border border-slate-800/40 rounded-3xl shadow-xl overflow-hidden flex flex-col backdrop-blur-md relative">
-          
-          {/* Chat Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800/40 bg-slate-900/20">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-sm text-text-primary">Grounded Chat Session</span>
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 7rem)' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Bot size={14} style={{ color: 'var(--teal)' }} />
+              </div>
+              <div>
+                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Gemini Study Assistant</p>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Grounded in your uploaded notes only</p>
+              </div>
             </div>
-            {messages.length > 0 && (
-              <button
-                onClick={handleClearChat}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-850 hover:bg-slate-800 text-xs font-semibold text-text-secondary hover:text-white transition-all cursor-pointer border border-slate-800 hover:border-slate-700"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Clear Chat
-              </button>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span className="badge badge-teal">
+                <span className="dot-live" style={{ background: 'var(--teal)', animation: 'pulse-glow 2s infinite' }} />
+                RAG Active
+              </span>
+              {messages.length > 0 && (
+                <button
+                  onClick={() => { setMessages([]); localStorage.removeItem('prepwise_chat'); }}
+                  className="btn btn-ghost btn-sm"
+                >
+                  <Trash2 size={13} /> Clear
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Chat scrolling area */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 min-h-0">
-            <ChatWindow messages={messages} loading={loading} />
-            
-            {/* Quick Questions Display when chat is empty */}
+          {/* Messages */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: 0 }}>
             {messages.length === 0 && (
-              <div className="max-w-2xl mx-auto px-4 pb-12">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <Sparkles className="h-4 w-4 text-cyan-400" />
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    Quick Grounded Prompts
-                  </span>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '1.75rem', paddingBottom: '2rem' }}>
+                <div className="animate-float">
+                  <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                    <Sparkles size={20} style={{ color: 'var(--teal)' }} />
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {quickQuestions.map((q, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSendMessage(q.text)}
-                      className="text-left px-5 py-4 rounded-2xl bg-slate-900/40 hover:bg-slate-850 border border-slate-800/50 hover:border-slate-700/80 transition-all duration-200 group cursor-pointer"
-                    >
-                      <p className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
-                        {q.text}
-                      </p>
-                      <span className="inline-block text-[9px] font-bold text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded-sm mt-2 uppercase tracking-wider">
-                        {q.subject}
-                      </span>
-                    </button>
-                  ))}
+                <div>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.125rem', marginBottom: '0.5rem' }}>Ask Anything</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', maxWidth: '22rem' }}>Your AI tutor answers from your uploaded notes only — no hallucinations.</p>
+                </div>
+                <div style={{ width: '100%', maxWidth: '28rem' }}>
+                  <p className="label" style={{ marginBottom: '0.75rem' }}>Suggested prompts</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '0.5rem' }}>
+                    {PROMPTS.map((q, i) => (
+                      <button key={i} onClick={() => send(q.text)} style={{
+                        textAlign: 'left', padding: '0.75rem 0.875rem',
+                        background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)',
+                        borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all var(--transition)',
+                      }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--amber-border)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
+                      >
+                        <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.375rem' }}>{q.text}</p>
+                        <span className="badge badge-amber">{q.subject}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
+            {messages.map((m, i) => <Bubble key={i} msg={m} />)}
+            {loading && <Typing />}
+            <div ref={bottomRef} />
           </div>
 
-          {/* Chat input box footer */}
-          <div className="p-4 md:p-6 border-t border-slate-800/40 bg-slate-900/10">
-            <ChatInput
-              value={input}
-              onChange={setInput}
-              onSubmit={() => handleSendMessage()}
-              loading={loading}
-              placeholder="Ask a question (e.g. 'Explain Merge Sort' or 'What is normalization?')..."
-            />
-            <p className="text-[11px] text-text-secondary text-center mt-3">
-              Answers are grounded strictly in your study notes and cite source PDFs.
-            </p>
+          {/* Input */}
+          <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={e => { setInput(e.target.value); e.target.style.height = 'auto'; e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`; }}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                disabled={loading}
+                rows={1}
+                placeholder="Ask a question from your notes… (Enter to send)"
+                className="input-field"
+                style={{ flex: 1, resize: 'none', minHeight: '2.75rem', maxHeight: '8rem' }}
+              />
+              <button onClick={() => send()} disabled={!input.trim() || loading} className="btn btn-primary" style={{ padding: '0.625rem 0.875rem', flexShrink: 0 }}>
+                <Send size={15} />
+              </button>
+            </div>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.625rem' }}>Powered by Gemini 2.5 Flash · Strictly grounded in your uploaded notes</p>
           </div>
         </div>
       </div>
@@ -154,3 +182,5 @@ const AskAI = () => {
 };
 
 export default AskAI;
+
+

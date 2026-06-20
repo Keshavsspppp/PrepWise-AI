@@ -7,30 +7,43 @@ import RetentionChart from '../components/RetentionChart';
 import TopicRiskCard from '../components/TopicRiskCard';
 import RevisionTimeline from '../components/RevisionTimeline';
 import RevisionRecommendationCard from '../components/RevisionRecommendationCard';
-import RetentionCard from '../components/RetentionCard';
-import {
-  Brain, RefreshCcw, Loader2, AlertCircle,
-  TrendingDown, Clock, Sparkles, History,
-  ChevronRight, BarChart2, Activity
-} from 'lucide-react';
+import { Brain, RefreshCcw, Loader2, AlertCircle, TrendingDown, Sparkles, History, ChevronRight } from 'lucide-react';
+import { RevisionHistoryContent } from './RevisionHistory';
 
-// ── Skeleton loader ──────────────────────────────────────────────────────────
-const Sk = ({ h = 'h-32', extra = '' }) => (
-  <div className={`animate-pulse bg-slate-800/50 rounded-2xl ${h} ${extra}`} />
-);
-
-// ── Summary stat pill ────────────────────────────────────────────────────────
-const StatPill = ({ label, value, color }) => (
-  <div className={`flex flex-col items-center px-4 py-3 rounded-2xl border bg-slate-900/30 ${color}`}>
-    <span className="text-xl font-extrabold text-white">{value}</span>
-    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{label}</span>
+/* ── helpers ──────────────────────────────────────────────────────────── */
+const Toast = ({ msg, type }) => (
+  <div style={{
+    position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 99,
+    padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)',
+    fontSize: '0.875rem', fontWeight: 600,
+    background: type === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+    border: `1px solid ${type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
+    color: type === 'error' ? '#f87171' : '#34d399',
+    backdropFilter: 'blur(8px)',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+  }}>
+    {msg}
   </div>
 );
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-const RevisionDashboard = () => {
-  const navigate = useNavigate();
+const SectionLabel = ({ children }) => (
+  <p className="label" style={{ marginBottom: '0.875rem' }}>{children}</p>
+);
 
+const StatCard = ({ label, value, col = 'var(--text-secondary)' }) => (
+  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1rem 1.25rem', textAlign: 'center' }}>
+    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.625rem', color: col }}>{value}</div>
+    <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{label}</div>
+  </div>
+);
+
+const FILTER_COLORS = {
+  All: 'var(--text-secondary)', High: '#f87171', Medium: 'var(--amber)', Low: 'var(--teal)'
+};
+
+/* ── main ─────────────────────────────────────────────────────────────── */
+export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
+  const [showHistory, setShowHistory] = useState(initialShowHistory);
   const [retention, setRetention] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
   const [aiTips, setAiTips] = useState({ recommendations: [], updatedAt: '' });
@@ -39,260 +52,207 @@ const RevisionDashboard = () => {
   const [markingId, setMarkingId] = useState(null);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
-  const [activeFilter, setActiveFilter] = useState('All'); // All | High | Medium | Low
+  const [activeFilter, setActiveFilter] = useState('All');
 
-  // ── Show transient toast ─────────────────────────────────────────────────
-  const showToast = (msg, type = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
-  };
+  const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3500); };
 
-  // ── Fetch all dashboard data ─────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
     try {
       setError(null);
       const [retRes, upRes, tipsRes] = await Promise.all([
-        API.get('/revision/retention'),
-        API.get('/revision/upcoming'),
-        API.get('/revision/ai-tips'),
+        API.get('/revision/retention'), API.get('/revision/upcoming'), API.get('/revision/ai-tips'),
       ]);
       setRetention(retRes.data || []);
       setUpcoming(upRes.data || []);
-      setAiTips({
-        recommendations: tipsRes.data?.recommendations || [],
-        updatedAt: tipsRes.data?.updated_at || '',
-      });
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load revision data.');
-    } finally {
-      setLoading(false);
-    }
+      setAiTips({ recommendations: tipsRes.data?.recommendations || [], updatedAt: tipsRes.data?.updated_at || '' });
+    } catch (err) { setError(err.response?.data?.detail || 'Failed to load revision data.'); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // ── Recalculate ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    setShowHistory(initialShowHistory);
+  }, [initialShowHistory]);
+
   const handleRecalculate = async () => {
     try {
-      setRecalculating(true);
-      setError(null);
+      setRecalculating(true); setError(null);
       const res = await API.post('/revision/recalculate');
       setAiTips({ recommendations: res.data.ai_recommendations || [], updatedAt: 'just now' });
       await fetchAll();
       showToast(`✅ Recalculated ${res.data.topics_processed} topics`);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Recalculation failed.');
-    } finally {
-      setRecalculating(false);
-    }
+    } catch (err) { setError(err.response?.data?.detail || 'Recalculation failed.'); }
+    finally { setRecalculating(false); }
   };
 
-  // ── Mark revision complete ──────────────────────────────────────────────
   const handleReviseComplete = async (topicId) => {
     try {
       setMarkingId(topicId);
       const res = await API.post('/revision/complete', { topic_id: topicId, completed: true });
       showToast(res.data.message || '✅ Revision marked complete!');
       await fetchAll();
-    } catch (err) {
-      showToast(err.response?.data?.detail || 'Failed to mark revision.', 'error');
-    } finally {
-      setMarkingId(null);
-    }
+    } catch (err) { showToast(err.response?.data?.detail || 'Failed to mark revision.', 'error'); }
+    finally { setMarkingId(null); }
   };
 
-  // ── Derived data ─────────────────────────────────────────────────────────
-  const highRisk   = retention.filter(t => t.risk_level === 'High');
+  const highRisk = retention.filter(t => t.risk_level === 'High');
   const mediumRisk = retention.filter(t => t.risk_level === 'Medium');
-  const lowRisk    = retention.filter(t => t.risk_level === 'Low');
-  const avgRetention = retention.length
-    ? Math.round(retention.reduce((s, t) => s + t.retention_score, 0) / retention.length)
-    : 0;
-
-  const filtered = activeFilter === 'All'
-    ? retention
-    : retention.filter(t => t.risk_level === activeFilter);
+  const lowRisk = retention.filter(t => t.risk_level === 'Low');
+  const avgRetention = retention.length ? Math.round(retention.reduce((s, t) => s + t.retention_score, 0) / retention.length) : 0;
+  const filtered = activeFilter === 'All' ? retention : retention.filter(t => t.risk_level === activeFilter);
 
   const FILTERS = [
-    { label: 'All',    count: retention.length,   color: 'border-slate-700 text-slate-300' },
-    { label: 'High',   count: highRisk.length,    color: 'border-red-500/30 text-red-400' },
-    { label: 'Medium', count: mediumRisk.length,  color: 'border-amber-500/30 text-amber-400' },
-    { label: 'Low',    count: lowRisk.length,      color: 'border-emerald-500/30 text-emerald-400' },
+    { label: 'All', count: retention.length },
+    { label: 'High', count: highRisk.length },
+    { label: 'Medium', count: mediumRisk.length },
+    { label: 'Low', count: lowRisk.length },
   ];
 
-  return (
-    <DashboardLayout currentPage="Smart Revision">
-      {/* ── Toast ── */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold border backdrop-blur-md transition-all duration-300
-          ${toast.type === 'error'
-            ? 'bg-red-950/90 border-red-500/30 text-red-300'
-            : 'bg-emerald-950/90 border-emerald-500/30 text-emerald-300'}`}>
-          {toast.msg}
-        </div>
-      )}
+  if (showHistory) {
+    return <RevisionHistoryContent onBack={() => setShowHistory(false)} />;
+  }
 
-      {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center h-10 w-10 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 border border-cyan-500/20">
-            <Brain className="h-5 w-5 text-cyan-400" />
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {toast && <Toast {...toast} />}
+
+      {/* ── Header ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Brain size={16} style={{ color: 'var(--teal)' }} />
           </div>
           <div>
-            <h1 className="text-xl font-display font-bold text-text-primary leading-tight">Smart Revision Engine</h1>
-            <p className="text-xs text-slate-500 mt-0.5">Ebbinghaus Forgetting Curve · AI-powered retention tracking</p>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem' }}>Smart Revision Engine</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', marginTop: '0.125rem' }}>Ebbinghaus Forgetting Curve · AI-powered retention tracking</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/revision/history')}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 text-slate-300 text-xs font-semibold rounded-xl transition-all cursor-pointer"
-          >
-            <History className="h-3.5 w-3.5" />
-            History
-          </button>
-          <button
-            id="recalculate-revision-btn"
-            onClick={handleRecalculate}
-            disabled={recalculating || loading}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-600 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {recalculating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCcw className="h-3.5 w-3.5" />}
-            {recalculating ? 'Analyzing...' : 'Recalculate'}
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={() => setShowHistory(true)} className="btn btn-ghost btn-sm"><History size={13} /> History</button>
+          <button id="recalculate-revision-btn" onClick={handleRecalculate} disabled={recalculating || loading} className="btn btn-teal btn-sm">
+            {recalculating ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />}
+            {recalculating ? 'Analyzing…' : 'Recalculate'}
           </button>
         </div>
       </div>
 
-      {/* ── Error ── */}
       {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
-          <AlertCircle className="h-4.5 w-4.5 text-red-400 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-300">{error}</p>
-          <button onClick={fetchAll} className="ml-auto text-xs text-red-300 hover:underline font-medium">Retry</button>
+        <div className="alert alert-error">
+          <AlertCircle size={15} style={{ flexShrink: 0 }} /> {error}
+          <button onClick={fetchAll} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontSize: '0.8rem', textDecoration: 'underline' }}>Retry</button>
         </div>
       )}
 
       {loading ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3"><Sk h="h-20" /><Sk h="h-20" /><Sk h="h-20" /><Sk h="h-20" /></div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6"><Sk h="h-48" /><Sk h="h-48" extra="lg:col-span-2" /></div>
-          <Sk h="h-64" />
+        <div style={{ padding: '5rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--teal-dim)', borderTop: '2px solid var(--teal)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading revision data…</p>
         </div>
       ) : (
-        <div className="space-y-7">
-
-          {/* ── Row 1: Summary Stats ── */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatPill label="Avg Retention" value={`${avgRetention}%`} color="border-cyan-500/20" />
-            <StatPill label="High Risk" value={highRisk.length} color="border-red-500/20" />
-            <StatPill label="Medium Risk" value={mediumRisk.length} color="border-amber-500/20" />
-            <StatPill label="Topics Tracked" value={retention.length} color="border-slate-700/50" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
+            <StatCard label="Avg Retention" value={`${avgRetention}%`} col="var(--teal)" />
+            <StatCard label="High Risk" value={highRisk.length} col="#f87171" />
+            <StatCard label="Medium Risk" value={mediumRisk.length} col="var(--amber)" />
+            <StatCard label="Topics Tracked" value={retention.length} col="var(--text-secondary)" />
           </div>
 
-          {/* ── Row 2: Memory Health + Retention Chart ── */}
+          {/* Memory Health + Chart */}
           {retention.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Memory Health Overview</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem' }}>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
+                <SectionLabel>Memory Health</SectionLabel>
                 <MemoryHealthCard topics={retention} />
               </div>
-              <div className="lg:col-span-2">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Subject Retention Comparison</p>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
+                <SectionLabel>Subject Retention Comparison</SectionLabel>
                 <RetentionChart topics={retention} />
               </div>
             </div>
           )}
 
-          {/* ── Row 3: Upcoming Schedule + AI Tips ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Revision Schedule</p>
-              <RevisionTimeline
-                upcoming={upcoming}
-                onRevise={handleReviseComplete}
-                markingId={markingId}
-              />
+          {/* Timeline + AI Tips */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
+              <SectionLabel>Revision Schedule</SectionLabel>
+              <RevisionTimeline upcoming={upcoming} onRevise={handleReviseComplete} markingId={markingId} />
             </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">AI Revision Tips</p>
-              <RevisionRecommendationCard
-                recommendations={aiTips.recommendations}
-                updatedAt={aiTips.updatedAt}
-                onRecalculate={handleRecalculate}
-                loading={recalculating}
-              />
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
+              <SectionLabel>AI Revision Tips</SectionLabel>
+              <RevisionRecommendationCard recommendations={aiTips.recommendations} updatedAt={aiTips.updatedAt} onRecalculate={handleRecalculate} loading={recalculating} />
             </div>
           </div>
 
-          {/* ── Row 4: Topic Risk Grid ── */}
+          {/* Topic Risk Grid */}
           {retention.length > 0 && (
             <div>
-              {/* Filter tabs */}
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Topic Analysis</p>
-                <div className="flex gap-1.5">
-                  {FILTERS.map(f => (
-                    <button
-                      key={f.label}
-                      onClick={() => setActiveFilter(f.label)}
-                      className={`px-3 py-1 rounded-xl text-[10px] font-bold border transition-all cursor-pointer
-                        ${activeFilter === f.label
-                          ? `${f.color} bg-slate-800/60`
-                          : 'border-slate-800 text-slate-600 hover:text-slate-400'}`}
-                    >
-                      {f.label} {f.count > 0 && <span className="ml-0.5 opacity-70">{f.count}</span>}
-                    </button>
-                  ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <SectionLabel>Topic Analysis</SectionLabel>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {FILTERS.map(f => {
+                    const col = FILTER_COLORS[f.label];
+                    const active = activeFilter === f.label;
+                    return (
+                      <button key={f.label} onClick={() => setActiveFilter(f.label)} style={{
+                        padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.7rem', fontWeight: 700,
+                        border: `1px solid ${active ? col : 'var(--border-strong)'}`,
+                        background: active ? col + '18' : 'transparent',
+                        color: active ? col : 'var(--text-muted)',
+                        cursor: 'pointer', transition: 'all var(--transition)',
+                      }}>
+                        {f.label} {f.count > 0 && <span style={{ opacity: 0.7 }}>{f.count}</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-
               {filtered.length === 0 ? (
-                <div className="py-12 text-center bg-slate-900/20 border border-slate-800/40 rounded-3xl">
-                  <p className="text-sm text-slate-500">No {activeFilter !== 'All' ? activeFilter + ' risk' : ''} topics found.</p>
+                <div style={{ padding: '3rem', textAlign: 'center', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No {activeFilter !== 'All' ? activeFilter + ' risk' : ''} topics found.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {filtered.slice(0, 12).map((topic) => (
-                    <TopicRiskCard
-                      key={topic.topic_id}
-                      {...topic}
-                      onRevise={() => handleReviseComplete(topic.topic_id)}
-                      loading={markingId === topic.topic_id}
-                    />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(15rem, 1fr))', gap: '0.875rem' }}>
+                  {filtered.slice(0, 12).map(topic => (
+                    <TopicRiskCard key={topic.topic_id} {...topic} onRevise={() => handleReviseComplete(topic.topic_id)} loading={markingId === topic.topic_id} />
                   ))}
                 </div>
               )}
             </div>
           )}
 
-          {/* ── Empty state ── */}
+          {/* Empty state */}
           {retention.length === 0 && !error && (
-            <div className="py-24 flex flex-col items-center text-center">
-              <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-cyan-500/10 to-indigo-500/10 border border-cyan-500/20 flex items-center justify-center mb-6">
-                <TrendingDown className="h-10 w-10 text-cyan-400" />
+            <div style={{ padding: '5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1.25rem' }}>
+              <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <TrendingDown size={24} style={{ color: 'var(--teal)' }} />
               </div>
-              <h2 className="text-xl font-bold text-text-primary mb-2">No Retention Data Yet</h2>
-              <p className="text-sm text-slate-500 max-w-sm leading-relaxed mb-6">
-                Take some quizzes first. The Forgetting Curve Engine will then track how fast you're forgetting each topic.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <a href="#/quiz/generator" className="flex items-center gap-2 px-5 py-2.5 bg-slate-800/60 border border-slate-700 hover:border-cyan-500/30 text-slate-300 text-sm font-semibold rounded-xl transition-all cursor-pointer">
-                  Take a Quiz <ChevronRight className="h-4 w-4" />
-                </a>
-                <button
-                  onClick={handleRecalculate}
-                  disabled={recalculating}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-cyan-500/20 cursor-pointer disabled:opacity-50"
-                >
-                  {recalculating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  {recalculating ? 'Analyzing...' : 'Run Analysis'}
+              <div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.5rem' }}>No Retention Data Yet</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '24rem', lineHeight: 1.6 }}>
+                  Take some quizzes first. The Forgetting Curve Engine will track how fast you forget each topic.
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <a href="#/quiz/generator" className="btn btn-ghost">Take a Quiz <ChevronRight size={14} /></a>
+                <button onClick={handleRecalculate} disabled={recalculating} className="btn btn-teal">
+                  {recalculating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  {recalculating ? 'Analyzing…' : 'Run Analysis'}
                 </button>
               </div>
             </div>
           )}
-
         </div>
       )}
+    </div>
+  );
+};
+
+const RevisionDashboard = () => {
+  return (
+    <DashboardLayout currentPage="Smart Revision">
+      <RevisionDashboardContent />
     </DashboardLayout>
   );
 };

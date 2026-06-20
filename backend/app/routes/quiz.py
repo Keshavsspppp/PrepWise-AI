@@ -3,15 +3,17 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from pydantic import BaseModel, Field
 from bson import ObjectId
 
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
 from app.core.rag import query_notes
-from app.core.gemini import gemini_model
-import google.generativeai as genai
+from app.core.gemini import gemini_client
+from google.genai import types
+from app.core.limiter import limiter
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -19,15 +21,15 @@ router = APIRouter(prefix="/quiz", tags=["Quiz Generation"])
 
 # Pydantic Schemas for Requests
 class QuizGenerateRequest(BaseModel):
-    subject: str
-    topic: str
+    subject: str = Field(..., max_length=100, min_length=1)
+    topic: str = Field(..., max_length=100, min_length=1)
     difficulty: str
     question_count: int
     quiz_type: str  # MCQ, Short Answer, Mixed
 
 class AnswerSubmission(BaseModel):
     question_id: str
-    selected_answer: str
+    selected_answer: str = Field(..., max_length=1000)
 
 class QuizSubmitRequest(BaseModel):
     quiz_id: str
@@ -52,6 +54,7 @@ class AnswerEvaluation(BaseModel):
     explanation: str
 
 class QuizSubmitResponse(BaseModel):
+    result_id: str
     score: int
     total: int
     percentage: float
@@ -72,8 +75,10 @@ def serialize_doc(doc):
     return doc
 
 @router.post("/generate", response_model=QuizGenerateResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/minute")
 async def generate_quiz(
-    request: QuizGenerateRequest,
+    request: Request,
+    quiz_request: QuizGenerateRequest,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
@@ -81,11 +86,11 @@ async def generate_quiz(
     Generate a quiz using context retrieved from the student's notes and store it in MongoDB.
     """
     user_id = current_user["_id"]
-    subject = request.subject
-    topic = request.topic.strip()
-    difficulty = request.difficulty
-    count = request.question_count
-    quiz_type = request.quiz_type
+    subject = quiz_request.subject
+    topic = quiz_request.topic.strip()
+    difficulty = quiz_request.difficulty
+    count = quiz_request.question_count
+    quiz_type = quiz_request.quiz_type
 
     if not topic:
         raise HTTPException(
@@ -167,9 +172,10 @@ Retrieved Context:
     logger.info(f"Quiz Gen: Requesting {count} questions for user {user_id} using gemini-2.5-flash...")
 
     try:
-        response = gemini_model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        response = gemini_client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 temperature=0.2,  # Low temperature for factual consistency
                 response_mime_type="application/json",
                 response_schema=response_schema
@@ -240,8 +246,10 @@ Retrieved Context:
         )
 
 @router.post("/submit", response_model=QuizSubmitResponse)
+@limiter.limit("5/minute")
 async def submit_quiz(
-    request: QuizSubmitRequest,
+    request: Request,
+    submit_request: QuizSubmitRequest,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
@@ -249,8 +257,8 @@ async def submit_quiz(
     Evaluate student answers, calculate score, write attempt to MongoDB, and return detailed feedback.
     """
     user_id = current_user["_id"]
-    quiz_id = request.quiz_id
-    submissions = {sub.question_id: sub.selected_answer for sub in request.answers}
+    quiz_id = submit_request.quiz_id
+    submissions = {sub.question_id: sub.selected_answer for sub in submit_request.answers}
 
     if not ObjectId.is_valid(quiz_id):
         raise HTTPException(
@@ -354,9 +362,10 @@ Questions to grade:
 {json.dumps(grading_items, indent=2)}
 """
         try:
-            response = gemini_model.generate_content(
-                grading_prompt,
-                generation_config=genai.types.GenerationConfig(
+            response = gemini_client.models.generate_content(
+                model=settings.GEMINI_MODEL,
+                contents=grading_prompt,
+                config=types.GenerateContentConfig(
                     temperature=0.0,
                     response_mime_type="application/json",
                     response_schema=grading_schema
@@ -427,7 +436,10 @@ Difficulty: {quiz['difficulty']}
 
 Acknowledge their strengths, note weak areas if applicable, and recommend study focuses. Keep it encouraging and direct.
 """
-        response = gemini_model.generate_content(feedback_prompt)
+        response = gemini_client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=feedback_prompt
+        )
         feedback = response.text.strip()
     except Exception as e:
         logger.error(f"Quiz Submit: Feedback generation failed: {e}")
@@ -446,8 +458,10 @@ Acknowledge their strengths, note weak areas if applicable, and recommend study 
         "completed_at": datetime.now(timezone.utc)
     }
 
+    result_id = ""
     try:
-        await db["quiz_results"].insert_one(result_doc)
+        result_insert = await db["quiz_results"].insert_one(result_doc)
+        result_id = str(result_insert.inserted_id)
         # Log user study activity
         await log_activity(db, user_id, "attempt_quiz")
     except Exception as e:
@@ -455,6 +469,7 @@ Acknowledge their strengths, note weak areas if applicable, and recommend study 
         # Return success regardless since evaluation is complete, but log it
         
     return QuizSubmitResponse(
+        result_id=result_id,
         score=score,
         total=total,
         percentage=percentage,
@@ -462,6 +477,47 @@ Acknowledge their strengths, note weak areas if applicable, and recommend study 
         wrong_answers=wrong_list,
         feedback=feedback
     )
+
+@router.get("/result/{result_id}")
+async def get_quiz_result(
+    result_id: str,
+    current_user: dict = Depends(get_current_user),
+    db=Depends(get_db)
+):
+    """Retrieve a specific quiz result joined with the original quiz details."""
+    uid = current_user["_id"]
+    if not ObjectId.is_valid(result_id):
+        raise HTTPException(status_code=400, detail="Invalid result ID format.")
+        
+    pipeline = [
+        {"$match": {"_id": ObjectId(result_id), "user_id": ObjectId(uid)}},
+        {"$lookup": {
+            "from": "quizzes",
+            "localField": "quiz_id",
+            "foreignField": "_id",
+            "as": "quiz_details"
+        }},
+        {"$unwind": "$quiz_details"}
+    ]
+    
+    cursor = db["quiz_results"].aggregate(pipeline)
+    results = await cursor.to_list(length=1)
+    if not results:
+        raise HTTPException(status_code=404, detail="Quiz result not found.")
+        
+    res = results[0]
+    return {
+        "result_id": str(res["_id"]),
+        "quiz_id": str(res["quiz_id"]),
+        "score": res["score"],
+        "total": res["total"],
+        "percentage": res["percentage"],
+        "correct_answers": res["correct_answers"],
+        "wrong_answers": res["wrong_answers"],
+        "feedback": res["feedback"],
+        "completed_at": res["completed_at"].isoformat() if isinstance(res.get("completed_at"), datetime) else str(res.get("completed_at")),
+        "quiz_details": serialize_doc(res["quiz_details"])
+    }
 
 @router.get("/history", response_model=List[Dict[str, Any]])
 async def get_quiz_history(

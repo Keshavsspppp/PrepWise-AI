@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, Clock, CheckCircle2, ChevronLeft, ChevronRight, Send } from 'lucide-react';
+import { AlertCircle, Clock, ChevronLeft, ChevronRight, Send, CheckCircle2 } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ProgressBar from '../components/ProgressBar';
 import QuestionCard from '../components/QuestionCard';
@@ -9,266 +9,172 @@ import API from '../api/axios';
 const QuizAttempt = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState({}); // mapping question_id -> selected_answer
-  const [timeLeft, setTimeLeft] = useState(0); // in seconds
+  const [answers, setAnswers] = useState({});
+  const [timeLeft, setTimeLeft] = useState(0);
 
-  // Fetch quiz details on mount
   useEffect(() => {
-    const fetchQuiz = async () => {
+    (async () => {
       try {
         setLoading(true);
-        const response = await API.get(`/quiz/${id}`);
-        setQuiz(response.data);
-        // 2 minutes per question
-        setTimeLeft(response.data.questions.length * 120);
-      } catch (err) {
-        console.error('Failed to fetch quiz:', err);
-        setError('Failed to load quiz questions. Please check if the quiz exists and belongs to you.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchQuiz();
+        const r = await API.get(`/quiz/${id}`);
+        setQuiz(r.data);
+        setTimeLeft(r.data.questions.length * 120);
+      } catch { setError('Failed to load quiz. It may not exist or belong to you.'); }
+      finally { setLoading(false); }
+    })();
   }, [id]);
 
-  // Handle countdown timer
-  useEffect(() => {
-    if (loading || !quiz || timeLeft <= 0 || submitting) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          // Auto submit when time runs out
-          handleAutoSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [loading, quiz, timeLeft, submitting]);
-
-  const handleAnswerChange = (selected) => {
-    const currentQuestionId = quiz.questions[currentIndex].question_id;
-    setAnswers((prev) => ({
-      ...prev,
-      [currentQuestionId]: selected
-    }));
-  };
-
-  const handleAutoSubmit = () => {
-    handleSubmitAnswers(true);
-  };
-
-  const handleSubmitAnswers = async (isTimeOut = false) => {
+  const submitRef = useRef();
+  
+  const submit = async (timeout = false) => {
     if (!quiz || submitting) return;
-
-    setSubmitting(true);
-    setError('');
-
-    // Format answers payload
-    const answersPayload = quiz.questions.map((q) => ({
-      question_id: q.question_id,
-      selected_answer: answers[q.question_id] || ''
-    }));
-
+    setSubmitting(true); setError('');
+    const payload = quiz.questions.map(q => ({ question_id: q.question_id, selected_answer: answers[q.question_id] || '' }));
     try {
-      const response = await API.post('/quiz/submit', {
-        quiz_id: id,
-        answers: answersPayload
-      });
-
-      // Redirect to results page, passing evaluation and quiz details in router state
-      navigate(`/quiz/result`, {
-        state: {
-          result: response.data,
-          quizDetails: quiz,
-          timeTaken: formatTimeTaken()
-        }
-      });
+      const r = await API.post('/quiz/submit', { quiz_id: quiz.quiz_id, answers: payload });
+      const resultId = r.data.result_id;
+      navigate(`/quiz/result/${resultId}`, { state: { result: r.data, quizDetails: quiz, timeTaken: formatTime(quiz.questions.length*120 - timeLeft) } });
     } catch (err) {
-      console.error('Quiz submission failed:', err);
-      let errMsg = 'Failed to submit quiz. Please try again.';
-      if (err.response && err.response.data && err.response.data.detail) {
-        errMsg = err.response.data.detail;
-      }
-      setError(errMsg);
+      setError(err.response?.data?.detail || 'Submission failed. Please try again.');
       setSubmitting(false);
     }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
+  submitRef.current = submit;
 
-  const formatTimeTaken = () => {
-    if (!quiz) return '0:00';
-    const totalTime = quiz.questions.length * 120;
-    const taken = totalTime - timeLeft;
-    return formatTime(taken);
-  };
+  useEffect(() => {
+    if (loading || !quiz || timeLeft <= 0 || submitting) return;
+    const timer = setInterval(() => {
+      setTimeLeft(p => {
+        if (p <= 1) {
+          clearInterval(timer);
+          if (submitRef.current) {
+            submitRef.current(true);
+          }
+          return 0;
+        }
+        return p - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [loading, quiz, submitting]);
 
-  if (loading) {
-    return (
-      <DashboardLayout currentPage="Quiz Attempt">
-        <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
-          <div className="h-10 w-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center animate-spin">
-            <Clock className="h-5 w-5" />
-          </div>
-          <p className="text-sm text-slate-400">Loading quiz questions...</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const formatTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
 
-  if (error || !quiz) {
-    return (
-      <DashboardLayout currentPage="Quiz Attempt">
-        <div className="max-w-md mx-auto p-6 bg-slate-900/30 border border-slate-800 rounded-3xl text-center space-y-4">
-          <AlertCircle className="h-10 w-10 text-red-500 mx-auto" />
-          <h3 className="text-base font-bold text-white">Error Loading Quiz</h3>
-          <p className="text-xs text-slate-450">{error || 'Quiz not found.'}</p>
-          <button
-            onClick={() => navigate('/quiz/history')}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition-colors cursor-pointer"
-          >
-            Go back to Planner
-          </button>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (loading) return (
+    <DashboardLayout currentPage="Quiz Attempt">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '6rem 0' }}>
+        <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <p style={{ color: 'var(--text-muted)' }}>Loading quiz questions…</p>
+      </div>
+    </DashboardLayout>
+  );
 
-  const currentQuestion = quiz.questions[currentIndex];
-  const isLastQuestion = currentIndex === quiz.questions.length - 1;
+  if (error || !quiz) return (
+    <DashboardLayout currentPage="Quiz Attempt">
+      <div style={{ maxWidth: '24rem', margin: '4rem auto', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+        <AlertCircle size={32} style={{ color: '#f87171' }} />
+        <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>Error Loading Quiz</h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{error || 'Quiz not found.'}</p>
+        <button onClick={() => navigate('/quiz/history')} className="btn btn-ghost">Back to History</button>
+      </div>
+    </DashboardLayout>
+  );
+
+  const q = quiz.questions[currentIndex];
+  const isLast = currentIndex === quiz.questions.length - 1;
+  const urgent = timeLeft < 60;
 
   return (
-    <DashboardLayout currentPage={`Attempting Quiz: ${quiz.topic}`}>
+    <DashboardLayout currentPage={`Quiz: ${quiz.topic}`}>
+      {/* Submitting overlay */}
       {submitting && (
-        <div className="fixed inset-0 bg-dark-bg/80 backdrop-blur-md z-50 flex flex-col items-center justify-center space-y-6">
-          <div className="h-12 w-12 rounded-xl bg-neon-gradient text-white flex items-center justify-center animate-spin shadow-lg">
-            <CheckCircle2 className="h-6 w-6" />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(8px)', zIndex: 99, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.5rem' }}>
+          <div style={{ width: '3.5rem', height: '3.5rem', background: 'var(--amber)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'float 1.5s ease-in-out infinite' }}>
+            <CheckCircle2 size={22} color="#0a0a0f" />
           </div>
-          <div className="space-y-1 text-center">
-            <h3 className="text-lg font-bold text-white">Grading with AI Tutor</h3>
-            <p className="text-xs text-slate-400">Evaluating your submissions and compiling feedback...</p>
+          <div style={{ textAlign: 'center' }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem', marginBottom: '0.5rem' }}>Grading with AI Tutor</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Evaluating submissions and compiling feedback…</p>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
-        {/* Main Quiz Area */}
-        <div className="lg:col-span-3 space-y-6 flex flex-col">
-          {/* Header Dashboard panel */}
-          <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-5 flex items-center justify-between gap-4 shadow-sm backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-cyan-400 bg-cyan-950/20 px-2.5 py-1 rounded-sm uppercase tracking-wider">
-                {quiz.subject}
-              </span>
-              <span className="text-xs font-bold text-slate-400">
-                Mode: {quiz.quiz_type}
-              </span>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 14rem', gap: '1.5rem', alignItems: 'start' }}>
+        {/* Main */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Quiz header */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span className="badge badge-amber">{quiz.subject}</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{quiz.quiz_type}</span>
             </div>
-            
-            {/* Timer component */}
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl border ${timeLeft < 60 ? 'border-red-500/20 bg-red-950/10 text-red-400 animate-pulse' : 'border-slate-850 bg-slate-900/60 text-slate-300'}`}>
-              <Clock className="h-4 w-4" />
-              <span className="font-mono text-sm font-bold">{formatTime(timeLeft)}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 0.875rem', background: urgent ? 'rgba(239,68,68,0.1)' : 'var(--bg-elevated)', border: `1px solid ${urgent ? 'rgba(239,68,68,0.3)' : 'var(--border)'}`, borderRadius: '100px', animation: urgent ? 'pulse-glow 1s infinite' : 'none' }}>
+              <Clock size={13} style={{ color: urgent ? '#f87171' : 'var(--text-secondary)' }} />
+              <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.9rem', color: urgent ? '#f87171' : 'var(--text-primary)' }}>{formatTime(timeLeft)}</span>
             </div>
           </div>
 
           <ProgressBar current={currentIndex + 1} total={quiz.questions.length} />
+          <QuestionCard question={q} index={currentIndex} total={quiz.questions.length} selectedAnswer={answers[q.question_id]} onChange={sel => setAnswers(p => ({ ...p, [q.question_id]: sel }))} mode="attempt" />
 
-          {/* Question Card */}
-          <QuestionCard
-            question={currentQuestion}
-            index={currentIndex}
-            total={quiz.questions.length}
-            selectedAnswer={answers[currentQuestion.question_id]}
-            onChange={handleAnswerChange}
-            mode="attempt"
-          />
-
-          {/* Navigation Controls */}
-          <div className="flex justify-between items-center pt-2">
+          {/* Nav */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button
-              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-              disabled={currentIndex === 0}
-              className="flex items-center gap-1.5 px-4.5 py-3 rounded-2xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 text-sm font-bold text-slate-300 hover:text-white disabled:opacity-40 cursor-pointer disabled:cursor-default transition-all"
+              onClick={() => setCurrentIndex(p => Math.max(0, p - 1))} disabled={currentIndex === 0}
+              className="btn btn-ghost"
             >
-              <ChevronLeft className="h-4.5 w-4.5" />
-              Previous
+              <ChevronLeft size={15} /> Previous
             </button>
-
-            {isLastQuestion ? (
-              <button
-                onClick={() => handleSubmitAnswers()}
-                className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-neon-gradient text-white hover:opacity-95 font-bold text-sm shadow-md shadow-primary/20 cursor-pointer"
-              >
-                <Send className="h-4 w-4" />
-                Submit Quiz
+            {isLast ? (
+              <button onClick={() => submit()} className="btn btn-primary" style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
+                <Send size={14} /> Submit Quiz
               </button>
             ) : (
-              <button
-                onClick={() => setCurrentIndex((prev) => Math.min(quiz.questions.length - 1, prev + 1))}
-                className="flex items-center gap-1.5 px-4.5 py-3 rounded-2xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 text-sm font-bold text-slate-300 hover:text-white cursor-pointer transition-all"
-              >
-                Next
-                <ChevronRight className="h-4.5 w-4.5" />
+              <button onClick={() => setCurrentIndex(p => Math.min(quiz.questions.length - 1, p + 1))} className="btn btn-ghost">
+                Next <ChevronRight size={15} />
               </button>
             )}
           </div>
         </div>
 
-        {/* Side Question Navigation Grid */}
-        <div className="space-y-6">
-          <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Questions Overview</h3>
-            <div className="grid grid-cols-5 gap-2.5">
-              {quiz.questions.map((q, idx) => {
-                const isAnswered = answers[q.question_id] && answers[q.question_id].trim() !== '';
-                const isCurrent = idx === currentIndex;
-                
-                let btnClass = 'bg-slate-950/40 border-slate-850 text-slate-500 hover:border-slate-700 hover:text-white';
-                if (isAnswered) {
-                  btnClass = 'bg-indigo-950/20 border-indigo-500/40 text-indigo-400';
-                }
-                if (isCurrent) {
-                  btnClass = 'bg-slate-800 border-indigo-500 text-white font-bold scale-105';
-                }
-                
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`h-10 rounded-xl border text-xs flex items-center justify-center transition-all cursor-pointer ${btnClass}`}
-                  >
-                    {idx + 1}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="pt-4 border-t border-slate-800/40 flex flex-col gap-2 text-[10px] text-slate-450 font-bold uppercase tracking-wider">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-sm bg-indigo-950/20 border border-indigo-500/40"></div>
-                <span>Answered</span>
+        {/* Side overview */}
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', position: 'sticky', top: '1rem' }}>
+          <p className="label">Questions Overview</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '0.375rem' }}>
+            {quiz.questions.map((q2, idx) => {
+              const answered = answers[q2.question_id]?.trim();
+              const current = idx === currentIndex;
+              return (
+                <button key={idx} onClick={() => setCurrentIndex(idx)} style={{
+                  height: '2.25rem', borderRadius: 'var(--radius-sm)',
+                  border: `1px solid ${current ? 'var(--amber)' : answered ? 'rgba(45,212,191,0.3)' : 'var(--border)'}`,
+                  background: current ? 'var(--amber-dim)' : answered ? 'var(--teal-dim)' : 'var(--bg-elevated)',
+                  color: current ? 'var(--amber)' : answered ? 'var(--teal)' : 'var(--text-muted)',
+                  fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.75rem',
+                  cursor: 'pointer', transition: 'all var(--transition)',
+                  transform: current ? 'scale(1.05)' : 'none',
+                }}>{idx + 1}</button>
+              );
+            })}
+          </div>
+          <div className="divider" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+            {[
+              { col: 'var(--amber)', label: 'Current' },
+              { col: 'var(--teal)', label: 'Answered' },
+              { col: 'var(--text-muted)', label: 'Unanswered' },
+            ].map(k => (
+              <div key={k.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: k.col + '30', border: `1px solid ${k.col}50` }} />
+                {k.label}
               </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-sm bg-slate-950/40 border border-slate-850"></div>
-                <span>Unanswered</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>

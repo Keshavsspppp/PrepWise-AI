@@ -39,7 +39,7 @@ const ChatWindow = ({ messages, loading }) => {
               </div>
               <div className="flex-1 space-y-3.5">
                 <span className="text-xs font-bold tracking-wide uppercase text-slate-450">
-                  StudyGenie AI is thinking...
+                  PrepWise AI is thinking...
                 </span>
                 <div className="flex items-center gap-1.5 pt-1">
                   <div className="h-2 w-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />

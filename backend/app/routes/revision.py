@@ -8,14 +8,16 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from bson import ObjectId
 
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
-from app.core.gemini import gemini_model
-import google.generativeai as genai
+from app.core.gemini import gemini_client
+from google.genai import types
+from app.core.limiter import limiter
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -505,7 +507,9 @@ async def complete_revision(
 
 
 @router.post("/recalculate", response_model=Dict[str, Any])
+@limiter.limit("3/minute")
 async def recalculate_all_retention(
+    request: Request,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
@@ -557,9 +561,10 @@ Topics:
 High-risk topics needing immediate attention: {', '.join(d['topic'] for d in high_risk) or 'None'}
 Medium-risk topics: {', '.join(d['topic'] for d in medium_risk) or 'None'}
 """
-        response = gemini_model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        response = gemini_client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 temperature=0.7,
                 response_mime_type="application/json",
                 response_schema=schema

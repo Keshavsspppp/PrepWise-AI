@@ -2,7 +2,7 @@ import os
 import logging
 import pypdf
 import chromadb
-import google.generativeai as genai
+from google.genai import types
 from sentence_transformers import SentenceTransformer
 from fastapi import HTTPException
 from app.core.config import settings
@@ -10,16 +10,23 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 logger = logging.getLogger(__name__)
 
-# Initialize persistent ChromaDB client
-# ChromaDB requires the path to be absolute or relative to the cwd
-os.makedirs(settings.CHROMA_PERSIST_DIR, exist_ok=True)
-chroma_client = chromadb.PersistentClient(path=settings.CHROMA_PERSIST_DIR)
+_chroma_client = None
 
-# Get or create collection
-collection = chroma_client.get_or_create_collection(
-    name="study_notes",
-    metadata={"hnsw:space": "cosine"}
-)
+def get_chroma_client():
+    global _chroma_client
+    if _chroma_client is None:
+        os.makedirs(settings.CHROMA_PERSIST_DIR, exist_ok=True)
+        _chroma_client = chromadb.PersistentClient(path=settings.CHROMA_PERSIST_DIR)
+    return _chroma_client
+
+def get_user_collection(user_id: str):
+    """Retrieve or create a partitioned Chroma collection for a specific user."""
+    client = get_chroma_client()
+    collection_name = f"user_{user_id}"
+    return client.get_or_create_collection(
+        name=collection_name,
+        metadata={"hnsw:space": "cosine"}
+    )
 
 # Lazy loading of sentence-transformers embedding model
 _embedding_model = None
@@ -101,6 +108,7 @@ def index_note(user_id: str, note_id: str, filename: str, subject: str, filepath
     ]
     
     # 5. Insert into ChromaDB
+    collection = get_user_collection(user_id)
     collection.add(
         ids=ids,
         embeddings=embeddings,
@@ -109,10 +117,11 @@ def index_note(user_id: str, note_id: str, filename: str, subject: str, filepath
     )
     logger.info(f"RAG: Successfully indexed {len(chunks)} chunks in ChromaDB for note {note_id}.")
 
-def delete_note_embeddings(note_id: str):
+def delete_note_embeddings(user_id: str, note_id: str):
     """Delete all indexed vector chunks for a specific note."""
     logger.info(f"RAG: Purging ChromaDB vectors for note {note_id}...")
     try:
+        collection = get_user_collection(user_id)
         collection.delete(where={"note_id": str(note_id)})
         logger.info(f"RAG: Successfully purged ChromaDB vectors for note {note_id}.")
     except Exception as e:
@@ -126,10 +135,10 @@ def query_notes(user_id: str, question: str, limit: int = 5) -> list[dict]:
     query_vector = model.encode(question).tolist()
     
     try:
+        collection = get_user_collection(user_id)
         results = collection.query(
             query_embeddings=[query_vector],
-            n_results=limit,
-            where={"user_id": str(user_id)}
+            n_results=limit
         )
         
         hits = []
@@ -211,10 +220,11 @@ Answer:"""
     logger.info("RAG: Sending grounded context and question to Gemini...")
     
     try:
-        from app.core.gemini import gemini_model
-        response = gemini_model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        from app.core.gemini import gemini_client
+        response = gemini_client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 temperature=0.0,  # 0.0 forces strict grounded outcomes
             )
         )

@@ -17,6 +17,11 @@ API.interceptors.request.use(
     }
     return config;
   },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Response interceptor to handle token refreshing on 401 Unauthorized
 API.interceptors.response.use(
   (response) => response,
@@ -48,7 +53,11 @@ API.interceptors.response.use(
           localStorage.setItem('refresh_token', new_refresh_token);
           
           // Retry original request with the new access token
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          if (originalRequest.headers) {
+            originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
+          } else {
+            originalRequest.headers = { Authorization: `Bearer ${access_token}` };
+          }
           return API(originalRequest);
         } catch (refreshError) {
           console.error("Refresh token failed:", refreshError);

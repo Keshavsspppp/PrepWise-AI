@@ -1,145 +1,159 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, AlertCircle, ArrowRight, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+const Spinner = () => (
+  <span style={{ width: '1rem', height: '1rem', border: '2px solid rgba(10,10,15,0.3)', borderTop: '2px solid #0a0a0f', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+);
+
+const getStrength = (pwd) => {
+  if (!pwd) return null;
+  const checks = [pwd.length >= 8, /[A-Z]/.test(pwd), /[0-9]/.test(pwd), /[^A-Za-z0-9]/.test(pwd)];
+  const score = checks.filter(Boolean).length;
+  if (score < 2) return { label: 'Weak',   w: '25%',  color: '#ef4444' };
+  if (score < 3) return { label: 'Fair',   w: '50%',  color: '#f59e0b' };
+  if (score < 4) return { label: 'Good',   w: '75%',  color: '#06b6d4' };
+  return           { label: 'Strong', w: '100%', color: '#10b981' };
+};
+
+const perks = [
+  'AI Q&A grounded in your uploaded PDFs',
+  'Auto-scheduled Ebbinghaus revision engine',
+  'Learning DNA mastery & retention profiling',
+  'AI Mock Viva with live evaluation & scoring',
+];
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    if (!name || !email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-    
-    setError('');
-    setLoading(true);
-    
-    const result = await register(name, email, password);
+    if (!name || !email || !password) { setError('Please fill in all fields.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    setError(''); setLoading(true);
+    const r = await register(name, email, password);
     setLoading(false);
-    
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setError(result.error);
-    }
+    if (r.success) navigate('/dashboard');
+    else setError(r.error);
   };
 
+  const strength = getStrength(password);
+
   return (
-    <div className="min-h-screen bg-dark-bg flex items-center justify-center p-6 font-sans text-text-primary">
-      {/* Decorative background blobs */}
-      <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-primary/5 blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-secondary/5 blur-3xl pointer-events-none"></div>
-
-      <div className="w-full max-w-md bg-dark-card border border-slate-800/40 rounded-3xl shadow-xl shadow-black/40 p-8 md:p-10 relative z-10 transition-all duration-300 hover:border-slate-800/80">
-        
-        {/* Header Branding */}
-        <div className="flex flex-col items-center space-y-3 pb-8 text-center">
-          <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-neon-gradient text-white shadow-lg shadow-primary/25">
-            <Sparkles className="h-6 w-6 animate-pulse" />
+    <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
+      {/* Left side */}
+      <div className="auth-side">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
+          <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, var(--amber), #e07b09)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '1rem' }}>✦</span>
           </div>
-          <div className="space-y-1.5">
-            <h2 className="font-display font-extrabold text-2xl text-text-primary tracking-tight">
-              Create Account
-            </h2>
-            <p className="text-sm text-text-secondary">
-              Get started with your personalized learning journey
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem' }}>PrepWise AI</span>
+        </div>
+
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.875rem', fontWeight: 800, marginBottom: '0.75rem', lineHeight: 1.15 }}>
+          Start your AI<br /><span style={{ color: 'var(--amber)' }}>learning journey</span>
+        </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem', lineHeight: 1.6 }}>
+          Free forever. No credit card required.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginBottom: '2.5rem' }}>
+          {perks.map(p => (
+            <div key={p} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <CheckCircle size={14} style={{ color: 'var(--teal)', flexShrink: 0 }} />
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{p}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Testimonial */}
+        <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <span style={{ fontSize: '1.5rem' }}>🎓</span>
+            <div>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)', fontStyle: 'italic' }}>"PrepWise helped me score 92% in my OS exam"</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>— Priya S., CS Student</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Form panel */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+        <div style={{ width: '100%', maxWidth: '22rem' }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.375rem' }}>Create account</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Join thousands of students studying smarter.</p>
+          </div>
+
+          {error && (
+            <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
+              <AlertCircle size={16} style={{ flexShrink: 0 }} />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
+            {/* Name */}
+            <div>
+              <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Full Name</label>
+              <div className="input-icon">
+                <User size={15} className="icon" />
+                <input id="register-name" type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" className="input-field" />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Email Address</label>
+              <div className="input-icon">
+                <Mail size={15} className="icon" />
+                <input id="register-email" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="input-field" />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Password</label>
+              <div className="input-icon">
+                <Lock size={15} className="icon" />
+                <input id="register-password" type={show ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters" className="input-field has-right" />
+                <button type="button" onClick={() => setShow(!show)} className="icon icon-right" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  {show ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+              {password && strength && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <div style={{ height: '3px', background: 'var(--border)', borderRadius: '100px', overflow: 'hidden', marginBottom: '0.25rem' }}>
+                    <div style={{ height: '100%', width: strength.w, background: strength.color, borderRadius: '100px', transition: 'all 0.3s' }} />
+                  </div>
+                  <span style={{ fontSize: '0.7rem', color: strength.color, fontWeight: 500 }}>Strength: {strength.label}</span>
+                </div>
+              )}
+            </div>
+
+            <button id="register-submit" type="submit" disabled={loading} className="btn btn-primary btn-block" style={{ padding: '0.875rem', marginTop: '0.5rem' }}>
+              {loading ? <><Spinner /> Creating account…</> : <>Create Account <ArrowRight size={15} /></>}
+            </button>
+
+            <p style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+              By signing up you agree to our Terms & Privacy Policy.
             </p>
+          </form>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+            Already have an account?{' '}
+            <a href="#/login" style={{ color: 'var(--amber)', fontWeight: 600 }}>Sign in</a>
           </div>
         </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 p-4 rounded-xl bg-error/10 border border-error/20 text-xs text-error flex items-center gap-2.5">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Register Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary">
-              Full Name
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
-                <User className="h-4 w-4" />
-              </div>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Alex Student"
-                className="w-full pl-10 pr-4 py-3 bg-slate-900/40 border border-slate-800 rounded-xl text-sm focus:outline-hidden focus:border-primary focus:bg-slate-900/85 transition-all duration-200 text-text-primary"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary">
-              Email Address
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
-                <Mail className="h-4 w-4" />
-              </div>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="alex@studygenie.ai"
-                className="w-full pl-10 pr-4 py-3 bg-slate-900/40 border border-slate-800 rounded-xl text-sm focus:outline-hidden focus:border-primary focus:bg-slate-900/85 transition-all duration-200 text-text-primary"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary">
-              Password
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
-                <Lock className="h-4 w-4" />
-              </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-slate-900/40 border border-slate-800 rounded-xl text-sm focus:outline-hidden focus:border-primary focus:bg-slate-900/85 transition-all duration-200 text-text-primary"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-neon-gradient hover:opacity-95 text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-md shadow-primary/15 active:scale-98 cursor-pointer disabled:opacity-50 glow-button"
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
-            {!loading && <ArrowRight className="h-4 w-4" />}
-          </button>
-        </form>
-
-        {/* Signin Link */}
-        <div className="pt-8 border-t border-slate-800/40 text-center text-xs text-text-secondary">
-          Already have an account?{' '}
-          <a href="#/login" className="text-primary hover:underline font-semibold">
-            Sign In
-          </a>
-        </div>
-
       </div>
     </div>
   );

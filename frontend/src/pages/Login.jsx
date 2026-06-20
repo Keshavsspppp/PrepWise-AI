@@ -1,133 +1,142 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+const S = {
+  page: { minHeight: '100vh', display: 'flex', background: 'var(--bg-base)', fontFamily: 'var(--font-body)' },
+  side: {
+    width: '44%', flexShrink: 0,
+    background: 'var(--bg-surface)',
+    borderRight: '1px solid var(--border)',
+    padding: '3rem',
+    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+  },
+  panel: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' },
+  wrap: { width: '100%', maxWidth: '22rem' },
+};
+
+const features = [
+  { icon: '🧠', label: 'AI-powered answers from your own notes' },
+  { icon: '📊', label: 'Learning DNA mastery tracking' },
+  { icon: '🔁', label: 'Forgetting curve revision engine' },
+  { icon: '🎤', label: 'AI Mock Viva with live scoring' },
+];
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-    
-    setError('');
-    setLoading(true);
-    
-    const result = await login(email, password);
+    if (!email || !password) { setError('Please fill in all fields.'); return; }
+    setError(''); setLoading(true);
+    const r = await login(email, password);
     setLoading(false);
-    
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setError(result.error);
-    }
+    if (r.success) navigate('/dashboard');
+    else setError(r.error);
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg flex items-center justify-center p-6 font-sans text-text-primary">
-      {/* Decorative background blobs */}
-      <div className="absolute top-1/4 left-1/4 h-80 w-80 rounded-full bg-primary/5 blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-secondary/5 blur-3xl pointer-events-none"></div>
-
-      <div className="w-full max-w-md bg-dark-card border border-slate-800/40 rounded-3xl shadow-xl shadow-black/40 p-8 md:p-10 relative z-10 transition-all duration-300 hover:border-slate-800/80">
-        
-        {/* Header Branding */}
-        <div className="flex flex-col items-center space-y-3 pb-8 text-center">
-          <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-neon-gradient text-white shadow-lg shadow-primary/25">
-            <Sparkles className="h-6 w-6 animate-pulse" />
+    <div style={S.page}>
+      {/* Feature side — hidden on small screens */}
+      <div style={S.side} className="auth-side">
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem' }}>
+          <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, var(--amber), #e07b09)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '1rem' }}>✦</span>
           </div>
-          <div className="space-y-1.5">
-            <h2 className="font-display font-extrabold text-2xl text-text-primary tracking-tight">
-              Welcome Back
-            </h2>
-            <p className="text-sm text-text-secondary">
-              Sign in to access your AI study companion
-            </p>
-          </div>
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)' }}>PrepWise AI</span>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 p-4 rounded-xl bg-error/10 border border-error/20 text-xs text-error flex items-center gap-2.5">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-text-secondary">
-              Email Address
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
-                <Mail className="h-4 w-4" />
-              </div>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="alex@studygenie.ai"
-                className="w-full pl-10 pr-4 py-3 bg-slate-900/40 border border-slate-800 rounded-xl text-sm focus:outline-hidden focus:border-primary focus:bg-slate-900/85 transition-all duration-200 text-text-primary"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center">
-              <label className="text-xs font-bold uppercase tracking-wider text-text-secondary">
-                Password
-              </label>
-              <a href="#" className="text-xs text-primary hover:underline">
-                Forgot password?
-              </a>
-            </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-text-secondary">
-                <Lock className="h-4 w-4" />
-              </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3 bg-slate-900/40 border border-slate-800 rounded-xl text-sm focus:outline-hidden focus:border-primary focus:bg-slate-900/85 transition-all duration-200 text-text-primary"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-neon-gradient hover:opacity-95 text-white rounded-xl font-semibold text-sm transition-all duration-200 shadow-md shadow-primary/15 active:scale-98 cursor-pointer disabled:opacity-50 glow-button"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-            {!loading && <ArrowRight className="h-4 w-4" />}
-          </button>
-        </form>
-
-        {/* Signup Link */}
-        <div className="pt-8 border-t border-slate-800/40 text-center text-xs text-text-secondary">
-          New to StudyGenie?{' '}
-          <a href="#/register" className="text-primary hover:underline font-semibold">
-            Create an account
-          </a>
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, lineHeight: 1.15, marginBottom: '0.75rem' }}>
+            Study smarter,<br />
+            <span style={{ color: 'var(--amber)' }}>not harder.</span>
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6 }}>
+            Your AI companion that learns how <em>you</em> learn.
+          </p>
         </div>
 
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+          {features.map(f => (
+            <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.875rem 1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+              <span style={{ fontSize: '1.25rem', flexShrink: 0 }}>{f.icon}</span>
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{f.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <p style={{ marginTop: 'auto', paddingTop: '2rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>© 2025 PrepWise AI · Gemini 2.5 Flash</p>
+      </div>
+
+      {/* Form panel */}
+      <div style={S.panel}>
+        <div style={S.wrap}>
+          <div style={{ marginBottom: '2rem' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.375rem' }}>Welcome back</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Sign in to continue your learning journey.</p>
+          </div>
+
+          {error && (
+            <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
+              <AlertCircle size={16} style={{ flexShrink: 0 }} />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
+            {/* Email */}
+            <div>
+              <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Email address</label>
+              <div className="input-icon">
+                <Mail size={15} className="icon" />
+                <input id="login-email" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="input-field" />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <label className="label">Password</label>
+                <a href="#/forgot-password" style={{ fontSize: '0.75rem', color: 'var(--amber)', fontWeight: 500 }}>Forgot?</a>
+              </div>
+              <div className="input-icon">
+                <Lock size={15} className="icon" />
+                <input id="login-password" type={show ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="input-field has-right" />
+                <button type="button" onClick={() => setShow(!show)} className="icon icon-right" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  {show ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <button id="login-submit" type="submit" disabled={loading} className="btn btn-primary btn-block" style={{ marginTop: '0.5rem', padding: '0.875rem' }}>
+              {loading ? <><Spinner /> Signing in…</> : <>Sign In <ArrowRight size={15} /></>}
+            </button>
+          </form>
+
+          <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+            New to PrepWise?{' '}
+            <a href="#/register" style={{ color: 'var(--amber)', fontWeight: 600 }}>Create account</a>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
+
+const Spinner = () => (
+  <span style={{
+    width: '1rem', height: '1rem', border: '2px solid rgba(10,10,15,0.3)',
+    borderTop: '2px solid #0a0a0f', borderRadius: '50%',
+    display: 'inline-block', animation: 'spin 0.8s linear infinite',
+  }} />
+);
 
 export default Login;

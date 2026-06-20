@@ -3,12 +3,13 @@ import uuid
 import logging
 import asyncio
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, BackgroundTasks, Response
 from fastapi.responses import FileResponse
 from bson import ObjectId
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
 from app.core.rag import index_note, delete_note_embeddings
+from app.core.storage import storage_backend
 
 
 logger = logging.getLogger(__name__)
@@ -20,8 +21,9 @@ MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB in bytes
 # Ensure upload directory exists
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-async def bg_index_note(user_id: str, note_id: str, filename: str, subject: str, filepath: str, db):
+async def bg_index_note(user_id: str, note_id: str, filename: str, subject: str, filepath: str):
     """Background task to extract, chunk, embed, and index a PDF note."""
+    db = get_db()
     try:
         # Since index_note is CPU/IO-bound and synchronous, run it in a separate thread
         await asyncio.to_thread(
@@ -41,12 +43,11 @@ async def bg_index_note(user_id: str, note_id: str, filename: str, subject: str,
             await db["notes"].delete_one({"_id": ObjectId(note_id)})
         except Exception as db_err:
             logger.error(f"Failed to rollback note metadata for {note_id}: {db_err}")
-        # Rollback local file from disk
-        if os.path.exists(filepath):
-            try:
-                os.remove(filepath)
-            except Exception as file_err:
-                logger.error(f"Failed to rollback note file {filepath}: {file_err}")
+        # Rollback local file from storage
+        try:
+            storage_backend.delete_file(filepath)
+        except Exception as file_err:
+            logger.error(f"Failed to rollback note file {filepath}: {file_err}")
 
 @router.post("/upload", status_code=status.HTTP_202_ACCEPTED)
 async def upload_note(
@@ -79,19 +80,24 @@ async def upload_note(
     # Reset read pointer in case we need it later
     await file.seek(0)
 
-    # 3. Validate MIME type using python-magic
+    # 3. Validate MIME type using python-magic with a robust fallback to magic bytes
+    is_pdf = False
     try:
         import magic
         mime_type = magic.from_buffer(contents[:2048], mime=True)
-        if mime_type != "application/pdf":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid file content. Only PDF files are allowed."
-            )
+        if mime_type == "application/pdf":
+            is_pdf = True
     except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
         logger.warning(f"Could not perform MIME type verification using python-magic: {e}")
+        # Fallback: Check magic bytes signature directly
+        if contents.startswith(b"%PDF-"):
+            is_pdf = True
+
+    if not is_pdf:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file content. Only PDF files are allowed."
+        )
 
     # 4. Sanitize original filename (Path Traversal Protection)
     orig_filename = os.path.basename(file.filename)
@@ -104,14 +110,12 @@ async def upload_note(
     
     # 5. Create unique filepath
     unique_filename = f"{uuid.uuid4()}_{safe_filename}"
-    filepath = os.path.join(UPLOAD_DIR, unique_filename)
     
-    # 6. Save file to local disk
+    # 6. Save file using storage_backend abstraction
     try:
-        with open(filepath, "wb") as f:
-            f.write(contents)
+        filepath = storage_backend.save_file(contents, unique_filename)
     except Exception as e:
-        logger.error(f"Failed to write file to disk: {e}")
+        logger.error(f"Failed to write file to storage: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to save file locally on server"
@@ -133,9 +137,11 @@ async def upload_note(
         inserted_id = str(result.inserted_id)
     except Exception as e:
         logger.error(f"Failed to save metadata in database: {e}")
-        # Clean up file on disk if DB insert fails
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        # Clean up file in storage if DB insert fails
+        try:
+            storage_backend.delete_file(filepath)
+        except Exception:
+            pass
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to save note metadata in database"
@@ -148,8 +154,7 @@ async def upload_note(
         note_id=inserted_id,
         filename=safe_filename,
         subject=subject,
-        filepath=filepath,
-        db=db
+        filepath=filepath
     )
         
     return {
@@ -168,10 +173,13 @@ async def upload_note(
 async def get_notes(
     q: str | None = None,
     subject: str | None = None,
+    page: int | None = None,
+    limit: int | None = None,
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_db)
+    db=Depends(get_db),
+    response: Response = None
 ):
-    """Retrieve all notes for the authenticated user, supporting optional search and subject filtering."""
+    """Retrieve all notes for the authenticated user, supporting optional search, subject filtering, and pagination."""
     query = {"user_id": ObjectId(current_user["_id"])}
     
     # Apply subject filter
@@ -183,13 +191,24 @@ async def get_notes(
         query["title"] = {"$regex": q, "$options": "i"}
         
     try:
+        total_count = await db["notes"].count_documents(query)
+        
         cursor = db["notes"].find(query).sort("upload_date", -1)
-        notes_list = await cursor.to_list(length=100)
+        if page is not None and limit is not None:
+            skip = (page - 1) * limit
+            cursor = cursor.skip(skip).limit(limit)
+            notes_list = await cursor.to_list(length=limit)
+        else:
+            notes_list = await cursor.to_list(length=100)
+            
+        if response and page is not None and limit is not None:
+            response.headers["X-Total-Count"] = str(total_count)
+            response.headers["Access-Control-Expose-Headers"] = "X-Total-Count"
         
         # Format response objects
-        response = []
+        response_data = []
         for note in notes_list:
-            response.append({
+            response_data.append({
                 "id": str(note["_id"]),
                 "user_id": str(note["user_id"]),
                 "title": note["title"],
@@ -198,7 +217,7 @@ async def get_notes(
                 "filesize": note["filesize"],
                 "upload_date": note["upload_date"].isoformat()
             })
-        return response
+        return response_data
     except Exception as e:
         logger.error(f"Failed to fetch notes: {e}")
         raise HTTPException(
@@ -212,7 +231,7 @@ async def delete_note(
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
-    """Delete a note's metadata from MongoDB and remove the physical file from disk."""
+    """Delete a note's metadata from MongoDB, purge from ChromaDB, and remove from storage."""
     if not ObjectId.is_valid(id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -244,19 +263,20 @@ async def delete_note(
             detail="Failed to delete note metadata from database"
         )
         
-    # Delete matching vectors from ChromaDB
+    # Delete matching vectors from ChromaDB (using user partitioned collection)
     try:
-        delete_note_embeddings(id)
+        delete_note_embeddings(current_user["_id"], id)
     except Exception as e:
         logger.error(f"Failed to delete matching vectors for note {id}: {e}")
         
-    # Delete physical file from disk
+    # Delete physical file using storage_backend
     filepath = note["filepath"]
-    if os.path.exists(filepath):
-        try:
-            os.remove(filepath)
-        except Exception as e:
-            logger.error(f"Failed to delete physical file {filepath}: {e}")
+    try:
+        storage_backend.delete_file(filepath)
+    except Exception as e:
+        logger.error(f"Failed to delete physical file {filepath}: {e}")
+            
+    return {"message": "Note deleted successfully", "id": id}
             # We don't raise an exception here because the database record is already gone,
             # but we log it for admin investigation of orphan files.
             

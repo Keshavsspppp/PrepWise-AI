@@ -1,7 +1,8 @@
 import logging
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from pydantic import BaseModel, Field
+from app.core.limiter import limiter
 
 from app.routes.auth import get_current_user
 from app.core.rag import query_notes, generate_rag_answer
@@ -13,7 +14,7 @@ router = APIRouter(prefix="/ai", tags=["AI Chat / RAG"])
 
 # Pydantic models for request and response validation
 class ChatRequest(BaseModel):
-    question: str
+    question: str = Field(..., max_length=1000, min_length=1)
 
 class SourceItem(BaseModel):
     filename: str
@@ -24,15 +25,17 @@ class ChatResponse(BaseModel):
     sources: List[SourceItem]
 
 @router.post("/chat", response_model=ChatResponse)
+@limiter.limit("10/minute")
 async def chat_with_notes(
-    request: ChatRequest,
+    request: Request,
+    chat_request: ChatRequest,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
     """
     Query the user's uploaded notes inside ChromaDB and return a grounded answer from Gemini.
     """
-    question = request.question.strip()
+    question = chat_request.question.strip()
     if not question:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

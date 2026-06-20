@@ -1,232 +1,173 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, BrainCircuit, Play, AlertCircle } from 'lucide-react';
+import { Sparkles, BrainCircuit, Play, AlertCircle, ChevronRight, History } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import API from '../api/axios';
+
+const SUBJECTS = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
+const DIFFICULTIES = [
+  { label: 'Easy',   desc: 'Basic recall', col: 'var(--teal)' },
+  { label: 'Medium', desc: 'Applied',      col: 'var(--amber)' },
+  { label: 'Hard',   desc: 'Edge cases',   col: '#f87171' },
+];
+const COUNTS = [5, 10, 20];
+const TYPES = [
+  { value: 'MCQ',          label: 'MCQ',          icon: '☑', desc: '4-choice single answer' },
+  { value: 'Short Answer', label: 'Short Answer',  icon: '✏', desc: 'Written, AI graded' },
+  { value: 'Mixed',        label: 'Mixed Mode',    icon: '⚡', desc: 'MCQ + Short hybrid' },
+];
+const STEPS = ['Searching ChromaDB…', 'Extracting context…', 'Consulting Gemini…', 'Building questions…', 'Saving to DB…'];
+
+const Spinner = () => <span style={{ width: '1rem', height: '1rem', border: '2px solid rgba(10,10,15,0.25)', borderTop: '2px solid #0a0a0f', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />;
+
+const SelBtn = ({ active, onClick, children, col }) => (
+  <button onClick={onClick} style={{
+    padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${active ? col || 'var(--amber)' : 'var(--border-strong)'}`,
+    background: active ? (col ? col + '18' : 'var(--amber-dim)') : 'var(--bg-elevated)',
+    color: active ? (col || 'var(--amber)') : 'var(--text-secondary)',
+    fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.8125rem',
+    cursor: 'pointer', transition: 'all var(--transition)', textAlign: 'left',
+  }}>
+    {children}
+  </button>
+);
 
 const QuizGenerator = () => {
   const [subject, setSubject] = useState('DSA');
   const [topic, setTopic] = useState('');
   const [difficulty, setDifficulty] = useState('Medium');
-  const [quizType, setQuizType] = useState('MCQ');
   const [count, setCount] = useState(10);
+  const [quizType, setQuizType] = useState('MCQ');
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(0);
   const [error, setError] = useState('');
-  const [loadingStep, setLoadingStep] = useState(0);
-
   const navigate = useNavigate();
 
-  const subjects = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
-  const difficulties = ['Easy', 'Medium', 'Hard'];
-  const quizTypes = [
-    { label: 'Multiple Choice (MCQ)', value: 'MCQ' },
-    { label: 'Short Answer', value: 'Short Answer' },
-    { label: 'Mixed Mode', value: 'Mixed' }
-  ];
-  const questionCounts = [5, 10, 20];
-
-  const loadingSteps = [
-    "Searching local ChromaDB note vectors...",
-    "Extracting relevant context from PDF pages...",
-    "Consulting AI generator for structured questions...",
-    "Formulating answer choices and explanations...",
-    "Saving quiz details securely in MongoDB..."
-  ];
-
-  // Rotate loading step texts
   React.useEffect(() => {
-    let interval;
-    if (loading) {
-      setLoadingStep(0);
-      interval = setInterval(() => {
-        setLoadingStep((prev) => (prev + 1) % loadingSteps.length);
-      }, 2500);
-    }
-    return () => clearInterval(interval);
+    let iv;
+    if (loading) { setStep(0); iv = setInterval(() => setStep(p => (p + 1) % STEPS.length), 2400); }
+    return () => clearInterval(iv);
   }, [loading]);
 
-  const handleGenerate = async (e) => {
+  const generate = async (e) => {
     e.preventDefault();
-    if (!topic.trim()) {
-      setError('Please specify a topic to generate questions for.');
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-
+    if (!topic.trim()) { setError('Please enter a topic.'); return; }
+    setError(''); setLoading(true);
     try {
-      const response = await API.post('/quiz/generate', {
-        subject,
-        topic: topic.trim(),
-        difficulty,
-        question_count: count,
-        quiz_type: quizType
-      });
-
-      const quizId = response.data.quiz_id;
-      // Redirect to attempt page
-      navigate(`/quiz/attempt/${quizId}`);
+      const res = await API.post('/quiz/generate', { subject, topic: topic.trim(), difficulty, question_count: count, quiz_type: quizType });
+      navigate(`/quiz/attempt/${res.data.quiz_id}`);
     } catch (err) {
-      console.error('Quiz generation failed:', err);
-      let errMsg = 'Failed to generate quiz. Please try again later.';
-      if (err.response && err.response.data && err.response.data.detail) {
-        errMsg = err.response.data.detail;
-      }
-      setError(errMsg);
-    } finally {
-      setLoading(false);
-    }
+      setError(err.response?.data?.detail || 'Quiz generation failed. Please try again.');
+    } finally { setLoading(false); }
   };
+
+  const diff = DIFFICULTIES.find(d => d.label === difficulty);
 
   return (
     <DashboardLayout currentPage="Quiz Generator">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-dark-card/60 border border-slate-800/40 rounded-3xl p-6 md:p-8 shadow-xl backdrop-blur-md relative overflow-hidden">
-          <div className="absolute top-0 right-0 h-40 w-40 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div style={{ maxWidth: '38rem', margin: '0 auto' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
+          {/* Header */}
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, var(--amber-dim) 0%, transparent 70%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Sparkles size={16} color="#0a0a0f" />
+              </div>
+              <div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem' }}>AI Quiz Generator</h2>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Questions from your uploaded notes</p>
+              </div>
+            </div>
+            <a href="#/quiz/history" className="btn btn-ghost btn-sm">
+              <History size={13} /> History
+            </a>
+          </div>
 
           {loading ? (
-            <div className="py-16 flex flex-col items-center justify-center text-center space-y-6">
-              <div className="relative flex items-center justify-center">
-                <div className="absolute h-20 w-20 rounded-full border-2 border-indigo-500/20 animate-ping duration-1000"></div>
-                <div className="h-14 w-14 rounded-2xl bg-neon-gradient text-white flex items-center justify-center shadow-lg shadow-primary/20 animate-spin">
-                  <BrainCircuit className="h-7 w-7" />
+            <div style={{ padding: '4rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', textAlign: 'center' }}>
+              <div className="animate-float" style={{ position: 'relative' }}>
+                <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-glow)' }}>
+                  <BrainCircuit size={24} color="#0a0a0f" />
                 </div>
+                <div style={{ position: 'absolute', inset: '-4px', border: '2px solid var(--amber-border)', borderRadius: 'var(--radius-xl)', animation: 'pulse-glow 2s infinite' }} />
               </div>
-              <div className="space-y-2 max-w-sm">
-                <h3 className="text-lg font-bold text-white tracking-tight">Generating AI Quiz</h3>
-                <p className="text-sm text-cyan-400 font-semibold animate-pulse transition-all duration-300">
-                  {loadingSteps[loadingStep]}
-                </p>
-                <p className="text-[11px] text-slate-500">This can take up to 20 seconds depending on note size.</p>
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem', marginBottom: '0.5rem' }}>Generating Your Quiz</h3>
+                <p style={{ color: 'var(--amber)', fontSize: '0.875rem', fontWeight: 500, animation: 'fadeIn 0.5s' }}>{STEPS[step]}</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.375rem' }}>15–30 seconds depending on note size</p>
+              </div>
+              {/* Step dots */}
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {STEPS.map((_, i) => (
+                  <div key={i} style={{ height: '5px', borderRadius: '100px', transition: 'all 0.3s', background: i === step ? 'var(--amber)' : 'var(--border)', width: i === step ? '1.5rem' : '5px' }} />
+                ))}
               </div>
             </div>
           ) : (
-            <form onSubmit={handleGenerate} className="space-y-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-neon-gradient text-white">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">Custom Study Quiz</h2>
-                  <p className="text-xs text-slate-400">Generate personalized questions grounded strictly in your study notes.</p>
-                </div>
-              </div>
-
+            <form onSubmit={generate} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               {error && (
-                <div className="flex items-start gap-3 p-4 rounded-2xl bg-red-950/20 border border-red-900/30 text-red-400 text-sm">
-                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                  <span>{error}</span>
+                <div className="alert alert-error">
+                  <AlertCircle size={15} style={{ flexShrink: 0 }} /> {error}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Subject dropdown */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Subject</label>
-                  <select
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl p-4 text-sm text-white focus:border-slate-700 outline-hidden cursor-pointer"
-                  >
-                    {subjects.map((sub) => (
-                      <option key={sub} value={sub} className="bg-slate-900 text-white">
-                        {sub}
-                      </option>
-                    ))}
+              {/* Subject + Topic */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Subject</label>
+                  <select value={subject} onChange={e => setSubject(e.target.value)} className="input-field" style={{ cursor: 'pointer', background: 'var(--bg-elevated)' }}>
+                    {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
-
-                {/* Topic text input */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Topic / Keyword</label>
-                  <input
-                    type="text"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    placeholder="e.g. AVL Trees, Normalization Form, Deadlocks"
-                    className="w-full bg-slate-900/40 border border-slate-800 focus:border-slate-700 rounded-2xl p-4 text-sm text-white placeholder-slate-600 outline-hidden"
-                  />
-                </div>
-
-                {/* Difficulty Selector */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Difficulty</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {difficulties.map((diff) => (
-                      <button
-                        key={diff}
-                        type="button"
-                        onClick={() => setDifficulty(diff)}
-                        className={`py-3.5 rounded-2xl border text-xs font-bold tracking-wide uppercase transition-all cursor-pointer ${
-                          difficulty === diff
-                            ? 'bg-slate-800 text-white border-indigo-500 shadow-xs'
-                            : 'bg-slate-900/20 border-slate-800 text-slate-450 hover:border-slate-700 hover:text-white'
-                        }`}
-                      >
-                        {diff}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Question Count Selector */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Question Count</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {questionCounts.map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setCount(num)}
-                        className={`py-3.5 rounded-2xl border text-xs font-bold tracking-wide uppercase transition-all cursor-pointer ${
-                          count === num
-                            ? 'bg-slate-800 text-white border-indigo-500 shadow-xs'
-                            : 'bg-slate-900/20 border-slate-800 text-slate-450 hover:border-slate-700 hover:text-white'
-                        }`}
-                      >
-                        {num} Qs
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Quiz Type Selector */}
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Quiz Mode</label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                    {quizTypes.map((type) => (
-                      <button
-                        key={type.value}
-                        type="button"
-                        onClick={() => setQuizType(type.value)}
-                        className={`py-4 px-5 rounded-2xl border text-left transition-all cursor-pointer ${
-                          quizType === type.value
-                            ? 'bg-indigo-950/20 text-white border-indigo-500 shadow-xs'
-                            : 'bg-slate-900/20 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white'
-                        }`}
-                      >
-                        <p className="text-sm font-bold">{type.label}</p>
-                        <span className="text-[10px] text-slate-450 font-medium block mt-1">
-                          {type.value === 'MCQ' && 'Standard four-choice single answer tests.'}
-                          {type.value === 'Short Answer' && 'Written conceptual descriptions graded by AI.'}
-                          {type.value === 'Mixed' && 'A dynamic balance of MCQs and written responses.'}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Topic</label>
+                  <input type="text" value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g. AVL Trees…" className="input-field" />
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-800/40 flex justify-end">
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 px-6 py-4 rounded-2xl bg-neon-gradient text-white hover:opacity-95 transition-opacity font-bold text-sm shadow-lg shadow-primary/20 cursor-pointer"
-                >
-                  <Play className="h-4 w-4" />
-                  Generate and Start Quiz
-                </button>
+              {/* Difficulty */}
+              <div>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Difficulty</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
+                  {DIFFICULTIES.map(d => (
+                    <SelBtn key={d.label} active={difficulty === d.label} onClick={() => setDifficulty(d.label)} col={d.col}>
+                      <div style={{ fontWeight: 700 }}>{d.label}</div>
+                      <div style={{ fontSize: '0.7rem', opacity: 0.65, marginTop: '0.125rem' }}>{d.desc}</div>
+                    </SelBtn>
+                  ))}
+                </div>
               </div>
+
+              {/* Count */}
+              <div>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Questions</label>
+                <div style={{ display: 'flex', gap: '0.625rem' }}>
+                  {COUNTS.map(n => (
+                    <SelBtn key={n} active={count === n} onClick={() => setCount(n)}>
+                      <span style={{ display: 'flex', justifyContent: 'center', fontWeight: 700 }}>{n}</span>
+                    </SelBtn>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quiz Type */}
+              <div>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Mode</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
+                  {TYPES.map(t => (
+                    <SelBtn key={t.value} active={quizType === t.value} onClick={() => setQuizType(t.value)}>
+                      <div style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>{t.icon}</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{t.label}</div>
+                      <div style={{ fontSize: '0.65rem', opacity: 0.6, marginTop: '0.125rem' }}>{t.desc}</div>
+                    </SelBtn>
+                  ))}
+                </div>
+              </div>
+
+              <div className="divider" />
+              <button type="submit" className="btn btn-primary btn-block btn-lg">
+                <Play size={16} /> Generate & Start Quiz
+              </button>
             </form>
           )}
         </div>

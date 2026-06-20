@@ -2,30 +2,31 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { Mic, BookOpen, BarChart3, Loader2, AlertCircle, ChevronRight, Clock, History } from 'lucide-react';
+import { Mic, BookOpen, BarChart3, AlertCircle, ChevronRight, Clock, History, Zap } from 'lucide-react';
 
 const SUBJECTS = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
-const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
-const QUESTION_COUNTS = [5, 10, 15];
+const DIFFICULTIES = [
+  { label: 'Easy',   desc: 'Foundational recall',      color: 'var(--teal)' },
+  { label: 'Medium', desc: 'Conceptual understanding', color: 'var(--amber)' },
+  { label: 'Hard',   desc: 'Analysis & edge cases',    color: '#f87171' },
+];
+const COUNTS = [5, 10, 15];
 
-const SelectCard = ({ label, options, value, onChange, icon: Icon }) => (
-  <div className="bg-slate-900/40 border border-slate-800/70 rounded-2xl p-4">
-    <div className="flex items-center gap-2 mb-3">
-      {Icon && <Icon className="h-4 w-4 text-indigo-400" />}
-      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{label}</p>
-    </div>
-    <div className="flex flex-wrap gap-2">
-      {options.map(opt => (
-        <button key={opt} onClick={() => onChange(opt)}
-          className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer
-            ${value === opt
-              ? 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-indigo-500/40 shadow-md shadow-indigo-500/20'
-              : 'bg-slate-800/50 text-slate-400 border-slate-700/40 hover:text-white hover:border-slate-600'}`}>
-          {opt}
-        </button>
-      ))}
-    </div>
-  </div>
+const HOW = [
+  { icon: BookOpen, label: 'RAG Retrieval',   desc: 'Questions from your notes via semantic search', col: 'var(--amber)' },
+  { icon: Mic,      label: 'AI Evaluation',   desc: 'Gemini grades your answers in real-time',       col: 'var(--teal)' },
+  { icon: BarChart3,label: 'Detailed Report', desc: 'Score, feedback & improvement suggestions',     col: '#818cf8' },
+];
+
+const Pill = ({ active, col, onClick, children }) => (
+  <button onClick={onClick} style={{
+    padding: '0.5rem 0.875rem', borderRadius: 'var(--radius-md)',
+    border: `1px solid ${active ? col : 'var(--border-strong)'}`,
+    background: active ? col + '18' : 'var(--bg-elevated)',
+    color: active ? col : 'var(--text-secondary)',
+    fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.8125rem',
+    cursor: 'pointer', transition: 'all var(--transition)',
+  }}>{children}</button>
 );
 
 const MockViva = () => {
@@ -36,103 +37,121 @@ const MockViva = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleStart = async () => {
+  const start = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const res = await API.post('/viva/start', {
-        subject, difficulty, question_count: questionCount
-      });
-      // Navigate to the session page with viva data
+      setLoading(true); setError(null);
+      const res = await API.post('/viva/start', { subject, difficulty, question_count: questionCount });
       navigate('/viva/session', {
-        state: {
-          vivaId: res.data.viva_id,
-          firstQuestion: res.data.first_question,
-          totalQuestions: res.data.total_questions,
-          subject: res.data.subject,
-          difficulty: res.data.difficulty,
-        }
+        state: { vivaId: res.data.viva_id, firstQuestion: res.data.first_question, totalQuestions: res.data.total_questions, subject: res.data.subject, difficulty: res.data.difficulty }
       });
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to start viva. Please upload notes for this subject first.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.response?.data?.detail || 'Failed to start. Upload notes for this subject first.'); }
+    finally { setLoading(false); }
   };
+
+  const diff = DIFFICULTIES.find(d => d.label === difficulty);
 
   return (
     <DashboardLayout currentPage="AI Mock Viva">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/20">
-              <Mic className="h-6 w-6 text-cyan-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-display font-bold text-text-primary">AI Mock Viva</h1>
-              <p className="text-xs text-slate-500 mt-0.5">RAG-powered oral examination from your uploaded notes</p>
-            </div>
-          </div>
-          <button onClick={() => navigate('/viva/history')}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-800/60 border border-slate-700/50 text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-700/60 transition-all cursor-pointer">
-            <History className="h-3.5 w-3.5" /> History
-          </button>
-        </div>
+      <div style={{ maxWidth: '36rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-        {/* How it works */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          {[
-            { icon: BookOpen, label: 'RAG Retrieval', desc: 'Questions generated from your uploaded notes' },
-            { icon: Mic,      label: 'AI Evaluation', desc: 'Gemini evaluates your answers in real-time' },
-            { icon: BarChart3,label: 'Detailed Report', desc: 'Get scores, feedback & improvement tips' },
-          ].map((item, i) => (
-            <div key={i} className="bg-slate-900/30 border border-slate-800/50 rounded-2xl p-4 text-center">
-              <div className="flex justify-center mb-2">
-                <item.icon className="h-5 w-5 text-indigo-400" />
+        {/* Header card */}
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
+          <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--teal-dim) 0%, transparent 70%)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+              <div className="animate-float" style={{ width: '3rem', height: '3rem', borderRadius: 'var(--radius-md)', background: 'var(--teal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Mic size={18} color="#0a0a0f" />
               </div>
-              <p className="text-[10px] font-bold text-white mb-1">{item.label}</p>
-              <p className="text-[9px] text-slate-500 leading-relaxed">{item.desc}</p>
+              <div>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem' }}>AI Mock Viva</h1>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>RAG-powered oral exam from your notes</p>
+              </div>
             </div>
-          ))}
+            <button onClick={() => navigate('/viva/history')} className="btn btn-ghost btn-sm">
+              <History size={13} /> History
+            </button>
+          </div>
+
+          {/* How it works */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid var(--border)' }}>
+            {HOW.map(h => (
+              <div key={h.label} style={{ padding: '1.125rem 0.875rem', textAlign: 'center', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: h.col + '18', border: `1px solid ${h.col}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <h.icon size={13} style={{ color: h.col }} />
+                </div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-primary)' }}>{h.label}</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>{h.desc}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Config */}
-        <div className="space-y-4 mb-6">
-          <SelectCard label="Select Subject" options={SUBJECTS} value={subject} onChange={setSubject} icon={BookOpen} />
-          <SelectCard label="Difficulty Level" options={DIFFICULTIES} value={difficulty} onChange={setDifficulty} icon={BarChart3} />
-          <SelectCard label="Number of Questions" options={QUESTION_COUNTS} value={questionCount} onChange={setQuestionCount} icon={Clock} />
-        </div>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Subject */}
+          <div>
+            <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><BookOpen size={12} /> Subject</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {SUBJECTS.map(s => <Pill key={s} active={subject === s} col="var(--teal)" onClick={() => setSubject(s)}>{s}</Pill>)}
+            </div>
+          </div>
 
-        {/* Session preview */}
-        <div className="bg-slate-900/30 border border-indigo-500/15 rounded-2xl p-4 mb-6">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Session Preview</p>
-          <div className="flex flex-wrap gap-4 text-xs text-slate-300">
-            <span>📚 <strong>{subject}</strong></span>
-            <span>⚡ <strong>{difficulty}</strong></span>
-            <span>📝 <strong>{questionCount} Questions</strong></span>
-            <span>⏱️ Est. <strong>~{questionCount * 3} min</strong></span>
+          {/* Difficulty */}
+          <div>
+            <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><Zap size={12} /> Difficulty</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
+              {DIFFICULTIES.map(d => (
+                <button key={d.label} onClick={() => setDifficulty(d.label)} style={{
+                  padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${difficulty === d.label ? d.color : 'var(--border-strong)'}`,
+                  background: difficulty === d.label ? d.color + '15' : 'var(--bg-elevated)',
+                  color: difficulty === d.label ? d.color : 'var(--text-secondary)',
+                  cursor: 'pointer', transition: 'all var(--transition)', textAlign: 'left',
+                }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.8125rem' }}>{d.label}</div>
+                  <div style={{ fontSize: '0.65rem', opacity: 0.65, marginTop: '0.125rem' }}>{d.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Count */}
+          <div>
+            <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><Clock size={12} /> Questions</label>
+            <div style={{ display: 'flex', gap: '0.625rem' }}>
+              {COUNTS.map(n => <Pill key={n} active={questionCount === n} col="var(--amber)" onClick={() => setQuestionCount(n)}>{n} Qs</Pill>)}
+            </div>
           </div>
         </div>
 
-        {error && (
-          <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl mb-4">
-            <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-300">{error}</p>
+        {/* Preview */}
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--teal-border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem 1.25rem' }}>
+          <p className="label" style={{ marginBottom: '0.75rem' }}>Session Preview</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.5rem' }}>
+            {[
+              { l: 'Subject', v: subject },
+              { l: 'Level', v: difficulty },
+              { l: 'Questions', v: `${questionCount}` },
+              { l: 'Est. Time', v: `~${questionCount * 3}m` },
+            ].map(p => (
+              <div key={p.l} style={{ textAlign: 'center', padding: '0.625rem', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                <div className="label" style={{ marginBottom: '0.25rem' }}>{p.l}</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{p.v}</div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        <button id="start-viva-btn" onClick={handleStart} disabled={loading}
-          className="w-full flex items-center justify-center gap-3 py-4 bg-gradient-to-r from-cyan-500 via-indigo-500 to-violet-600 hover:from-cyan-600 hover:via-indigo-600 hover:to-violet-700 text-white font-bold text-base rounded-2xl transition-all shadow-lg shadow-indigo-500/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-          {loading ? (
-            <><Loader2 className="h-5 w-5 animate-spin" /> Generating Questions from Your Notes...</>
-          ) : (
-            <><Mic className="h-5 w-5" /> Start Mock Viva <ChevronRight className="h-5 w-5" /></>
-          )}
+        {error && <div className="alert alert-error"><AlertCircle size={15} style={{ flexShrink: 0 }} />{error}</div>}
+
+        <button id="start-viva-btn" onClick={start} disabled={loading} className="btn btn-xl btn-block"
+          style={{ background: 'linear-gradient(135deg, var(--teal), #0d9488)', color: '#0a0a0f', border: 'none', fontWeight: 800 }}
+        >
+          {loading
+            ? <><span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(10,10,15,0.3)', borderTop: '2px solid #0a0a0f', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} /> Generating Questions…</>
+            : <><Mic size={18} /> Start Mock Viva <ChevronRight size={18} /></>
+          }
         </button>
-
-        <p className="text-[10px] text-slate-600 text-center mt-3">
-          Questions are generated exclusively from your uploaded study notes using RAG technology.
+        <p style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+          Questions generated exclusively from your uploaded notes via RAG semantic search.
         </p>
       </div>
     </DashboardLayout>

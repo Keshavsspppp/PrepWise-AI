@@ -1,7 +1,7 @@
 import React from 'react';
 import { Calendar, Award, ChevronRight, FileText } from 'lucide-react';
 
-const QuizCard = ({ attempt, onRetake }) => {
+const QuizCard = ({ attempt, onRetake, onViewResults }) => {
   const formattedDate = new Date(attempt.completed_at).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -25,7 +25,7 @@ const QuizCard = ({ attempt, onRetake }) => {
 
   return (
     <div className="bg-slate-900/30 border border-slate-800/80 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:border-slate-700/60 transition-all duration-205 shadow-xs group">
-      <div className="flex items-start gap-4">
+      <div className="flex items-start gap-4 cursor-pointer flex-1" onClick={() => onViewResults && onViewResults(attempt)}>
         <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-slate-905/70 border border-slate-800 flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
           <FileText className="h-5 w-5 text-indigo-400" />
         </div>

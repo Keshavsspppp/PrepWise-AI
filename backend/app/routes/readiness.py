@@ -7,13 +7,15 @@ import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from bson import ObjectId
 
 from app.db.mongodb import get_db
 from app.routes.auth import get_current_user
-from app.core.gemini import gemini_model
-import google.generativeai as genai
+from app.core.gemini import gemini_client
+from google.genai import types
+from app.core.limiter import limiter
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -103,9 +105,12 @@ async def calculate_readiness(user_id: str, db) -> dict:
     # 5. SUBJECT COVERAGE (10%)
     notes_count = await db["notes"].count_documents({"user_id": uid})
     subjects_with_notes = await db["notes"].distinct("subject", {"user_id": uid})
-    all_subjects = {"DSA", "DBMS", "Operating Systems", "Computer Networks", "Aptitude"}
+    all_system_subjects = await db["notes"].distinct("subject")
+    default_subjects = {"DSA", "DBMS", "Operating Systems", "Computer Networks", "Aptitude"}
+    all_subjects = set(all_system_subjects) | default_subjects
     covered = len(set(subjects_with_notes) & all_subjects)
-    coverage_score = min(100.0, (covered / 5) * 100 + (notes_count * 5))
+    total_subjects = len(all_subjects)
+    coverage_score = min(100.0, (covered / max(total_subjects, 1)) * 100 + (notes_count * 5))
 
     # 6. LEARNING DNA (10%)
     dna = await db["learning_dna"].find_one({"user_id": uid})
@@ -116,13 +121,12 @@ async def calculate_readiness(user_id: str, db) -> dict:
         dna_score = min(100.0, overall_quiz_avg)
 
     # ── Weighted Overall Score ────────────────────────────────────────────────
-    # Fallback to baseline scores if data missing so new users see realistic values
-    qpa = overall_quiz_avg if quiz_results else 60.0
-    ret = overall_retention_avg if retention_docs else 65.0
-    con = consistency_score if active_days > 0 else 60.0
-    rev = revision_rate if revision_history else 50.0
-    cov = coverage_score if notes_count > 0 else 40.0
-    dna_s = dna_score if dna else 60.0
+    qpa = overall_quiz_avg
+    ret = overall_retention_avg
+    con = consistency_score
+    rev = revision_rate
+    cov = coverage_score
+    dna_s = dna_score
 
     overall = round(
         qpa * WEIGHTS["quiz_performance"] +
@@ -138,8 +142,8 @@ async def calculate_readiness(user_id: str, db) -> dict:
     all_subs = set(subject_quiz_scores.keys()) | set(subject_retention.keys())
     subject_scores = []
     for sub in all_subs:
-        sq = sum(subject_quiz_scores.get(sub, [60.0])) / max(len(subject_quiz_scores.get(sub, [60.0])), 1)
-        sr = sum(subject_retention.get(sub, [65.0])) / max(len(subject_retention.get(sub, [65.0])), 1)
+        sq = sum(subject_quiz_scores.get(sub, [0.0])) / max(len(subject_quiz_scores.get(sub, [0.0])), 1)
+        sr = sum(subject_retention.get(sub, [0.0])) / max(len(subject_retention.get(sub, [0.0])), 1)
         sub_score = round(sq * 0.6 + sr * 0.4, 1)
         subject_scores.append({
             "subject": sub,
@@ -193,6 +197,19 @@ async def calculate_readiness(user_id: str, db) -> dict:
 
 # ─── Helper for Cache Invalidation ──────────────────────────────────────────
 
+def format_readiness_doc(doc: dict) -> dict:
+    if not doc:
+        return doc
+    doc = dict(doc)
+    doc["_id"] = str(doc["_id"])
+    doc["user_id"] = str(doc["user_id"])
+    if "generated_at" in doc and isinstance(doc["generated_at"], datetime):
+        gen_at = doc["generated_at"]
+        if gen_at.tzinfo is None:
+            gen_at = gen_at.replace(tzinfo=timezone.utc)
+        doc["generated_at"] = gen_at.isoformat()
+    return doc
+
 def is_cache_stale(cached: dict) -> bool:
     """Check if the cached readiness document is older than 24 hours."""
     if not cached or "generated_at" not in cached:
@@ -215,9 +232,7 @@ async def get_overall_readiness(
     uid = current_user["_id"]
     cached = await db["exam_readiness"].find_one({"user_id": ObjectId(uid)})
     if cached and not is_cache_stale(cached):
-        cached["_id"] = str(cached["_id"])
-        cached["user_id"] = str(cached["user_id"])
-        return cached
+        return format_readiness_doc(cached)
     # Auto-calculate if not cached or stale
     result = await calculate_readiness(uid, db)
     existing_recs = cached.get("recommendations", []) if cached else []
@@ -227,8 +242,8 @@ async def get_overall_readiness(
         {"$set": {**result, "user_id": ObjectId(uid)}},
         upsert=True
     )
-    result["user_id"] = uid
-    return result
+    inserted = await db["exam_readiness"].find_one({"user_id": ObjectId(uid)})
+    return format_readiness_doc(inserted)
 
 
 @router.get("/subjects")
@@ -283,7 +298,14 @@ async def get_readiness_recommendations(
     cached = await db["exam_readiness"].find_one({"user_id": ObjectId(uid)})
     recs = cached.get("recommendations", []) if cached else []
     if recs:
-        return {"recommendations": recs, "generated_at": str(cached.get("generated_at", ""))}
+        gen_at = cached.get("generated_at")
+        if isinstance(gen_at, datetime):
+            if gen_at.tzinfo is None:
+                gen_at = gen_at.replace(tzinfo=timezone.utc)
+            gen_at_str = gen_at.isoformat()
+        else:
+            gen_at_str = str(gen_at)
+        return {"recommendations": recs, "generated_at": gen_at_str}
     return {"recommendations": [
         "Click 'Recalculate' to generate your personalized AI exam recommendations.",
         "Start by taking a few quizzes across all your subjects.",
@@ -292,7 +314,9 @@ async def get_readiness_recommendations(
 
 
 @router.post("/recalculate")
+@limiter.limit("3/minute")
 async def recalculate_readiness(
+    request: Request,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
@@ -343,9 +367,10 @@ Each recommendation must be 1-2 concise sentences. Be specific, motivating, and 
 
     recommendations = []
     try:
-        response = gemini_model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        response = gemini_client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 temperature=0.6,
                 response_mime_type="application/json",
                 response_schema=schema
@@ -368,5 +393,5 @@ Each recommendation must be 1-2 concise sentences. Be specific, motivating, and 
         {"$set": {**result, "user_id": ObjectId(uid)}},
         upsert=True
     )
-    result["user_id"] = uid
-    return result
+    inserted = await db["exam_readiness"].find_one({"user_id": ObjectId(uid)})
+    return format_readiness_doc(inserted)

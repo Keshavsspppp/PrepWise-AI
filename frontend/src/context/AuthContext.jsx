@@ -1,6 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import API from '../api/axios';
 
+const extractErrorMessage = (error, defaultMsg = "An error occurred. Please try again.") => {
+  if (error.response?.data?.detail) {
+    const detail = error.response.data.detail;
+    if (Array.isArray(detail)) {
+      return detail.map(err => {
+        let msg = err.msg || "Invalid input";
+        if (msg.startsWith("Value error, ")) {
+          msg = msg.replace("Value error, ", "");
+        }
+        return msg;
+      }).join(". ");
+    } else if (typeof detail === 'string') {
+      return detail;
+    }
+  }
+  return error.response?.data?.message || error.message || defaultMsg;
+};
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -42,7 +60,7 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error("Login failed:", error);
-      const message = error.response?.data?.detail || "Invalid email or password";
+      const message = extractErrorMessage(error, "Invalid email or password");
       return { success: false, error: message };
     }
   };
@@ -55,7 +73,7 @@ export const AuthProvider = ({ children }) => {
       return await login(email, password);
     } catch (error) {
       console.error("Registration failed:", error);
-      const message = error.response?.data?.detail || "Registration failed. Please try again.";
+      const message = extractErrorMessage(error, "Registration failed. Please try again.");
       return { success: false, error: message };
     }
   };

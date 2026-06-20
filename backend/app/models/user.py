@@ -11,8 +11,18 @@ class UserRegister(UserBase):
     @field_validator('password')
     @classmethod
     def validate_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
         if not any(char.isdigit() for char in v):
             raise ValueError('Password must contain at least one digit')
+        if not any(char.isupper() for char in v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not any(char.islower() for char in v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        
+        special_chars = '!@#$%^&*(),.?":{}|<>'
+        if not any(char in special_chars for char in v):
+            raise ValueError('Password must contain at least one special character (!@#$%^&* etc.)')
         return v
 
 class UserLogin(BaseModel):
@@ -45,3 +55,12 @@ class RefreshRequest(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
     user_id: Optional[str] = None
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    token: str
+    new_password: str
+

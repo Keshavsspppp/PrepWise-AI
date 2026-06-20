@@ -3,8 +3,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "StudyGenie AI"
-    DEBUG: bool = True
+    PROJECT_NAME: str = "PrepWise AI"
+    DEBUG: bool = False
+    GEMINI_MODEL: str = "gemini-2.5-flash"
     
     # MongoDB Config
     MONGO_URI: str = "mongodb://localhost:27017/studygenie"

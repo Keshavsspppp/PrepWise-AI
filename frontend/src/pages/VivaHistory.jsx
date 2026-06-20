@@ -2,24 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { History, ArrowLeft, Mic, RotateCcw, BarChart3, Search, Calendar, Star, Loader2 } from 'lucide-react';
+import { History, ArrowLeft, Mic, BarChart3, Search, Calendar, Inbox } from 'lucide-react';
 
-const GRADE_COLORS = {
-  'Distinction':        'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  'Merit':              'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
-  'Pass':               'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  'Needs Improvement':  'bg-red-500/15 text-red-400 border-red-500/20',
+const GRADE = (avg) => {
+  if (avg === null || avg === undefined) return { label: 'Pending',          col: 'var(--text-muted)', dim: 'var(--border)', border: 'var(--border-strong)' };
+  if (avg >= 8.5) return { label: 'Distinction',    col: 'var(--teal)',  dim: 'var(--teal-dim)',  border: 'var(--teal-border)' };
+  if (avg >= 7.0) return { label: 'Merit',           col: 'var(--amber)', dim: 'var(--amber-dim)', border: 'var(--amber-border)' };
+  if (avg >= 5.0) return { label: 'Pass',            col: '#818cf8', dim: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' };
+  return            { label: 'Needs Improvement', col: '#f87171', dim: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)' };
 };
-
-const getGrade = (avg) => {
-  if (avg === null || avg === undefined) return 'Pending';
-  if (avg >= 8.5) return 'Distinction';
-  if (avg >= 7.0) return 'Merit';
-  if (avg >= 5.0) return 'Pass';
-  return 'Needs Improvement';
-};
-
-const Sk = () => <div className="animate-pulse bg-slate-800/50 rounded-2xl h-20 w-full" />;
 
 const VivaHistory = () => {
   const navigate = useNavigate();
@@ -46,110 +37,123 @@ const VivaHistory = () => {
 
   return (
     <DashboardLayout currentPage="Viva History">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/viva')}
-            className="flex items-center justify-center h-9 w-9 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-400 hover:text-white cursor-pointer">
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <div className="flex items-center gap-2">
-            <History className="h-5 w-5 text-indigo-400" />
-            <div>
-              <h1 className="text-xl font-display font-bold text-text-primary">Viva History</h1>
-              <p className="text-xs text-slate-500">All your completed mock viva sessions</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            <button onClick={() => navigate('/viva')} className="btn btn-ghost btn-sm" style={{ padding: '0.375rem' }}>
+              <ArrowLeft size={15} />
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <History size={16} style={{ color: 'var(--teal)' }} />
+              <div>
+                <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem' }}>Viva History</h1>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>All completed mock viva sessions</p>
+              </div>
             </div>
           </div>
+          <button onClick={() => navigate('/viva')} className="btn btn-teal btn-sm">
+            <Mic size={13} /> New Viva
+          </button>
         </div>
-        <button onClick={() => navigate('/viva')}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white text-xs font-bold rounded-xl cursor-pointer">
-          <Mic className="h-3.5 w-3.5" /> New Viva
-        </button>
-      </div>
 
-      {/* Summary */}
-      {!loading && history.length > 0 && (
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-slate-900/40 border border-slate-800/70 rounded-2xl p-4 text-center">
-            <p className="text-2xl font-extrabold text-white">{history.length}</p>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Sessions</p>
-          </div>
-          <div className="bg-slate-900/40 border border-slate-800/70 rounded-2xl p-4 text-center">
-            <p className="text-2xl font-extrabold text-cyan-400">{avgScore}</p>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Avg Score/Q</p>
-          </div>
-          <div className="bg-slate-900/40 border border-slate-800/70 rounded-2xl p-4 text-center">
-            <p className="text-2xl font-extrabold text-white">{new Set(history.map(h => h.subject)).size}</p>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Subjects</p>
-          </div>
-        </div>
-      )}
-
-      {/* Search */}
-      {!loading && history.length > 0 && (
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search by subject or difficulty..."
-            className="w-full bg-slate-900/40 border border-slate-800/70 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500/40 transition-colors" />
-        </div>
-      )}
-
-      {/* List */}
-      {loading ? (
-        <div className="space-y-3">{[...Array(4)].map((_, i) => <Sk key={i} />)}</div>
-      ) : error ? (
-        <div className="p-5 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm">{error}</div>
-      ) : filtered.length === 0 ? (
-        <div className="py-20 flex flex-col items-center text-center">
-          <Mic className="h-12 w-12 text-slate-600 mb-4" />
-          <h3 className="text-lg font-bold text-slate-400 mb-2">{history.length === 0 ? 'No Viva Sessions Yet' : 'No results found'}</h3>
-          <p className="text-sm text-slate-600 mb-5">
-            {history.length === 0 ? 'Start your first AI Mock Viva to see it here.' : `No sessions match "${search}".`}
-          </p>
-          {history.length === 0 && (
-            <button onClick={() => navigate('/viva')}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white text-sm font-bold rounded-xl cursor-pointer">
-              <Mic className="h-4 w-4" /> Start First Viva
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filtered.map(session => {
-            const grade = getGrade(session.avg_score);
-            const gradeCls = GRADE_COLORS[grade] || 'bg-slate-800/40 text-slate-400 border-slate-700/40';
-            const pct = session.avg_score !== null ? Math.round(session.avg_score * 10) : null;
-            return (
-              <div key={session.viva_id}
-                className="flex items-center gap-4 bg-slate-900/30 border border-slate-800/60 hover:border-slate-700/60 rounded-2xl px-5 py-4 transition-all cursor-pointer"
-                onClick={() => navigate('/viva/results', { state: { vivaId: session.viva_id } })}>
-                <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-slate-800/60 border border-slate-700/40">
-                  <Mic className="h-5 w-5 text-indigo-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-white">{session.subject}</p>
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${gradeCls}`}>{grade}</span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-0.5 text-[10px] text-slate-500">
-                    <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(session.started_at).toLocaleDateString()}</span>
-                    <span>{session.difficulty}</span>
-                    <span>{session.question_count} Qs</span>
-                  </div>
-                </div>
-                {pct !== null && (
-                  <div className="flex-shrink-0 text-right">
-                    <p className="text-lg font-extrabold text-white">{pct}%</p>
-                    <p className="text-[9px] text-slate-500">{session.avg_score}/10 avg</p>
-                  </div>
-                )}
-                <BarChart3 className="h-4 w-4 text-slate-600 flex-shrink-0" />
+        {/* Summary */}
+        {!loading && history.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
+            {[
+              { label: 'Sessions',  value: history.length,                         col: 'var(--text-primary)' },
+              { label: 'Avg Score', value: avgScore,                               col: 'var(--teal)' },
+              { label: 'Subjects',  value: new Set(history.map(h => h.subject)).size, col: 'var(--amber)' },
+            ].map(s => (
+              <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem', textAlign: 'center' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.625rem', color: s.col }}>{s.value}</div>
+                <div className="label" style={{ marginTop: '0.25rem' }}>{s.label}</div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+
+        {/* Search */}
+        {!loading && history.length > 0 && (
+          <div className="input-icon">
+            <Search size={15} className="icon" />
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by subject or difficulty…" className="input-field" />
+          </div>
+        )}
+
+        {error && <div className="alert alert-error">{error}</div>}
+
+        {loading ? (
+          <div style={{ padding: '4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--teal-dim)', borderTop: '2px solid var(--teal)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading sessions…</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ padding: '5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1rem' }}>
+            <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Inbox size={20} style={{ color: 'var(--text-muted)' }} />
+            </div>
+            <div>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: '0.375rem' }}>{history.length === 0 ? 'No Viva Sessions Yet' : 'No results found'}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', maxWidth: '22rem' }}>
+                {history.length === 0 ? 'Start your first AI Mock Viva to see it here.' : `No sessions match "${search}".`}
+              </p>
+            </div>
+            {history.length === 0 && (
+              <button onClick={() => navigate('/viva')} className="btn btn-teal">
+                <Mic size={14} /> Start First Viva
+              </button>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+            {filtered.map(session => {
+              const pct = session.avg_score !== null ? Math.round(session.avg_score * 10) : null;
+              const g = GRADE(session.avg_score);
+              return (
+                <div key={session.viva_id}
+                  onClick={() => navigate('/viva/results', { state: { vivaId: session.viva_id } })}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '1rem',
+                    background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
+                    padding: '1rem 1.25rem', cursor: 'pointer', transition: 'all var(--transition)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--teal-border)'; e.currentTarget.style.transform = 'translateX(2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+                >
+                  {/* Icon */}
+                  <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Mic size={14} style={{ color: 'var(--teal)' }} />
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{session.subject}</span>
+                      <span style={{ display: 'inline-flex', padding: '0.125rem 0.5rem', borderRadius: '100px', fontSize: '0.6rem', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.05em', textTransform: 'uppercase', background: g.dim, border: `1px solid ${g.border}`, color: g.col }}>{g.label}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Calendar size={11} />{new Date(session.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span>{session.difficulty}</span>
+                      <span>{session.question_count} Questions</span>
+                    </div>
+                  </div>
+
+                  {/* Score */}
+                  {pct !== null && (
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', color: pct >= 70 ? 'var(--teal)' : pct >= 50 ? 'var(--amber)' : '#f87171' }}>{pct}%</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{session.avg_score}/10 avg</div>
+                    </div>
+                  )}
+
+                  <BarChart3 size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </DashboardLayout>
   );
 };

@@ -6,153 +6,139 @@ import SubjectReadinessCard from '../components/SubjectReadinessCard';
 import ReadinessChart from '../components/ReadinessChart';
 import RecommendationPanel from '../components/RecommendationPanel';
 import RiskIndicator from '../components/RiskIndicator';
-import ProgressRing from '../components/ProgressRing';
-import { GraduationCap, RefreshCcw, Loader2, AlertCircle, ChevronRight, Sparkles, BookOpen, TrendingUp } from 'lucide-react';
+import { GraduationCap, RefreshCcw, Loader2, AlertCircle, Sparkles, BookOpen, ChevronRight } from 'lucide-react';
 
-const Sk = ({ h = 'h-32', extra = '' }) => <div className={`animate-pulse bg-slate-800/50 rounded-2xl ${h} ${extra}`} />;
+const Toast = ({ msg, type }) => (
+  <div style={{
+    position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 99,
+    padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', fontWeight: 600,
+    background: type === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+    border: `1px solid ${type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
+    color: type === 'error' ? '#f87171' : '#34d399',
+    backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+  }}>{msg}</div>
+);
 
-const StatPill = ({ label, value, sub, color = 'border-slate-700/50' }) => (
-  <div className={`flex flex-col px-4 py-3 rounded-2xl border bg-slate-900/30 ${color}`}>
-    <span className="text-xl font-extrabold text-white">{value}</span>
-    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
-    {sub && <span className="text-[9px] text-slate-600 mt-0.5">{sub}</span>}
+const SectionLabel = ({ children }) => (
+  <p className="label" style={{ marginBottom: '0.875rem' }}>{children}</p>
+);
+
+const StatCard = ({ label, value, sub, col = 'var(--text-primary)' }) => (
+  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1rem 1.25rem' }}>
+    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.5rem', color: col, marginBottom: '0.125rem' }}>{value}</div>
+    <div className="label">{label}</div>
+    {sub && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>}
   </div>
 );
 
-const ExamReadiness = () => {
+const retColor = (p) => p >= 75 ? 'var(--teal)' : p >= 50 ? 'var(--amber)' : '#ef4444';
+
+export const ExamReadinessContent = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [recalculating, setRecalculating] = useState(false);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
-  const [topicFilter, setTopicFilter] = useState('Weak'); // Weak | Strong | All
+  const [topicFilter, setTopicFilter] = useState('Weak');
 
-  const showToast = (msg, type = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
-  };
+  const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3500); };
 
   const fetchData = useCallback(async () => {
     try {
       setError(null);
       const res = await API.get('/readiness/overall');
       setData(res.data);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load exam readiness data.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.response?.data?.detail || 'Failed to load exam readiness data.'); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleRecalculate = async () => {
     try {
-      setRecalculating(true);
-      setError(null);
+      setRecalculating(true); setError(null);
       const res = await API.post('/readiness/recalculate');
       setData(res.data);
-      showToast('✅ Readiness scores recalculated successfully!');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Recalculation failed.');
-    } finally {
-      setRecalculating(false);
-    }
+      showToast('✅ Readiness scores recalculated!');
+    } catch (err) { setError(err.response?.data?.detail || 'Recalculation failed.'); }
+    finally { setRecalculating(false); }
   };
 
   const subjects = data?.subject_scores || [];
   const topics = data?.topic_scores || [];
   const recommendations = data?.recommendations || [];
   const overall = data?.overall_score || 0;
-
   const highRisk = subjects.filter(s => s.status === 'High Risk' || s.status === 'Needs Improvement');
-  const ready    = subjects.filter(s => s.status === 'Ready');
-
-  const filteredTopics = topicFilter === 'Weak'   ? topics.slice(0, 8) :
-                         topicFilter === 'Strong'  ? topics.slice().reverse().slice(0, 8) : topics.slice(0, 12);
-
-  // Sort subjects by readiness descending for ranking
+  const ready = subjects.filter(s => s.status === 'Ready');
   const rankedSubjects = subjects.slice().sort((a, b) => b.readiness_score - a.readiness_score);
+  const filteredTopics = topicFilter === 'Weak' ? topics.slice(0, 8) : topicFilter === 'Strong' ? topics.slice().reverse().slice(0, 8) : topics.slice(0, 12);
 
   return (
-    <DashboardLayout currentPage="Exam Readiness">
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold border backdrop-blur-md
-          ${toast.type === 'error' ? 'bg-red-950/90 border-red-500/30 text-red-300' : 'bg-emerald-950/90 border-emerald-500/30 text-emerald-300'}`}>
-          {toast.msg}
-        </div>
-      )}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {toast && <Toast {...toast} />}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center h-10 w-10 rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20 border border-violet-500/20">
-            <GraduationCap className="h-5 w-5 text-violet-400" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <GraduationCap size={16} style={{ color: 'var(--amber)' }} />
           </div>
           <div>
-            <h1 className="text-xl font-display font-bold text-text-primary leading-tight">Exam Readiness</h1>
-            <p className="text-xs text-slate-500 mt-0.5">AI-powered exam preparation analysis · Multi-factor scoring</p>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem' }}>Exam Readiness</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', marginTop: '0.125rem' }}>AI-powered exam preparation analysis · Multi-factor scoring</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <a href="#/viva" className="flex items-center gap-2 px-3 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 text-slate-300 text-xs font-semibold rounded-xl transition-all cursor-pointer">
-            <BookOpen className="h-3.5 w-3.5" /> Start Mock Viva
-          </a>
-          <button id="readiness-recalculate-btn" onClick={handleRecalculate} disabled={recalculating || loading}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-            {recalculating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCcw className="h-3.5 w-3.5" />}
-            {recalculating ? 'Analyzing...' : 'Recalculate'}
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <a href="#/viva" className="btn btn-ghost btn-sm"><BookOpen size={13} /> Start Mock Viva</a>
+          <button id="readiness-recalculate-btn" onClick={handleRecalculate} disabled={recalculating || loading} className="btn btn-primary btn-sm">
+            {recalculating ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />}
+            {recalculating ? 'Analyzing…' : 'Recalculate'}
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
-          <AlertCircle className="h-4.5 w-4.5 text-red-400 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-300">{error}</p>
-          <button onClick={fetchData} className="ml-auto text-xs text-red-300 hover:underline font-medium">Retry</button>
+        <div className="alert alert-error">
+          <AlertCircle size={15} style={{ flexShrink: 0 }} /> {error}
+          <button onClick={fetchData} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', textDecoration: 'underline', fontSize: '0.8rem' }}>Retry</button>
         </div>
       )}
 
       {loading ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{[...Array(4)].map((_, i) => <Sk key={i} h="h-20" />)}</div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6"><Sk h="h-80" /><Sk h="h-80" extra="lg:col-span-2" /></div>
+        <div style={{ padding: '5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Calculating readiness…</p>
         </div>
       ) : (
-        <div className="space-y-7">
-
-          {/* Summary pills */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatPill label="Overall Readiness" value={`${Math.round(overall)}%`} color="border-violet-500/20" />
-            <StatPill label="Exam Prediction" value={data?.prediction_status || '—'} color="border-indigo-500/20" />
-            <StatPill label="High Risk Subjects" value={highRisk.length} sub={highRisk.map(s => s.subject).join(', ') || '—'} color="border-red-500/20" />
-            <StatPill label="Exam Ready" value={ready.length} sub={`out of ${subjects.length} subjects`} color="border-emerald-500/20" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+          {/* Summary stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
+            <StatCard label="Overall Readiness" value={`${Math.round(overall)}%`} col="var(--amber)" />
+            <StatCard label="Exam Prediction" value={data?.prediction_status || '—'} col="var(--teal)" />
+            <StatCard label="High Risk Subjects" value={highRisk.length} sub={highRisk.map(s => s.subject).join(', ') || 'None'} col="#f87171" />
+            <StatCard label="Exam Ready" value={ready.length} sub={`out of ${subjects.length} subjects`} col="var(--teal)" />
           </div>
 
-          {/* Main row: score card + chart */}
+          {/* Score card + chart */}
           {data && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Overall Score</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem' }}>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
+                <SectionLabel>Overall Score</SectionLabel>
                 <ReadinessScoreCard {...data} />
               </div>
-              <div className="lg:col-span-2">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Score Analysis</p>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
+                <SectionLabel>Score Analysis</SectionLabel>
                 <ReadinessChart subjects={rankedSubjects} topics={topics} />
               </div>
             </div>
           )}
 
-          {/* Subject readiness grid */}
+          {/* Subject ranking */}
           {subjects.length > 0 && (
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-4">Subject Readiness Ranking</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {rankedSubjects.map((s, i) => (
-                  <SubjectReadinessCard key={i} {...s} rank={i + 1} />
-                ))}
+              <SectionLabel>Subject Readiness Ranking</SectionLabel>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(14rem, 1fr))', gap: '0.875rem' }}>
+                {rankedSubjects.map((s, i) => <SubjectReadinessCard key={i} {...s} rank={i + 1} />)}
               </div>
             </div>
           )}
@@ -160,84 +146,85 @@ const ExamReadiness = () => {
           {/* Risk analysis */}
           {subjects.length > 0 && (
             <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Risk Analysis</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <SectionLabel>Risk Analysis</SectionLabel>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(18rem, 1fr))', gap: '0.75rem' }}>
                 {subjects.map((s, i) => (
-                  <RiskIndicator key={i} score={s.readiness_score} label={s.subject} status={s.status === 'Ready' ? 'Exam Ready' : s.status === 'Good' ? 'Good Preparation' : s.status === 'Needs Improvement' ? 'Moderate Risk' : 'High Risk'} />
+                  <RiskIndicator key={i} score={s.readiness_score} label={s.subject}
+                    status={s.status === 'Ready' ? 'Exam Ready' : s.status === 'Good' ? 'Good Preparation' : s.status === 'Needs Improvement' ? 'Moderate Risk' : 'High Risk'} />
                 ))}
               </div>
             </div>
           )}
 
           {/* Topics + Recommendations */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Topic analysis */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
             {topics.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Topic Readiness</p>
-                  <div className="flex gap-1">
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <SectionLabel>Topic Readiness</SectionLabel>
+                  <div style={{ display: 'flex', gap: '0.375rem' }}>
                     {['Weak', 'Strong', 'All'].map(f => (
-                      <button key={f} onClick={() => setTopicFilter(f)}
-                        className={`px-2.5 py-1 text-[9px] font-bold rounded-xl border transition-all cursor-pointer
-                          ${topicFilter === f ? 'bg-slate-800/60 text-white border-slate-700' : 'text-slate-600 border-slate-800 hover:text-slate-400'}`}>
-                        {f}
-                      </button>
+                      <button key={f} onClick={() => setTopicFilter(f)} style={{
+                        padding: '0.2rem 0.625rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700,
+                        border: `1px solid ${topicFilter === f ? 'var(--amber-border)' : 'var(--border-strong)'}`,
+                        background: topicFilter === f ? 'var(--amber-dim)' : 'transparent',
+                        color: topicFilter === f ? 'var(--amber)' : 'var(--text-muted)',
+                        cursor: 'pointer', transition: 'all var(--transition)',
+                      }}>{f}</button>
                     ))}
                   </div>
                 </div>
-                <div className="bg-slate-900/40 border border-slate-800/70 rounded-3xl p-5 space-y-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
                   {filteredTopics.map((t, i) => {
-                    const color = t.readiness_score >= 75 ? '#22c55e' : t.readiness_score >= 50 ? '#f59e0b' : '#ef4444';
+                    const col = retColor(t.readiness_score);
                     return (
-                      <div key={i} className="flex items-center gap-3">
-                        <span className="text-[9px] text-slate-400 w-28 truncate flex-shrink-0">{t.topic}</span>
-                        <div className="flex-1 h-2 bg-slate-800/60 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${Math.max(t.readiness_score, 2)}%`, backgroundColor: color, boxShadow: `0 0 4px ${color}55` }} />
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', width: '7rem', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.topic}</span>
+                        <div style={{ flex: 1, height: '6px', background: 'var(--border)', borderRadius: '100px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', borderRadius: '100px', background: col, width: `${Math.max(t.readiness_score, 2)}%`, transition: 'width 0.7s ease' }} />
                         </div>
-                        <span className="text-[9px] font-bold text-white w-8 text-right" style={{ color }}>{t.readiness_score.toFixed(0)}%</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: col, width: '2.5rem', textAlign: 'right', flexShrink: 0 }}>{t.readiness_score.toFixed(0)}%</span>
                       </div>
                     );
                   })}
                 </div>
               </div>
             )}
-
-            {/* AI Recommendations */}
-            <div>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">AI Recommendations</p>
-              <RecommendationPanel
-                recommendations={recommendations}
-                onRecalculate={handleRecalculate}
-                loading={recalculating}
-                generated_at={data?.generated_at ? new Date(data.generated_at).toLocaleString() : ''}
-              />
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
+              <SectionLabel>AI Recommendations</SectionLabel>
+              <RecommendationPanel recommendations={recommendations} onRecalculate={handleRecalculate} loading={recalculating} generated_at={data?.generated_at ? new Date(data.generated_at).toLocaleString() : ''} />
             </div>
           </div>
 
           {/* Empty state */}
           {!data && !error && (
-            <div className="py-20 flex flex-col items-center text-center">
-              <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/20 flex items-center justify-center mb-6">
-                <GraduationCap className="h-10 w-10 text-violet-400" />
+            <div style={{ padding: '5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1.25rem' }}>
+              <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <GraduationCap size={24} style={{ color: 'var(--amber)' }} />
               </div>
-              <h2 className="text-xl font-bold text-text-primary mb-2">No Readiness Data Yet</h2>
-              <p className="text-sm text-slate-500 max-w-sm leading-relaxed mb-6">Take quizzes and upload notes to generate your exam readiness score.</p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <a href="#/quiz/generator" className="flex items-center gap-2 px-5 py-2.5 bg-slate-800/60 border border-slate-700 text-slate-300 text-sm font-semibold rounded-xl cursor-pointer">
-                  Take a Quiz <ChevronRight className="h-4 w-4" />
-                </a>
-                <button onClick={handleRecalculate} disabled={recalculating}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-indigo-600 text-white text-sm font-bold rounded-xl cursor-pointer disabled:opacity-50">
-                  {recalculating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                  {recalculating ? 'Analyzing...' : 'Calculate Readiness'}
+              <div>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.5rem' }}>No Readiness Data Yet</h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '24rem', lineHeight: 1.6 }}>Take quizzes and upload notes to generate your exam readiness score.</p>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <a href="#/quiz/generator" className="btn btn-ghost">Take a Quiz <ChevronRight size={14} /></a>
+                <button onClick={handleRecalculate} disabled={recalculating} className="btn btn-primary">
+                  {recalculating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  {recalculating ? 'Analyzing…' : 'Calculate Readiness'}
                 </button>
               </div>
             </div>
           )}
         </div>
       )}
+    </div>
+  );
+};
+
+const ExamReadiness = () => {
+  return (
+    <DashboardLayout currentPage="Exam Readiness">
+      <ExamReadinessContent />
     </DashboardLayout>
   );
 };

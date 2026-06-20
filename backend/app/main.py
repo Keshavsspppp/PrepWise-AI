@@ -1,6 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+import traceback
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
@@ -34,6 +36,31 @@ app = FastAPI(
     debug=settings.DEBUG,
     lifespan=lifespan
 )
+
+@app.middleware("http")
+async def catch_exceptions_middleware(request: Request, call_next):
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as e:
+        logger.error(f"Unhandled exception occurred: {e}\n{traceback.format_exc()}")
+        origin = request.headers.get("origin")
+        headers = {}
+        if origin:
+            headers["Access-Control-Allow-Origin"] = origin
+            headers["Access-Control-Allow-Credentials"] = "true"
+            headers["Access-Control-Allow-Methods"] = "*"
+            headers["Access-Control-Allow-Headers"] = "*"
+        content = {"detail": "Internal Server Error"}
+        if settings.DEBUG:
+            content["error"] = str(e)
+            content["traceback"] = traceback.format_exc().split("\n")
+            
+        return JSONResponse(
+            status_code=500,
+            content=content,
+            headers=headers
+        )
 
 # Set up Rate Limiting
 app.state.limiter = limiter

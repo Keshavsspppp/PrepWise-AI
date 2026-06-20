@@ -9,14 +9,16 @@ import logging
 from datetime import datetime, timezone
 from typing import List, Dict
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, Field
 from bson import ObjectId
 
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
 from app.core.rag import query_notes
-import google.generativeai as genai
+from google.genai import types
+from app.core.limiter import limiter
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +27,14 @@ router = APIRouter(prefix="/viva", tags=["Mock Viva"])
 # ─── Pydantic Schemas ──────────────────────────────────────────────────────────
 
 class StartVivaRequest(BaseModel):
-    subject: str
+    subject: str = Field(..., max_length=100, min_length=1)
     difficulty: str = "Medium"   # Easy | Medium | Hard
     question_count: int = 5      # 5, 10, 15
 
 class AnswerRequest(BaseModel):
     viva_id: str
     question_id: str
-    answer: str
+    answer: str = Field(..., max_length=2000, min_length=1)
 
 class CompleteVivaRequest(BaseModel):
     viva_id: str
@@ -104,10 +106,11 @@ Context from Student Notes:
 Generate {count} questions now."""
 
     try:
-        from app.core.gemini import gemini_model
-        response = gemini_model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        from app.core.gemini import gemini_client
+        response = gemini_client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 temperature=0.4,
                 response_mime_type="application/json",
                 response_schema=schema
@@ -215,10 +218,11 @@ List 1-2 strengths if applicable.
 Provide a 1-sentence correctness_summary."""
 
     try:
-        from app.core.gemini import gemini_model
-        response = gemini_model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        from app.core.gemini import gemini_client
+        response = gemini_client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 temperature=0.2,
                 response_mime_type="application/json",
                 response_schema=schema
@@ -251,23 +255,25 @@ Provide a 1-sentence correctness_summary."""
 # ─── API Endpoints ─────────────────────────────────────────────────────────────
 
 @router.post("/start")
+@limiter.limit("3/minute")
 async def start_viva(
-    request: StartVivaRequest,
+    request: Request,
+    viva_request: StartVivaRequest,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
     """Start a new viva session and return the first question."""
     uid = current_user["_id"]
 
-    if request.question_count not in [5, 10, 15]:
+    if viva_request.question_count not in [5, 10, 15]:
         raise HTTPException(status_code=400, detail="Question count must be 5, 10, or 15.")
 
     # Generate questions
     questions = await generate_viva_questions(
         user_id=uid,
-        subject=request.subject,
-        difficulty=request.difficulty,
-        count=request.question_count,
+        subject=viva_request.subject,
+        difficulty=viva_request.difficulty,
+        count=viva_request.question_count,
         db=db
     )
 
@@ -311,14 +317,16 @@ async def start_viva(
 
 
 @router.post("/answer")
+@limiter.limit("10/minute")
 async def submit_answer(
-    request: AnswerRequest,
+    request: Request,
+    answer_request: AnswerRequest,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
     """Submit an answer, evaluate it, and return feedback + next question."""
     uid = current_user["_id"]
-    viva_id = request.viva_id
+    viva_id = answer_request.viva_id
 
     if not ObjectId.is_valid(viva_id):
         raise HTTPException(status_code=400, detail="Invalid viva_id.")
@@ -334,7 +342,7 @@ async def submit_answer(
 
     questions = session["questions"]
     # Find question by ID
-    question_doc = next((q for q in questions if q["question_id"] == request.question_id), None)
+    question_doc = next((q for q in questions if q["question_id"] == answer_request.question_id), None)
     if not question_doc:
         raise HTTPException(status_code=404, detail="Question not found in session.")
 
@@ -343,7 +351,7 @@ async def submit_answer(
         question=question_doc["question"],
         reference_answer=question_doc["reference_answer"],
         key_concepts=question_doc["key_concepts"],
-        student_answer=request.answer,
+        student_answer=answer_request.answer,
         subject=session["subject"],
         difficulty=session["difficulty"]
     )

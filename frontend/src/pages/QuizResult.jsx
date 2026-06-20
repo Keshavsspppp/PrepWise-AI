@@ -1,190 +1,154 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { AlertCircle, HelpCircle, ChevronRight, CheckCircle2, XCircle, RotateCcw, Home, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { AlertCircle, HelpCircle, ChevronLeft, ChevronRight, RotateCcw, Home } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ScoreCard from '../components/ScoreCard';
 import ResultAnalysis from '../components/ResultAnalysis';
 import QuestionCard from '../components/QuestionCard';
+import API from '../api/axios';
 
 const QuizResult = () => {
-  const location = useLocation();
+  const { state } = useLocation();
+  const { resultId } = useParams();
   const navigate = useNavigate();
-
-  // Extract evaluation data from router location state
-  const { result, quizDetails, timeTaken } = location.state || {};
+  
+  const [result, setResult] = useState(state?.result || null);
+  const [quizDetails, setQuizDetails] = useState(state?.quizDetails || null);
+  const [timeTaken, setTimeTaken] = useState(state?.timeTaken || 'N/A');
+  const [loading, setLoading] = useState(!state?.result);
+  const [error, setError] = useState(null);
   const [reviewIndex, setReviewIndex] = useState(0);
 
-  if (!result || !quizDetails) {
-    return (
-      <DashboardLayout currentPage="Quiz Results">
-        <div className="max-w-md mx-auto p-6 bg-slate-900/30 border border-slate-800 rounded-3xl text-center space-y-4">
-          <AlertCircle className="h-10 w-10 text-amber-500 mx-auto animate-pulse" />
-          <h3 className="text-base font-bold text-white">No Results Found</h3>
-          <p className="text-xs text-slate-450">
-            It looks like you refreshed the page or navigated here directly. Please complete a quiz or review your attempts history to inspect results.
-          </p>
-          <div className="flex flex-col gap-2 pt-2">
-            <button
-              onClick={() => navigate('/quiz/history')}
-              className="w-full px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-505 text-xs font-bold text-white transition-colors cursor-pointer"
-            >
-              Go to Quiz History
-            </button>
-            <button
-              onClick={() => navigate('/quiz/generator')}
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors cursor-pointer border border-slate-750"
-            >
-              Generate New Quiz
-            </button>
-          </div>
+  useEffect(() => {
+    if (state?.result) {
+      setLoading(false);
+      return;
+    }
+    
+    const fetchResult = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get(`/quiz/result/${resultId}`);
+        setResult(res.data);
+        setQuizDetails(res.data.quiz_details);
+        setTimeTaken('N/A');
+      } catch (err) {
+        console.error("Failed to fetch quiz result:", err);
+        setError("Failed to load quiz results.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (resultId) {
+      fetchResult();
+    } else {
+      setLoading(false);
+    }
+  }, [resultId, state]);
+
+  if (loading) return (
+    <DashboardLayout currentPage="Quiz Results">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '6rem 0' }}>
+        <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <p style={{ color: 'var(--text-muted)' }}>Loading quiz results…</p>
+      </div>
+    </DashboardLayout>
+  );
+
+  if (error || !result || !quizDetails) return (
+    <DashboardLayout currentPage="Quiz Results">
+      <div style={{ maxWidth: '24rem', margin: '4rem auto', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+        <AlertCircle size={32} style={{ color: 'var(--amber)' }} />
+        <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>No Results Found</h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{error || "Please complete a quiz to see results, or check your history."}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+          <button onClick={() => navigate('/quiz/history')} className="btn btn-primary btn-block">Quiz History</button>
+          <button onClick={() => navigate('/quiz/generator')} className="btn btn-ghost btn-block">New Quiz</button>
         </div>
-      </DashboardLayout>
-    );
-  }
+      </div>
+    </DashboardLayout>
+  );
 
-  // Combine correct and wrong answers in order to present a chronological review list
   const allEvaluations = [...result.correct_answers, ...result.wrong_answers];
-  // Sort evaluations by matching question index in the original quiz questions list
-  const originalIds = quizDetails.questions.map(q => q.question_id);
-  allEvaluations.sort((a, b) => originalIds.indexOf(a.question_id) - originalIds.indexOf(b.question_id));
-
-  const currentReview = allEvaluations[reviewIndex];
+  const origIds = quizDetails.questions.map(q => q.question_id);
+  allEvaluations.sort((a, b) => origIds.indexOf(a.question_id) - origIds.indexOf(b.question_id));
+  const cur = allEvaluations[reviewIndex];
 
   return (
-    <DashboardLayout currentPage={`Quiz Result Analysis: ${quizDetails.topic}`}>
-      <div className="space-y-8">
-        {/* Visual score details */}
-        <ScoreCard 
-          score={result.score} 
-          total={result.total} 
-          percentage={result.percentage} 
-        />
+    <DashboardLayout currentPage={`Result: ${quizDetails.topic}`}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <ScoreCard score={result.score} total={result.total} percentage={result.percentage} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Main Review Section */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">
-                Question Review & Explanations
-              </h3>
-              <div className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">
-                Time taken: <span className="text-white font-mono">{timeTaken || 'N/A'}</span>
-              </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 18rem', gap: '1.5rem', alignItems: 'start' }}>
+          {/* Main review */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p className="label">Question Review</p>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Time: <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)', fontWeight: 600 }}>{timeTaken || 'N/A'}</span>
+              </span>
             </div>
 
-            {/* Current Question Review Card */}
-            {currentReview && (
-              <div className="space-y-4">
+            {cur && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <QuestionCard
-                  question={{
-                    question: currentReview.question,
-                    options: quizDetails.questions.find(q => q.question_id === currentReview.question_id)?.options || [],
-                    correct_answer: currentReview.correct_answer
-                  }}
-                  index={reviewIndex}
-                  total={allEvaluations.length}
-                  selectedAnswer={currentReview.selected_answer}
-                  onChange={() => {}}
-                  mode="review"
+                  question={{ question: cur.question, options: quizDetails.questions.find(q => q.question_id === cur.question_id)?.options || [], correct_answer: cur.correct_answer }}
+                  index={reviewIndex} total={allEvaluations.length}
+                  selectedAnswer={cur.selected_answer} onChange={() => {}} mode="review"
                 />
-
-                {/* Explanation Card */}
-                <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 shadow-sm backdrop-blur-md relative overflow-hidden">
-                  <div className="flex items-start gap-4">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-indigo-950/20 border border-indigo-500/30 text-indigo-400 flex-shrink-0">
-                      <HelpCircle className="h-4.5 w-4.5" />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-xs font-bold text-slate-450 uppercase tracking-wider block">AI Explanation</span>
-                      <p className="text-sm text-slate-300 leading-relaxed mt-1.5">
-                        {currentReview.explanation}
-                      </p>
-                    </div>
+                {/* Explanation */}
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', display: 'flex', gap: '1rem' }}>
+                  <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <HelpCircle size={14} style={{ color: 'var(--amber)' }} />
+                  </div>
+                  <div>
+                    <p className="label" style={{ marginBottom: '0.375rem' }}>AI Explanation</p>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>{cur.explanation}</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Next/Prev Review Navigation controls */}
-            <div className="flex justify-between items-center">
-              <button
-                disabled={reviewIndex === 0}
-                onClick={() => setReviewIndex(prev => prev - 1)}
-                className="px-4 py-2.5 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer disabled:cursor-default transition-all"
-              >
-                Previous Question
+            {/* Review nav */}
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <button disabled={reviewIndex === 0} onClick={() => setReviewIndex(p => p - 1)} className="btn btn-ghost">
+                <ChevronLeft size={14} /> Previous
               </button>
-              <button
-                disabled={reviewIndex === allEvaluations.length - 1}
-                onClick={() => setReviewIndex(prev => prev + 1)}
-                className="px-4 py-2.5 rounded-xl bg-slate-900/60 hover:bg-slate-850 border border-slate-800 text-xs font-bold text-slate-300 disabled:opacity-40 cursor-pointer disabled:cursor-default transition-all"
-              >
-                Next Question
+              <button disabled={reviewIndex === allEvaluations.length - 1} onClick={() => setReviewIndex(p => p + 1)} className="btn btn-ghost">
+                Next <ChevronRight size={14} />
               </button>
             </div>
           </div>
 
-          {/* Side Feedback Panel & Grid overview */}
-          <div className="space-y-6">
-            
-            {/* Feedback evaluation */}
-            <ResultAnalysis 
-              feedback={result.feedback} 
-              score={result.score} 
-              total={result.total} 
-            />
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'sticky', top: '1rem' }}>
+            <ResultAnalysis feedback={result.feedback} score={result.score} total={result.total} />
 
-            {/* Quick Navigation grid */}
-            <div className="bg-slate-900/35 border border-slate-800/85 rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-4">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Review Navigation</h4>
-              <div className="grid grid-cols-5 gap-2.5">
-                {allEvaluations.map((ev, idx) => {
-                  const isCorrect = ev.is_correct;
-                  const isCurrent = idx === reviewIndex;
-                  
-                  let borderClass = 'border-slate-850';
-                  let bgClass = 'bg-slate-950/20 text-slate-450';
-                  
-                  if (isCorrect) {
-                    bgClass = 'bg-emerald-950/15 text-emerald-450 border-emerald-900/30';
-                  } else {
-                    bgClass = 'bg-red-950/15 text-red-450 border-red-900/30';
-                  }
-                  
-                  if (isCurrent) {
-                    borderClass = 'border-indigo-500 scale-105 font-bold';
-                  }
-                  
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => setReviewIndex(idx)}
-                      className={`h-10 rounded-xl border text-xs flex items-center justify-center transition-all cursor-pointer ${bgClass} ${borderClass}`}
-                    >
-                      {idx + 1}
-                    </button>
-                  );
-                })}
+            {/* Nav grid */}
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem' }}>
+              <p className="label" style={{ marginBottom: '0.75rem' }}>Review Navigation</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '0.375rem', marginBottom: '0.75rem' }}>
+                {allEvaluations.map((ev, idx) => (
+                  <button key={idx} onClick={() => setReviewIndex(idx)} style={{
+                    height: '2.25rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', transition: 'all var(--transition)',
+                    border: `1px solid ${idx === reviewIndex ? 'var(--amber)' : ev.is_correct ? 'rgba(45,212,191,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                    background: idx === reviewIndex ? 'var(--amber-dim)' : ev.is_correct ? 'var(--teal-dim)' : 'rgba(239,68,68,0.08)',
+                    color: idx === reviewIndex ? 'var(--amber)' : ev.is_correct ? 'var(--teal)' : '#f87171',
+                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.75rem',
+                    transform: idx === reviewIndex ? 'scale(1.05)' : 'none',
+                  }}>{idx + 1}</button>
+                ))}
               </div>
-            </div>
-
-            {/* Dashboard / Retake options */}
-            <div className="bg-slate-900/35 border border-slate-800/85 rounded-3xl p-4 flex flex-col gap-2.5 backdrop-blur-md">
-              <button
-                onClick={() => navigate('/quiz/generator')}
-                className="w-full py-3.5 rounded-2xl bg-neon-gradient text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-primary/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Retake Another Quiz
-              </button>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="w-full py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-750 text-slate-350 hover:text-white font-bold text-xs uppercase tracking-wider transition-all border border-slate-750 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Home className="h-4 w-4" />
-                Return to Dashboard
-              </button>
+              <div className="divider" style={{ marginBottom: '0.75rem' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <button onClick={() => navigate('/quiz/generator')} className="btn btn-primary btn-block">
+                  <RotateCcw size={14} /> New Quiz
+                </button>
+                <button onClick={() => navigate('/dashboard')} className="btn btn-ghost btn-block">
+                  <Home size={14} /> Dashboard
+                </button>
+              </div>
             </div>
           </div>
         </div>

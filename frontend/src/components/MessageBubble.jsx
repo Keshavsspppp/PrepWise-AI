@@ -110,7 +110,7 @@ const MessageBubble = ({ message }) => {
         {/* Header label */}
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold tracking-wide uppercase text-slate-450">
-            {isAI ? 'StudyGenie AI' : 'You'}
+            {isAI ? 'PrepWise AI' : 'You'}
           </span>
         </div>
 

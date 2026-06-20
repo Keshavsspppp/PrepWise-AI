@@ -2,14 +2,16 @@ import json
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Any
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
+from app.core.limiter import limiter
 from bson import ObjectId
 
 from app.db.mongodb import get_db
 from app.routes.auth import get_current_user
-from app.core.gemini import gemini_model
-import google.generativeai as genai
+from app.core.gemini import gemini_client
+from google.genai import types
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -151,13 +153,7 @@ async def calculate_profile(user_id: str, db) -> Dict[str, Any]:
     
     discipline_score = min(100, (notes_count * 10) + (ask_ai_count * 4) + (attempt_quiz_count * 8))
     
-    # Baselines for new users to look realistic and encouraging
-    if consistency_score == 0:
-        consistency_score = 65
-    if retention_score == 0:
-        retention_score = 70
-    if discipline_score == 0:
-        discipline_score = 75
+
 
     # Determine learning speed
     if retention_score >= 80:
@@ -273,7 +269,9 @@ async def force_recalculate_dna(
     )
 
 @router.get("/recommendations", response_model=RecommendationResponse)
+@limiter.limit("5/minute")
 async def get_ai_recommendations(
+    request: Request,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
@@ -324,9 +322,10 @@ Profile details:
 {metrics_summary}
 """
     try:
-        response = gemini_model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        response = gemini_client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 temperature=0.7,
                 response_mime_type="application/json",
                 response_schema=schema
@@ -465,14 +464,46 @@ async def get_dna_analytics(
 
     # Total unique active study days across all history
     total_sessions = len(active_days)
-    if total_sessions == 0:
-        total_sessions = 1  # baseline
 
-    # Calculate mock study hours (average 45 minutes per study session)
-    total_study_hours = round((total_sessions * 45) / 60, 1)
+    notes_count = await db["notes"].count_documents({"user_id": ObjectId(user_id)})
+
+    # Compute realistic study hours:
+    # 1. Notes uploads: 15 minutes (0.25 hours) per upload
+    notes_hours = notes_count * 0.25
+    
+    # 2. Quiz attempts: 1.5 minutes per question attempted
+    quiz_hours = 0.0
+    for res in quiz_results:
+        q_count = len(res.get("correct_answers", [])) + len(res.get("wrong_answers", []))
+        quiz_hours += (q_count * 1.5) / 60
+        
+    # 3. Completed viva sessions: actual duration (capped at 2 hours), default to 15 mins (0.25h) if invalid
+    viva_cursor = db["viva_sessions"].find({"user_id": ObjectId(user_id), "status": "completed"})
+    vivas = await viva_cursor.to_list(length=500)
+    viva_hours = 0.0
+    for v in vivas:
+        if v.get("started_at") and v.get("completed_at"):
+            start = v["started_at"]
+            end = v["completed_at"]
+            if start.tzinfo is None:
+                start = start.replace(tzinfo=timezone.utc)
+            if end.tzinfo is None:
+                end = end.replace(tzinfo=timezone.utc)
+            dur = (end - start).total_seconds() / 3600
+            if 0.0 < dur < 2.0:
+                viva_hours += dur
+            else:
+                viva_hours += 0.25
+        else:
+            viva_hours += 0.25
+            
+    # 4. Completed revisions: 10 minutes (0.17 hours) per completed revision
+    revision_count = await db["revision_history"].count_documents({"user_id": ObjectId(user_id)})
+    revision_hours = (revision_count * 10) / 60
+    
+    total_study_hours = round(notes_hours + quiz_hours + viva_hours + revision_hours, 1)
 
     # Additional activity-based metrics
-    notes_count = await db["notes"].count_documents({"user_id": ObjectId(user_id)})
     questions_asked = sum(1 for act in activities if act["activity_type"] == "ask_ai")
 
     # Build active_days_list as YYYY-MM-DD strings for the last 28 days

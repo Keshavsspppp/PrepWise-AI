@@ -1,309 +1,231 @@
-import React from 'react';
-import { 
-  FileText, 
-  Clock, 
-  Award, 
-  ShieldAlert, 
-  ArrowUpRight, 
-  Brain,
-  History,
-  TrendingUp,
-  Sparkles
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileText, Award, Brain, TrendingUp, ArrowUpRight, Zap, Play, Target, ShieldAlert, Activity, ChevronRight } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import API from '../api/axios';
 
+/* ── helpers ──────────────────────────────────────────────────────────── */
+const pct = (n) => `${n}%`;
+
+const retColor = (p) => p < 50 ? '#ef4444' : p < 75 ? '#f59e0b' : '#10b981';
+
+/* ── sub-components ───────────────────────────────────────────────────── */
+const StatCard = ({ icon: Icon, label, value, sub, color, href }) => (
+  <a href={href || '#'} style={{
+    display: 'block', background: 'var(--bg-card)', border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-lg)', padding: '1.25rem', cursor: 'pointer',
+    transition: 'all var(--transition)', textDecoration: 'none',
+  }}
+    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+  >
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+      <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: color + '20', border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon size={16} style={{ color }} />
+      </div>
+      <ArrowUpRight size={14} style={{ color: 'var(--text-muted)' }} />
+    </div>
+    <div className="stat-value">{value}</div>
+    <div className="stat-label">{label}</div>
+    {sub && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.375rem' }}>{sub}</div>}
+  </a>
+);
+
+const TopicBar = ({ name, pct: p, note }) => (
+  <div style={{ marginBottom: '1rem' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+      <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>{name}</span>
+      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: retColor(p) }}>{p}%</span>
+    </div>
+    <div className="progress-track">
+      <div className="progress-fill" style={{ width: pct(p), background: retColor(p) }} />
+    </div>
+    {note && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{note}</div>}
+  </div>
+);
+
+/* ── main ─────────────────────────────────────────────────────────────── */
 const Dashboard = () => {
-  const stats = [
-    { 
-      name: 'Notes Uploaded', 
-      value: '12 Files', 
-      change: '+3 this week', 
-      icon: FileText, 
-      color: 'from-blue-500 to-indigo-500', 
-      bg: 'bg-primary/10' 
-    },
-    { 
-      name: 'Study Hours', 
-      value: '34.5 Hrs', 
-      change: '1.2h today', 
-      icon: Clock, 
-      color: 'from-brand-500 to-purple-600', 
-      bg: 'bg-secondary/10' 
-    },
-    { 
-      name: 'Quiz Accuracy', 
-      value: '76%', 
-      change: '+4% vs last week', 
-      icon: Award, 
-      color: 'from-emerald-400 to-teal-500', 
-      bg: 'bg-success/10' 
-    },
-    { 
-      name: 'Ready Score', 
-      value: '78%', 
-      change: 'Target: 85%', 
-      icon: TrendingUp, 
-      color: 'from-amber-400 to-orange-500', 
-      bg: 'bg-warning/10' 
-    },
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [stats, setStats] = useState(null);
+  const firstName = user?.name?.split(' ')[0] || 'Student';
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [n, q] = await Promise.allSettled([API.get('/notes'), API.get('/quiz/history')]);
+        const notes = n.status === 'fulfilled' ? n.value.data : [];
+        const quizzes = q.status === 'fulfilled' ? q.value.data : [];
+        const avg = quizzes.length ? Math.round(quizzes.reduce((s, x) => s + (x.percentage || 0), 0) / quizzes.length) : 0;
+        setStats({ noteCount: notes.length, quizCount: quizzes.length, avgScore: avg });
+      } catch { setStats({ noteCount: 0, quizCount: 0, avgScore: 0 }); }
+    })();
+  }, []);
+
+  const cards = [
+    { icon: FileText, label: 'Notes Uploaded',   value: stats ? `${stats.noteCount}` : '—',    sub: 'PDF documents',       color: 'var(--amber)',  href: '#/notes/list' },
+    { icon: Award,    label: 'Quiz Accuracy',     value: stats ? `${stats.avgScore}%` : '—',    sub: 'Average all quizzes', color: 'var(--teal)',   href: '#/quiz/history' },
+    { icon: Brain,    label: 'Quizzes Attempted', value: stats ? `${stats.quizCount}` : '—',    sub: 'All time',            color: '#818cf8', href: '#/quiz/history' },
+    { icon: TrendingUp, label: 'Exam Readiness', value: '—',                                    sub: 'Calculate now',       color: '#f472b6', href: '#/readiness' },
   ];
 
-  const weakTopics = [
-    { name: 'Dynamic Programming', percentage: 42, color: 'bg-error', retention: 'Critical (Forget curve)' },
-    { name: 'Operating Systems', percentage: 75, color: 'bg-warning', retention: 'Fair (Review in 2 days)' },
-  ];
-
-  const strongTopics = [
-    { name: 'DBMS Indexing', percentage: 92, color: 'bg-success' },
-    { name: 'Computer Networks', percentage: 88, color: 'bg-success' },
+  const actions = [
+    { icon: Play,     label: 'Generate Quiz',   desc: 'AI quiz from your notes',    href: '/quiz/generator', color: 'var(--amber)' },
+    { icon: Brain,    label: 'Ask AI',           desc: 'Grounded Q&A',              href: '/ai/ask',         color: 'var(--teal)' },
+    { icon: FileText, label: 'Upload Notes',     desc: 'Add a PDF',                 href: '/notes/upload',   color: '#818cf8' },
+    { icon: Target,   label: 'Readiness',        desc: 'Exam score check',          href: '/readiness',      color: '#f472b6' },
   ];
 
   return (
     <DashboardLayout currentPage="Dashboard">
-      {/* Welcome Hero Panel */}
-      <div className="relative overflow-hidden rounded-3xl bg-neon-gradient p-8 md:p-10 text-white shadow-xl shadow-primary/10">
-        <div className="absolute right-0 top-0 -mr-10 -mt-10 h-48 w-48 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
-        <div className="absolute left-1/3 bottom-0 -mb-12 h-36 w-36 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
-        
-        <div className="relative z-10 max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold tracking-wide border border-white/10">
-            <Sparkles className="h-3.5 w-3.5 text-warning" />
-            <span>StudyGenie Intelligence v1.0</span>
-          </div>
-          <h2 className="font-display font-extrabold text-3xl md:text-4xl tracking-tight">
-            Welcome back, Alex!
-          </h2>
-          <p className="text-white/80 text-sm md:text-base leading-relaxed">
-            Your retention engine predicts you are ready to study. You have 2 key topics in "Dynamic Programming" that require revision today to beat the forgetting curve.
-          </p>
-          <div className="pt-2 flex flex-wrap gap-3">
-            <button className="bg-white hover:bg-text-primary text-primary px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 shadow-md active:scale-95 cursor-pointer glow-button">
-              Start Practice Quiz
-            </button>
-            <button className="bg-white/10 hover:bg-white/15 text-white border border-white/20 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95 cursor-pointer">
-              Upload New Notes
-            </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+
+        {/* ── Hero ── */}
+        <div style={{
+          borderRadius: 'var(--radius-xl)', padding: '2rem 2.25rem', position: 'relative', overflow: 'hidden',
+          background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(45,212,191,0.06) 100%)',
+          border: '1px solid var(--amber-border)',
+        }}>
+          <div style={{ position: 'absolute', right: '-2rem', top: '-2rem', width: '10rem', height: '10rem', borderRadius: '50%', background: 'rgba(245,158,11,0.06)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div className="badge badge-amber" style={{ marginBottom: '0.875rem' }}>✦ PrepWise Intelligence</div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.625rem', marginBottom: '0.5rem' }}>
+              Good day, {firstName}! 👋
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', marginBottom: '1.25rem', maxWidth: '32rem', lineHeight: 1.6 }}>
+              Your AI study system is ready. Upload notes, generate quizzes grounded in your material, and track mastery.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button onClick={() => navigate('/quiz/generator')} className="btn btn-primary">
+                <Play size={14} /> Start Quiz
+              </button>
+              <button onClick={() => navigate('/notes/upload')} className="btn btn-ghost">
+                <FileText size={14} /> Upload Notes
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Grid of Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div 
-              key={stat.name} 
-              className="bg-dark-card border border-slate-800/40 p-6 rounded-2xl shadow-xs transition-all duration-355 glow-card"
-            >
-              <div className="flex justify-between items-start">
-                <div className={`p-3 rounded-xl ${stat.bg}`}>
-                  <Icon className="h-6 w-6 text-primary" />
+        {/* ── Stats grid ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          {cards.map(c => <StatCard key={c.label} {...c} />)}
+        </div>
+
+        {/* ── Quick actions ── */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <Zap size={15} style={{ color: 'var(--amber)' }} />
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem' }}>Quick Actions</h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+            {actions.map(a => (
+              <button key={a.label} onClick={() => navigate(a.href)} style={{
+                background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
+                padding: '1.125rem', textAlign: 'left', cursor: 'pointer', transition: 'all var(--transition)',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+              >
+                <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: a.color + '18', border: `1px solid ${a.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                  <a.icon size={14} style={{ color: a.color }} />
                 </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-text-secondary">
-                  Real-time
-                </span>
-              </div>
-              <div className="mt-4 space-y-1">
-                <h3 className="text-2xl font-bold text-text-primary tracking-tight">{stat.value}</h3>
-                <p className="text-sm font-medium text-text-secondary">{stat.name}</p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-800/40 flex items-center justify-between text-xs">
-                <span className="text-text-secondary font-medium">{stat.change}</span>
-                <a href="#" className="text-primary hover:underline flex items-center gap-0.5 font-semibold">
-                  View <ArrowUpRight className="h-3 w-3" />
-                </a>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{a.label}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>{a.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
 
-      {/* Learning DNA & Forgetting Curve Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Learning DNA Profile */}
-        <div className="lg:col-span-2 bg-dark-card border border-slate-800/40 rounded-2xl p-6 shadow-xs flex flex-col space-y-6 glow-card">
-          <div className="flex items-center justify-between border-b border-slate-800/40 pb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-secondary/15 text-secondary rounded-lg">
-                <Brain className="h-5 w-5" />
+        {/* ── DNA + Forgetting ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+          {/* Learning DNA */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Brain size={14} style={{ color: 'var(--amber)' }} />
+                </div>
+                <div>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem' }}>Learning DNA</h3>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Mastery by retention</p>
+                </div>
+              </div>
+              <a href="#/dna" className="btn btn-ghost btn-sm" style={{ gap: '0.25rem' }}>
+                Full report <ChevronRight size={12} />
+              </a>
+            </div>
+            <div className="divider" style={{ marginBottom: '1.25rem' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div>
+                <p className="label" style={{ color: 'rgba(239,68,68,0.7)', marginBottom: '0.75rem' }}>⚠ Needs Attention</p>
+                <TopicBar name="Dynamic Programming" pct={42} note="Critical — revise today" />
+                <TopicBar name="Operating Systems" pct={67} note="Review in 2 days" />
               </div>
               <div>
-                <h3 className="font-display font-bold text-text-primary">Learning DNA Profile</h3>
-                <p className="text-xs text-text-secondary">Subject mastery and performance trends</p>
+                <p className="label" style={{ color: 'rgba(16,185,129,0.7)', marginBottom: '0.75rem' }}>✓ Mastered</p>
+                <TopicBar name="DBMS Indexing" pct={92} note="Keep reviewing weekly" />
+                <TopicBar name="Computer Networks" pct={88} note="Strong — maintain" />
               </div>
             </div>
-            <span className="bg-secondary/15 text-secondary text-xs px-2.5 py-1 rounded-full font-semibold border border-secondary/10">
-              Active
-            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Weak Areas (Focus Required) */}
-            <div className="space-y-4">
-              <h4 className="text-xs uppercase tracking-wider font-bold text-error flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-error"></span>
-                Focus Needed (Weak Areas)
-              </h4>
-              <div className="space-y-3.5">
-                {weakTopics.map((topic) => (
-                  <div key={topic.name} className="space-y-1.5 p-3 rounded-xl bg-slate-900/30 border border-slate-800/30">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-semibold text-text-primary">{topic.name}</span>
-                      <span className="font-bold text-error">{topic.percentage}% Mastery</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-850 rounded-full overflow-hidden">
-                      <div className={`h-full ${topic.color}`} style={{ width: `${topic.percentage}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-text-secondary mt-1">{topic.retention}</p>
+          {/* Forgetting Curve */}
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--amber-border)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
+              <ShieldAlert size={15} style={{ color: 'var(--amber)' }} />
+              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem' }}>Forgetting Curve</h3>
+            </div>
+            <div className="alert alert-amber" style={{ marginBottom: '1rem', fontSize: '0.8125rem' }}>
+              <ShieldAlert size={14} style={{ flexShrink: 0 }} />
+              Retrieval practice for <strong>Dynamic Programming</strong> is due today.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+              {[
+                { name: 'Dynamic Programming', ret: 42, status: 'Critical', href: '#/revision', btnLabel: 'Revise Now', urgent: true },
+                { name: 'Operating Systems', ret: 75, status: 'Medium', href: '#/revision', btnLabel: 'Schedule', urgent: false },
+                { name: 'DBMS Indexing', ret: 92, status: 'Excellent', href: null, btnLabel: 'Solid ✓', urgent: false },
+              ].map(t => (
+                <div key={t.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', transition: 'all var(--transition)' }}>
+                  <div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>{t.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: retColor(t.ret), marginTop: '0.125rem' }}>{t.ret}% · {t.status}</div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Strong Areas (Mastered) */}
-            <div className="space-y-4">
-              <h4 className="text-xs uppercase tracking-wider font-bold text-success flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-success"></span>
-                Mastered Topics (Strengths)
-              </h4>
-              <div className="space-y-3.5">
-                {strongTopics.map((topic) => (
-                  <div key={topic.name} className="space-y-1.5 p-3 rounded-xl bg-slate-900/30 border border-slate-800/30">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-semibold text-text-primary">{topic.name}</span>
-                      <span className="font-bold text-success">{topic.percentage}% Mastery</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-850 rounded-full overflow-hidden">
-                      <div className={`h-full ${topic.color}`} style={{ width: `${topic.percentage}%` }}></div>
-                    </div>
-                    <p className="text-[10px] text-text-secondary mt-1">Consistency is key - review in 2 weeks</p>
-                  </div>
-                ))}
-              </div>
+                  {t.href
+                    ? <a href={t.href} className={`btn btn-sm ${t.urgent ? 'btn-outline' : 'btn-ghost'}`}>{t.btnLabel}</a>
+                    : <span className="btn btn-ghost btn-sm" style={{ opacity: 0.4, cursor: 'default' }}>{t.btnLabel}</span>
+                  }
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Forgetting Curve Engine */}
-        <div className="bg-dark-card border border-slate-800/40 rounded-2xl p-6 shadow-xs flex flex-col space-y-6 glow-card">
-          <div className="flex items-center justify-between border-b border-slate-800/40 pb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-warning/15 text-warning rounded-lg">
-                <ShieldAlert className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-display font-bold text-text-primary">Forgetting Curve</h3>
-                <p className="text-xs text-text-secondary">Next planned revisions</p>
-              </div>
-            </div>
+        {/* ── Activity ── */}
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1.25rem' }}>
+            <Activity size={15} style={{ color: 'var(--text-secondary)' }} />
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem' }}>Recent Activity</h3>
           </div>
-
-          <div className="flex-1 space-y-4">
-            <div className="p-4 rounded-2xl bg-warning/10 border border-warning/20 text-xs text-warning flex gap-2.5">
-              <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>We suggest doing a retrieval practice today for <strong>Dynamic Programming</strong> to reset memory decay.</span>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-xs p-3 rounded-xl border border-slate-800/40">
-                <div>
-                  <p className="font-semibold text-text-primary">Dynamic Programming</p>
-                  <p className="text-[10px] text-error mt-0.5">Retention: 42% (Critical)</p>
-                </div>
-                <button className="bg-error hover:bg-error/90 text-white font-semibold px-3 py-1.5 rounded-lg text-[10px] transition-colors cursor-pointer">
-                  Revise Now
-                </button>
+          <div className="divider" style={{ marginBottom: '0.75rem' }} />
+          {[
+            { letter: 'Q', color: 'var(--teal)',   title: 'Completed Quiz: DBMS Transactions', sub: '10 Questions · Easy', score: '90%', time: '2h ago' },
+            { letter: 'N', color: 'var(--amber)',  title: 'Uploaded Notes: CN_Routing.pdf', sub: 'Computer Networks · 45 pages', score: 'Indexed', time: 'Yesterday' },
+            { letter: 'V', color: '#818cf8',       title: 'AI Mock Viva: Operating Systems', sub: 'Process synchronization', score: '75%', time: '3 days ago' },
+          ].map((a, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.875rem 0', borderBottom: i < 2 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}>
+              <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: a.color + '18', border: `1px solid ${a.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.8rem', color: a.color, flexShrink: 0 }}>{a.letter}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>{a.sub}</div>
               </div>
-
-              <div className="flex justify-between items-center text-xs p-3 rounded-xl border border-slate-800/40">
-                <div>
-                  <p className="font-semibold text-text-primary">Operating Systems</p>
-                  <p className="text-[10px] text-warning mt-0.5">Retention: 75% (Medium)</p>
-                </div>
-                <button className="bg-warning hover:bg-warning/90 text-white font-semibold px-3 py-1.5 rounded-lg text-[10px] transition-colors cursor-pointer">
-                  Schedule
-                </button>
-              </div>
-
-              <div className="flex justify-between items-center text-xs p-3 rounded-xl border border-slate-800/40 opacity-50">
-                <div>
-                  <p className="font-semibold text-text-primary">DBMS Indexing</p>
-                  <p className="text-[10px] text-success mt-0.5">Retention: 92% (Excellent)</p>
-                </div>
-                <button disabled className="bg-slate-800 text-slate-500 font-semibold px-3 py-1.5 rounded-lg text-[10px]">
-                  Solid
-                </button>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>{a.score}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{a.time}</div>
               </div>
             </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Recent Activity Section */}
-      <div className="bg-dark-card border border-slate-800/40 rounded-2xl p-6 shadow-xs flex flex-col space-y-6 glow-card">
-        <div className="flex items-center justify-between border-b border-slate-800/40 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-slate-800 text-text-secondary rounded-lg">
-              <History className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-text-primary">Recent Activity</h3>
-              <p className="text-xs text-text-secondary">Your latest StudyGenie learning sessions</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="divide-y divide-slate-800/40">
-          <div className="py-3.5 flex items-center justify-between first:pt-0 last:pb-0">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-success/10 text-success flex items-center justify-center font-bold text-xs">
-                Q
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-text-primary">Completed Quiz: DBMS Transactions</p>
-                <p className="text-xs text-text-secondary">10 Questions • Easy Difficulty</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-bold text-text-primary">90% Score</p>
-              <p className="text-[10px] text-text-secondary">2 hours ago</p>
-            </div>
-          </div>
-
-          <div className="py-3.5 flex items-center justify-between first:pt-0 last:pb-0">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                N
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-text-primary">Uploaded Study Notes: CN_Routing_Algorithms.pdf</p>
-                <p className="text-xs text-text-secondary">Computer Networks • 45 Pages • 4.2MB</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-semibold text-text-secondary">Processed</p>
-              <p className="text-[10px] text-text-secondary">Yesterday</p>
-            </div>
-          </div>
-
-          <div className="py-3.5 flex items-center justify-between first:pt-0 last:pb-0">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center font-bold text-xs">
-                V
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-text-primary">Completed AI Mock Viva: Operating Systems</p>
-                <p className="text-xs text-text-secondary">Conducted evaluation for process synchronization</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-bold text-text-primary">75% Score</p>
-              <p className="text-[10px] text-text-secondary">3 days ago</p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </DashboardLayout>

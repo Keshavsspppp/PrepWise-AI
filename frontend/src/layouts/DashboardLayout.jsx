@@ -1,182 +1,193 @@
 import React, { useState } from 'react';
-import { 
-  BookOpen, 
-  LayoutDashboard, 
-  BrainCircuit, 
-  Calendar, 
-  Mic, 
-  BarChart3, 
-  LogOut, 
-  Menu, 
-  Bell, 
-  User,
-  Sparkles,
-  Dna,
-  RefreshCcw,
-  GraduationCap
+import {
+  BookOpen, LayoutDashboard, BrainCircuit, Calendar,
+  Mic, LogOut, Menu, Bell, Sparkles, Dna, RefreshCcw,
+  GraduationCap, X, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
+const nav = [
+  { name: 'Dashboard',          icon: LayoutDashboard, href: '#/dashboard',    pages: ['Dashboard'] },
+  { name: 'Notes Manager',      icon: BookOpen,         href: '#/notes/list',   pages: ['Notes Manager', 'Upload Notes'] },
+  { name: 'AI Study Assistant', icon: BrainCircuit,     href: '#/ai/ask',       pages: ['AI Study Assistant'] },
+  { name: 'AI Quiz Planner',    icon: Calendar,         href: '#/quiz/history', pages: ['AI Quiz Planner','Quiz Generator','Quiz Attempt','Quiz Results'] },
+  { name: 'Mastery & Insights', icon: Dna,              href: '#/dna',          pages: ['Mastery & Insights', 'Learning DNA', 'Smart Revision', 'Revision History', 'Exam Readiness'] },
+  { name: 'AI Mock Viva',       icon: Mic,              href: '#/viva',         pages: ['AI Mock Viva','Viva Session','Viva Results','Viva History'] },
+];
+
+const initials = (name) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U';
+
+const NavLink = ({ item, current }) => {
+  const Icon = item.icon;
+  const active = item.pages.includes(current);
+  return (
+    <a href={item.href} className={`nav-link${active ? ' active' : ''}`}>
+      <span className="nav-icon"><Icon size={15} /></span>
+      {item.name}
+      {active && <ChevronRight size={12} style={{ marginLeft: 'auto', color: 'var(--amber)' }} />}
+    </a>
+  );
+};
+
 const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [bell, setBell] = useState(false);
   const { user, logout } = useAuth();
 
-  // Get user initials for avatar
-  const getInitials = (name) => {
-    if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  const navigation = [
-    { name: 'Dashboard', icon: LayoutDashboard, href: '#/dashboard', active: currentPage === 'Dashboard' },
-    { name: 'Notes Manager', icon: BookOpen, href: '#/notes/list', active: currentPage === 'Notes Manager' },
-    { name: 'AI Study Assistant', icon: BrainCircuit, href: '#/ai/ask', active: currentPage === 'AI Study Assistant' },
-    { name: 'AI Quiz Planner', icon: Calendar, href: '#/quiz/history', active: currentPage === 'AI Quiz Planner' || currentPage === 'Quiz Generator' || currentPage === 'Quiz Attempt' || currentPage === 'Quiz Results' },
-    { name: 'Learning DNA', icon: Dna, href: '#/dna', active: currentPage === 'Learning DNA' },
-    { name: 'Smart Revision', icon: RefreshCcw, href: '#/revision', active: currentPage === 'Smart Revision' || currentPage === 'Revision History' },
-    { name: 'Exam Readiness', icon: GraduationCap, href: '#/readiness', active: currentPage === 'Exam Readiness' },
-    { name: 'AI Mock Viva', icon: Mic, href: '#/viva', active: currentPage === 'AI Mock Viva' || currentPage === 'Viva Session' || currentPage === 'Viva Results' || currentPage === 'Viva History' },
-    { name: 'Analytics', icon: BarChart3, href: '#', active: currentPage === 'Analytics' },
-  ];
-
   return (
-    <div className="min-h-screen bg-dark-bg flex flex-col font-sans text-text-primary">
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-dark-bg/60 backdrop-blur-sm lg:hidden transition-opacity duration-300"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', fontFamily: 'var(--font-body)', position: 'relative', overflow: 'hidden' }}>
 
-      {/* Sidebar Component */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-dark-card border-r border-slate-800/40
-        transform transition-transform duration-300 ease-in-out lg:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        {/* Logo Section */}
-        <div className="flex h-16 items-center gap-2.5 px-6 border-b border-slate-800/40">
-          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-neon-gradient text-white shadow-md shadow-primary/20">
-            <Sparkles className="h-5 w-5 animate-pulse" />
+      {/* Decorative Background Orbs */}
+      <div className="glow-orb glow-orb-primary" />
+      <div className="glow-orb glow-orb-secondary" />
+
+      {/* Overlay */}
+      <div
+        className={`sidebar-overlay${open ? ' show' : ''}`}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* Sidebar */}
+      <aside className={`sidebar${open ? ' open' : ''}`}>
+        {/* Logo */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.625rem',
+          padding: '1.125rem 1rem', borderBottom: '1px solid var(--border)',
+        }}>
+          <div style={{
+            width: '2rem', height: '2rem', borderRadius: 'var(--radius-md)',
+            background: 'linear-gradient(135deg, var(--amber), #e07b09)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Sparkles size={14} color="#0a0a0f" />
           </div>
-          <span className="font-display font-bold text-xl tracking-tight text-neon-gradient">
-            StudyGenie AI
-          </span>
+          <div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.9375rem', color: 'var(--text-primary)', lineHeight: 1.1 }}>PrepWise</div>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.06em', fontWeight: 500 }}>AI STUDY</div>
+          </div>
+          <button onClick={() => setOpen(false)} style={{ marginLeft: 'auto', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }} className="lg:hidden">
+            <X size={15} />
+          </button>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex-1 space-y-1.5 px-4 py-6 overflow-y-auto">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            return (
-              <a
-                key={item.name}
-                href={item.href}
-                className={`
-                  flex items-center gap-3.5 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 group
-                  ${item.active 
-                    ? 'bg-slate-800/50 text-white font-semibold shadow-xs border-l-4 border-primary' 
-                    : 'text-text-secondary hover:bg-slate-800/30 hover:text-white'}
-                `}
-              >
-                <Icon className={`
-                  h-5 w-5 transition-transform duration-200 group-hover:scale-110
-                  ${item.active ? 'text-primary' : 'text-slate-550 group-hover:text-slate-405'}
-                `} />
-                {item.name}
-              </a>
-            );
-          })}
+        {/* Nav */}
+        <nav style={{ flex: 1, padding: '0.75rem 0.625rem', display: 'flex', flexDirection: 'column', gap: '0.125rem', overflowY: 'auto' }}>
+          <p className="label" style={{ padding: '0.5rem 0.75rem 0.375rem' }}>Navigation</p>
+          {nav.map(item => <NavLink key={item.name} item={item} current={currentPage} />)}
         </nav>
 
-        {/* User Profile Footer */}
-        <div className="p-4 border-t border-slate-800/50 bg-slate-900/20">
-          <div className="flex items-center gap-3 px-2 py-1.5 rounded-lg">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 text-text-primary font-bold text-xs uppercase shadow-inner">
-              {getInitials(user?.name)}
+        {/* User footer */}
+        <div style={{ padding: '0.75rem', borderTop: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.5rem 0.625rem', borderRadius: 'var(--radius-md)' }}>
+            <div style={{
+              width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)',
+              background: 'var(--amber-dim)', border: '1px solid var(--amber-border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.7rem', color: 'var(--amber)',
+              flexShrink: 0,
+            }}>
+              {initials(user?.name)}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-text-primary truncate">{user?.name || 'Alex Student'}</p>
-              <p className="text-xs text-text-secondary truncate">{user?.email || 'alex@studygenie.ai'}</p>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'Student'}</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
             </div>
-            <button 
+            <button
               onClick={logout}
-              title="Sign Out"
-              className="text-text-secondary hover:text-error transition-colors p-1.5 rounded-lg hover:bg-slate-800 cursor-pointer"
+              title="Sign out"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem', borderRadius: 'var(--radius-sm)', transition: 'all var(--transition)' }}
+              onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut size={14} />
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main Layout Area */}
-      <div className="lg:pl-72 flex flex-col flex-1">
-        {/* Header/Navbar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-800/30 bg-dark-card/85 backdrop-blur-md px-6 lg:px-8">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-text-secondary hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <h1 className="font-display font-bold text-lg md:text-xl text-text-primary">
-              {currentPage}
-            </h1>
+      {/* Main */}
+      <div className="main-area" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        {/* Header */}
+        <header className="app-header">
+          <button
+            onClick={() => setOpen(true)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', marginRight: '0.5rem', padding: '0.25rem' }}
+            className="lg:hidden"
+          >
+            <Menu size={18} />
+          </button>
+
+          <div style={{ flex: 1 }}>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{currentPage}</h1>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Quick Stats Panel */}
-            <div className="hidden sm:flex items-center gap-2 bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20 text-primary text-xs font-semibold">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Readiness: 78%</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            {/* Live status */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.625rem', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', borderRadius: '100px', fontSize: '0.7rem', color: 'var(--teal)', fontWeight: 600 }}>
+              <span className="dot-live" style={{ animation: 'pulse-glow 2s infinite' }} />
+              Gemini
             </div>
 
-            {/* Notifications */}
-            <div className="relative">
-              <button 
-                onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="p-2 text-text-secondary hover:bg-slate-800 rounded-lg transition-colors relative cursor-pointer"
+            {/* Bell */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setBell(!bell)}
+                style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.375rem', display: 'flex', alignItems: 'center', transition: 'all var(--transition)' }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
               >
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error"></span>
+                <Bell size={15} />
+                <span style={{ position: 'absolute', top: '0.25rem', right: '0.25rem', width: '5px', height: '5px', borderRadius: '50%', background: 'var(--amber)' }} />
               </button>
-              {notificationsOpen && (
-                <div className="absolute right-0 mt-2.5 w-80 rounded-2xl bg-dark-card border border-slate-800 shadow-xl py-3 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
-                  <div className="px-4 pb-2 border-b border-slate-800/50 flex justify-between items-center">
-                    <span className="font-semibold text-sm text-text-primary">Notifications</span>
-                    <button className="text-xs text-primary hover:underline">Mark all read</button>
+
+              {bell && (
+                <div className="animate-fade-in" style={{
+                  position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+                  width: '18rem', background: 'var(--bg-card)', border: '1px solid var(--border-strong)',
+                  borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                  zIndex: 60,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.875rem' }}>Notifications</span>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: 'var(--amber)', fontWeight: 600 }}>Mark read</button>
                   </div>
-                  <div className="max-h-64 overflow-y-auto py-1.5">
-                    <div className="px-4 py-2.5 hover:bg-slate-850 transition-colors">
-                      <p className="text-xs font-medium text-text-primary">Forgetting Curve Alert 📉</p>
-                      <p className="text-[11px] text-text-secondary mt-0.5">Your retention for "Dynamic Programming" has dropped below 50%. Schedule a revision quiz!</p>
+                  {[
+                    { icon: '📉', t: 'Forgetting Curve Alert', m: '"Dynamic Programming" retention dropped below 50%' },
+                    { icon: '📅', t: 'Revision Due', m: 'OS Scheduling revision is overdue today' },
+                  ].map((n, i) => (
+                    <div key={i} style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'all var(--transition)' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-elevated)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                      <div style={{ display: 'flex', gap: '0.625rem' }}>
+                        <span style={{ fontSize: '1rem' }}>{n.icon}</span>
+                        <div>
+                          <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-primary)' }}>{n.t}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>{n.m}</div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="px-4 py-2.5 hover:bg-slate-850 transition-colors border-t border-slate-800/40">
-                      <p className="text-xs font-medium text-text-primary">New study plan generated 📅</p>
-                      <p className="text-[11px] text-text-secondary mt-0.5">We updated your calendar according to your upcoming DBMS exam.</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Profile Dropdown Toggle */}
-            <div className="h-8 w-px bg-slate-800 hidden sm:block"></div>
-            <button className="flex items-center gap-2 p-1.5 hover:bg-slate-800 rounded-xl transition-colors">
-              <div className="h-8 w-8 rounded-lg bg-neon-gradient text-white flex items-center justify-center font-bold text-sm uppercase">
-                {getInitials(user?.name)}
-              </div>
-            </button>
+            {/* Avatar */}
+            <div style={{
+              width: '1.875rem', height: '1.875rem', borderRadius: 'var(--radius-sm)',
+              background: 'var(--amber-dim)', border: '1px solid var(--amber-border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.6875rem', color: 'var(--amber)',
+              cursor: 'default',
+            }}>
+              {initials(user?.name)}
+            </div>
           </div>
         </header>
 
-        {/* Children/Main Content */}
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto">
-          <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        {/* Page content */}
+        <main style={{ flex: 1, padding: '1.5rem', overflowY: 'auto' }}>
+          <div className="animate-fade-up" style={{ maxWidth: '72rem', margin: '0 auto' }}>
             {children}
           </div>
         </main>
