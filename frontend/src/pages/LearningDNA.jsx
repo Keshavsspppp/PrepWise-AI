@@ -13,6 +13,7 @@ import ConsistencyTracker from '../components/ConsistencyTracker';
 import { Dna, RefreshCcw, AlertCircle, Loader2, CheckCircle2, Brain, Sparkles, ChevronRight, GraduationCap } from 'lucide-react';
 import { RevisionDashboardContent } from './RevisionDashboard';
 import { ExamReadinessContent } from './ExamReadiness';
+import Reveal from '../components/Reveal';
 
 /* ─── shared sub-components ─────────────────────────────────────────────── */
 const StatusTag = ({ label, col = 'var(--teal)', dim, border }) => (
@@ -188,45 +189,59 @@ const LearningDNA = () => {
                 </div>
 
                 {/* Overview metric cards */}
-                <div>
-                  <SectionLabel>Overview Metrics</SectionLabel>
-                  <DNAOverviewCard speed={speedLabel} consistency={profile.consistency_score ?? 0} streak={analytics?.streak ?? 0} discipline={profile.study_discipline_score ?? 0} />
-                </div>
+                <Reveal variant="pop" delay={80}>
+                  <div>
+                    <SectionLabel>Overview Metrics</SectionLabel>
+                    <DNAOverviewCard speed={speedLabel} consistency={profile.consistency_score ?? 0} streak={analytics?.streak ?? 0} discipline={profile.study_discipline_score ?? 0} />
+                  </div>
+                </Reveal>
 
                 {/* DNA Score + Subject Mastery */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem' }}>
-                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                    <SectionLabel>Overall DNA Score</SectionLabel>
-                    <LearningScoreCard score={dnaScore} />
-                  </div>
-                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                    <SectionLabel>Subject Mastery</SectionLabel>
-                    <SubjectStrengthChart performances={subjectPerformances} />
-                  </div>
+                  <Reveal variant="pop" delay={160} style={{ height: '100%' }}>
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                      <SectionLabel>Overall DNA Score</SectionLabel>
+                      <LearningScoreCard score={dnaScore} />
+                    </div>
+                  </Reveal>
+                  <Reveal variant="pop" delay={240} style={{ height: '100%' }}>
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                      <SectionLabel>Subject Mastery</SectionLabel>
+                      <SubjectStrengthChart performances={subjectPerformances} />
+                    </div>
+                  </Reveal>
                 </div>
 
                 {/* Topic + Activity */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                    <SectionLabel>Topic Analysis</SectionLabel>
-                    <TopicAnalysisChart topics={topicPerformances} />
-                  </div>
-                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                    <SectionLabel>Activity Insights</SectionLabel>
-                    <ProgressInsights activity={activityData} />
-                  </div>
+                  <Reveal variant="pop" delay={320} style={{ height: '100%' }}>
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                      <SectionLabel>Topic Analysis</SectionLabel>
+                      <TopicAnalysisChart topics={topicPerformances} />
+                    </div>
+                  </Reveal>
+                  <Reveal variant="pop" delay={400} style={{ height: '100%' }}>
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                      <SectionLabel>Activity Insights</SectionLabel>
+                      <ProgressInsights activity={activityData} />
+                    </div>
+                  </Reveal>
                 </div>
 
                 {/* Consistency + Recommendations */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                    <SectionLabel>Consistency Tracker · 28-day heatmap</SectionLabel>
-                    <ConsistencyTracker streak={analytics?.streak ?? 0} consistency_score={profile.consistency_score ?? 0} active_days_list={activeDaysList} />
-                  </div>
-                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                    <SectionLabel>AI Recommendations · Gemini personalized tips</SectionLabel>
-                    <RecommendationCard recommendations={recommendations} />
-                  </div>
+                  <Reveal variant="pop" delay={480} style={{ height: '100%' }}>
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                      <SectionLabel>Consistency Tracker · 28-day heatmap</SectionLabel>
+                      <ConsistencyTracker streak={analytics?.streak ?? 0} consistency_score={profile.consistency_score ?? 0} active_days_list={activeDaysList} />
+                    </div>
+                  </Reveal>
+                  <Reveal variant="pop" delay={560} style={{ height: '100%' }}>
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                      <SectionLabel>AI Recommendations · Gemini personalized tips</SectionLabel>
+                      <RecommendationCard recommendations={recommendations} />
+                    </div>
+                  </Reveal>
                 </div>
               </div>
             )}

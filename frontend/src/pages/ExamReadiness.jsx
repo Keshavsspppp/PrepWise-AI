@@ -7,6 +7,7 @@ import ReadinessChart from '../components/ReadinessChart';
 import RecommendationPanel from '../components/RecommendationPanel';
 import RiskIndicator from '../components/RiskIndicator';
 import { GraduationCap, RefreshCcw, Loader2, AlertCircle, Sparkles, BookOpen, ChevronRight } from 'lucide-react';
+import Reveal from '../components/Reveal';
 
 const Toast = ({ msg, type }) => (
   <div style={{
@@ -113,23 +114,35 @@ export const ExamReadinessContent = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
           {/* Summary stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
-            <StatCard label="Overall Readiness" value={`${Math.round(overall)}%`} col="var(--amber)" />
-            <StatCard label="Exam Prediction" value={data?.prediction_status || '—'} col="var(--teal)" />
-            <StatCard label="High Risk Subjects" value={highRisk.length} sub={highRisk.map(s => s.subject).join(', ') || 'None'} col="#f87171" />
-            <StatCard label="Exam Ready" value={ready.length} sub={`out of ${subjects.length} subjects`} col="var(--teal)" />
+            <Reveal variant="pop" delay={50} style={{ width: '100%' }}>
+              <StatCard label="Overall Readiness" value={`${Math.round(overall)}%`} col="var(--amber)" />
+            </Reveal>
+            <Reveal variant="pop" delay={100} style={{ width: '100%' }}>
+              <StatCard label="Exam Prediction" value={data?.prediction_status || '—'} col="var(--teal)" />
+            </Reveal>
+            <Reveal variant="pop" delay={150} style={{ width: '100%' }}>
+              <StatCard label="High Risk Subjects" value={highRisk.length} sub={highRisk.map(s => s.subject).join(', ') || 'None'} col="#f87171" />
+            </Reveal>
+            <Reveal variant="pop" delay={200} style={{ width: '100%' }}>
+              <StatCard label="Exam Ready" value={ready.length} sub={`out of ${subjects.length} subjects`} col="var(--teal)" />
+            </Reveal>
           </div>
 
           {/* Score card + chart */}
           {data && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem' }}>
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                <SectionLabel>Overall Score</SectionLabel>
-                <ReadinessScoreCard {...data} />
-              </div>
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                <SectionLabel>Score Analysis</SectionLabel>
-                <ReadinessChart subjects={rankedSubjects} topics={topics} />
-              </div>
+              <Reveal variant="pop" delay={150} style={{ height: '100%' }}>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                  <SectionLabel>Overall Score</SectionLabel>
+                  <ReadinessScoreCard {...data} />
+                </div>
+              </Reveal>
+              <Reveal variant="up" delay={200} style={{ height: '100%' }}>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                  <SectionLabel>Score Analysis</SectionLabel>
+                  <ReadinessChart subjects={rankedSubjects} topics={topics} />
+                </div>
+              </Reveal>
             </div>
           )}
 
@@ -138,7 +151,11 @@ export const ExamReadinessContent = () => {
             <div>
               <SectionLabel>Subject Readiness Ranking</SectionLabel>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(14rem, 1fr))', gap: '0.875rem' }}>
-                {rankedSubjects.map((s, i) => <SubjectReadinessCard key={i} {...s} rank={i + 1} />)}
+                {rankedSubjects.map((s, i) => (
+                  <Reveal key={i} variant="up" delay={Math.min(i, 6) * 80}>
+                    <SubjectReadinessCard {...s} rank={i + 1} />
+                  </Reveal>
+                ))}
               </div>
             </div>
           )}
@@ -149,8 +166,10 @@ export const ExamReadinessContent = () => {
               <SectionLabel>Risk Analysis</SectionLabel>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(18rem, 1fr))', gap: '0.75rem' }}>
                 {subjects.map((s, i) => (
-                  <RiskIndicator key={i} score={s.readiness_score} label={s.subject}
-                    status={s.status === 'Ready' ? 'Exam Ready' : s.status === 'Good' ? 'Good Preparation' : s.status === 'Needs Improvement' ? 'Moderate Risk' : 'High Risk'} />
+                  <Reveal key={i} variant="up" delay={Math.min(i, 6) * 60}>
+                    <RiskIndicator score={s.readiness_score} label={s.subject}
+                      status={s.status === 'Ready' ? 'Exam Ready' : s.status === 'Good' ? 'Good Preparation' : s.status === 'Needs Improvement' ? 'Moderate Risk' : 'High Risk'} />
+                  </Reveal>
                 ))}
               </div>
             </div>
@@ -159,41 +178,45 @@ export const ExamReadinessContent = () => {
           {/* Topics + Recommendations */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
             {topics.length > 0 && (
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <SectionLabel>Topic Readiness</SectionLabel>
-                  <div style={{ display: 'flex', gap: '0.375rem' }}>
-                    {['Weak', 'Strong', 'All'].map(f => (
-                      <button key={f} onClick={() => setTopicFilter(f)} style={{
-                        padding: '0.2rem 0.625rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700,
-                        border: `1px solid ${topicFilter === f ? 'var(--amber-border)' : 'var(--border-strong)'}`,
-                        background: topicFilter === f ? 'var(--amber-dim)' : 'transparent',
-                        color: topicFilter === f ? 'var(--amber)' : 'var(--text-muted)',
-                        cursor: 'pointer', transition: 'all var(--transition)',
-                      }}>{f}</button>
-                    ))}
+              <Reveal variant="left" delay={250} style={{ height: '100%' }}>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <SectionLabel>Topic Readiness</SectionLabel>
+                    <div style={{ display: 'flex', gap: '0.375rem' }}>
+                      {['Weak', 'Strong', 'All'].map(f => (
+                        <button key={f} onClick={() => setTopicFilter(f)} style={{
+                          padding: '0.2rem 0.625rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700,
+                          border: `1px solid ${topicFilter === f ? 'var(--amber-border)' : 'var(--border-strong)'}`,
+                          background: topicFilter === f ? 'var(--amber-dim)' : 'transparent',
+                          color: topicFilter === f ? 'var(--amber)' : 'var(--text-muted)',
+                          cursor: 'pointer', transition: 'all var(--transition)',
+                        }}>{f}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+                    {filteredTopics.map((t, idx) => {
+                      const col = retColor(t.readiness_score);
+                      return (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', width: '7rem', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.topic}</span>
+                          <div style={{ flex: 1, height: '6px', background: 'var(--border)', borderRadius: '100px', overflow: 'hidden' }}>
+                            <div style={{ height: '100%', borderRadius: '100px', background: col, width: `${Math.max(t.readiness_score, 2)}%`, transition: 'width 0.7s ease' }} />
+                          </div>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: col, width: '2.5rem', textAlign: 'right', flexShrink: 0 }}>{t.readiness_score.toFixed(0)}%</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                  {filteredTopics.map((t, i) => {
-                    const col = retColor(t.readiness_score);
-                    return (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', width: '7rem', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.topic}</span>
-                        <div style={{ flex: 1, height: '6px', background: 'var(--border)', borderRadius: '100px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', borderRadius: '100px', background: col, width: `${Math.max(t.readiness_score, 2)}%`, transition: 'width 0.7s ease' }} />
-                        </div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: col, width: '2.5rem', textAlign: 'right', flexShrink: 0 }}>{t.readiness_score.toFixed(0)}%</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              </Reveal>
             )}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-              <SectionLabel>AI Recommendations</SectionLabel>
-              <RecommendationPanel recommendations={recommendations} onRecalculate={handleRecalculate} loading={recalculating} generated_at={data?.generated_at ? new Date(data.generated_at).toLocaleString() : ''} />
-            </div>
+            <Reveal variant="right" delay={300} style={{ height: '100%' }}>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                <SectionLabel>AI Recommendations</SectionLabel>
+                <RecommendationPanel recommendations={recommendations} onRecalculate={handleRecalculate} loading={recalculating} generated_at={data?.generated_at ? new Date(data.generated_at).toLocaleString() : ''} />
+              </div>
+            </Reveal>
           </div>
 
           {/* Empty state */}

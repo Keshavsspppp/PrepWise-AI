@@ -9,6 +9,7 @@ import RevisionTimeline from '../components/RevisionTimeline';
 import RevisionRecommendationCard from '../components/RevisionRecommendationCard';
 import { Brain, RefreshCcw, Loader2, AlertCircle, TrendingDown, Sparkles, History, ChevronRight } from 'lucide-react';
 import { RevisionHistoryContent } from './RevisionHistory';
+import Reveal from '../components/Reveal';
 
 /* ── helpers ──────────────────────────────────────────────────────────── */
 const Toast = ({ msg, type }) => (
@@ -118,7 +119,7 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
       {toast && <Toast {...toast} />}
 
       {/* ── Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
           <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Brain size={16} style={{ color: 'var(--teal)' }} />
@@ -153,36 +154,52 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
-            <StatCard label="Avg Retention" value={`${avgRetention}%`} col="var(--teal)" />
-            <StatCard label="High Risk" value={highRisk.length} col="#f87171" />
-            <StatCard label="Medium Risk" value={mediumRisk.length} col="var(--amber)" />
-            <StatCard label="Topics Tracked" value={retention.length} col="var(--text-secondary)" />
+            <Reveal variant="pop" delay={50} style={{ width: '100%' }}>
+              <StatCard label="Avg Retention" value={`${avgRetention}%`} col="var(--teal)" />
+            </Reveal>
+            <Reveal variant="pop" delay={100} style={{ width: '100%' }}>
+              <StatCard label="High Risk" value={highRisk.length} col="#f87171" />
+            </Reveal>
+            <Reveal variant="pop" delay={150} style={{ width: '100%' }}>
+              <StatCard label="Medium Risk" value={mediumRisk.length} col="var(--amber)" />
+            </Reveal>
+            <Reveal variant="pop" delay={200} style={{ width: '100%' }}>
+              <StatCard label="Topics Tracked" value={retention.length} col="var(--text-secondary)" />
+            </Reveal>
           </div>
 
           {/* Memory Health + Chart */}
           {retention.length > 0 && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem' }}>
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                <SectionLabel>Memory Health</SectionLabel>
-                <MemoryHealthCard topics={retention} />
-              </div>
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-                <SectionLabel>Subject Retention Comparison</SectionLabel>
-                <RetentionChart topics={retention} />
-              </div>
+              <Reveal variant="left" delay={150} style={{ height: '100%' }}>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                  <SectionLabel>Memory Health</SectionLabel>
+                  <MemoryHealthCard topics={retention} />
+                </div>
+              </Reveal>
+              <Reveal variant="right" delay={200} style={{ height: '100%' }}>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                  <SectionLabel>Subject Retention Comparison</SectionLabel>
+                  <RetentionChart topics={retention} />
+                </div>
+              </Reveal>
             </div>
           )}
 
           {/* Timeline + AI Tips */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-              <SectionLabel>Revision Schedule</SectionLabel>
-              <RevisionTimeline upcoming={upcoming} onRevise={handleReviseComplete} markingId={markingId} />
-            </div>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem' }}>
-              <SectionLabel>AI Revision Tips</SectionLabel>
-              <RevisionRecommendationCard recommendations={aiTips.recommendations} updatedAt={aiTips.updatedAt} onRecalculate={handleRecalculate} loading={recalculating} />
-            </div>
+            <Reveal variant="left" delay={250} style={{ height: '100%' }}>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                <SectionLabel>Revision Schedule</SectionLabel>
+                <RevisionTimeline upcoming={upcoming} onRevise={handleReviseComplete} markingId={markingId} />
+              </div>
+            </Reveal>
+            <Reveal variant="right" delay={300} style={{ height: '100%' }}>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', height: '100%' }}>
+                <SectionLabel>AI Revision Tips</SectionLabel>
+                <RevisionRecommendationCard recommendations={aiTips.recommendations} updatedAt={aiTips.updatedAt} onRecalculate={handleRecalculate} loading={recalculating} />
+              </div>
+            </Reveal>
           </div>
 
           {/* Topic Risk Grid */}
@@ -214,8 +231,10 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(15rem, 1fr))', gap: '0.875rem' }}>
-                  {filtered.slice(0, 12).map(topic => (
-                    <TopicRiskCard key={topic.topic_id} {...topic} onRevise={() => handleReviseComplete(topic.topic_id)} loading={markingId === topic.topic_id} />
+                  {filtered.slice(0, 12).map((topic, i) => (
+                    <Reveal key={topic.topic_id} variant="pop" delay={Math.min(i, 6) * 60}>
+                      <TopicRiskCard {...topic} onRevise={() => handleReviseComplete(topic.topic_id)} loading={markingId === topic.topic_id} />
+                    </Reveal>
                   ))}
                 </div>
               )}

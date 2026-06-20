@@ -754,3 +754,63 @@ input, textarea, select, button {
 
 /* ─── Selection ─────────────────────────────────────────────────────────── */
 ::selection { background: var(--amber-dim); }
+
+/* ─── Scroll Reveal (Intersection-Observer driven, see hooks/useInView.js) ─ */
+.reveal {
+  opacity: 0;
+  will-change: transform, opacity;
+  transition-property: opacity, transform;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 700ms;
+}
+.reveal-up    { transform: translateY(28px); }
+.reveal-down  { transform: translateY(-28px); }
+.reveal-left  { transform: translateX(-32px); }
+.reveal-right { transform: translateX(32px); }
+.reveal-pop   { transform: translateY(14px) scale(0.92); }
+.reveal-fade  { transform: none; }
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { transition: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* ─── Scroll progress bar (thin strip along the bottom of the sticky header) ─ */
+.scroll-progress-track {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: transparent;
+}
+.scroll-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber), var(--teal));
+  width: 0%;
+  transition: width 80ms linear;
+}
+
+/* ─── Button micro-interaction (press feedback) ───────────────────────────
+   Existing .btn already animates on hover; this adds a tactile press state
+   and a subtle icon nudge so clicks feel acknowledged. */
+.btn:active:not(:disabled) { transform: scale(0.97) !important; }
+.btn svg { transition: transform 220ms cubic-bezier(0.4,0,0.2,1); }
+.btn:hover:not(:disabled) svg { transform: translateX(1px); }
+
+/* ─── Number count-up ticker (paired with hooks/useCountUp.js) ───────────── */
+.stat-value-animated {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Route-level page transition ─────────────────────────────────────────
+   Applied via the `route-fade` class wrapping page content. */
+@keyframes routeFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.route-fade { animation: routeFadeIn 0.45s cubic-bezier(0.16,1,0.3,1) both; }
+

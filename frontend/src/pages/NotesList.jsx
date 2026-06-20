@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, FileText, Trash2, Download, Calendar, HardDrive, Inbox, Plus, AlertCircle, Upload, CheckCircle2, X, CloudUpload } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import API from '../api/axios';
+import Reveal from '../components/Reveal';
 
 const SUBJECTS = ['All', 'DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
 
@@ -281,46 +282,49 @@ const NotesList = () => {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(15rem, 1fr))', gap: '1rem' }}>
-            {notes.map(note => {
+            {notes.map((note, i) => {
               const c = cfg(note.subject);
               return (
-                <div key={note.id} style={{
-                  background: 'var(--bg-card)', border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-lg)', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                  transition: 'all var(--transition)',
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
-                >
-                  {/* Color band */}
-                  <div style={{ height: '3px', background: c.color }} />
-                  {/* Body */}
-                  <div style={{ padding: '1.125rem', flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.5rem', background: c.dim, border: `1px solid ${c.border}`, borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700, color: c.color, fontFamily: 'var(--font-display)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{note.subject}</span>
-                      <FileText size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                <Reveal key={note.id} variant="pop" delay={Math.min(i, 6) * 60}>
+                  <div style={{
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-lg)', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                    transition: 'all var(--transition)',
+                    height: '100%'
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+                  >
+                    {/* Color band */}
+                    <div style={{ height: '3px', background: c.color }} />
+                    {/* Body */}
+                    <div style={{ padding: '1.125rem', flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.875rem' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.5rem', background: c.dim, border: `1px solid ${c.border}`, borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700, color: c.color, fontFamily: 'var(--font-display)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{note.subject}</span>
+                        <FileText size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+                      </div>
+                      <h4 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem', marginBottom: '0.25rem', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{note.title}</h4>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{note.filename}</p>
                     </div>
-                    <h4 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem', marginBottom: '0.25rem', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{note.title}</h4>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{note.filename}</p>
+                    {/* Footer */}
+                    <div style={{ padding: '0.75rem 1.125rem', borderTop: '1px solid var(--border)', background: 'rgba(255,255,255,0.015)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.625rem' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Calendar size={11} />{fmtDate(note.upload_date)}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><HardDrive size={11} />{fmtBytes(note.filesize)}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        <button onClick={() => dl(note.id, note.filename)} className="btn btn-ghost btn-sm" style={{ justifyContent: 'center' }}>
+                          <Download size={13} /> Download
+                        </button>
+                        <button onClick={() => del(note.id)} disabled={deleting === note.id} className="btn btn-danger btn-sm" style={{ justifyContent: 'center' }}>
+                          {deleting === note.id
+                            ? <span style={{ width: '12px', height: '12px', border: '2px solid rgba(248,113,113,0.3)', borderTop: '2px solid #f87171', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+                            : <Trash2 size={13} />} Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  {/* Footer */}
-                  <div style={{ padding: '0.75rem 1.125rem', borderTop: '1px solid var(--border)', background: 'rgba(255,255,255,0.015)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.625rem' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Calendar size={11} />{fmtDate(note.upload_date)}</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><HardDrive size={11} />{fmtBytes(note.filesize)}</span>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                      <button onClick={() => dl(note.id, note.filename)} className="btn btn-ghost btn-sm" style={{ justifyContent: 'center' }}>
-                        <Download size={13} /> Download
-                      </button>
-                      <button onClick={() => del(note.id)} disabled={deleting === note.id} className="btn btn-danger btn-sm" style={{ justifyContent: 'center' }}>
-                        {deleting === note.id
-                          ? <span style={{ width: '12px', height: '12px', border: '2px solid rgba(248,113,113,0.3)', borderTop: '2px solid #f87171', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
-                          : <Trash2 size={13} />} Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                </Reveal>
               );
             })}
           </div>

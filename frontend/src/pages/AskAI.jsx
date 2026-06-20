@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, Sparkles, Send, Bot, User } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import API from '../api/axios';
+import Reveal from '../components/Reveal';
 
 const PROMPTS = [
   { text: 'Explain Merge Sort.',              subject: 'DSA' },
@@ -120,7 +121,7 @@ const AskAI = () => {
           {/* Messages */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: 0 }}>
             {messages.length === 0 && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '1.75rem', paddingBottom: '2rem' }}>
+              <Reveal variant="up" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '1.75rem', paddingBottom: '2rem' }}>
                 <div className="animate-float">
                   <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                     <Sparkles size={20} style={{ color: 'var(--teal)' }} />
@@ -148,7 +149,7 @@ const AskAI = () => {
                     ))}
                   </div>
                 </div>
-              </div>
+              </Reveal>
             )}
             {messages.map((m, i) => <Bubble key={i} msg={m} />)}
             {loading && <Typing />}

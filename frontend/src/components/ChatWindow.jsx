@@ -4,11 +4,9 @@ import { BrainCircuit } from 'lucide-react';
 
 const ChatWindow = ({ messages, loading }) => {
   const bottomRef = useRef(null);
-
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
-
   return (
     <div className="flex flex-col h-full overflow-y-auto px-1 md:px-4">
       {messages.length === 0 ? (

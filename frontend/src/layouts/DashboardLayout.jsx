@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   BookOpen, LayoutDashboard, BrainCircuit, Calendar,
   Mic, LogOut, Menu, Bell, Sparkles, Dna, RefreshCcw,
   GraduationCap, X, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import ScrollProgress from '../components/ScrollProgress';
+
 
 const nav = [
   { name: 'Dashboard',          icon: LayoutDashboard, href: '#/dashboard',    pages: ['Dashboard'] },
@@ -33,6 +35,7 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
   const [open, setOpen] = useState(false);
   const [bell, setBell] = useState(false);
   const { user, logout } = useAuth();
+  const scrollRef = useRef(null);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', fontFamily: 'var(--font-body)', position: 'relative', overflow: 'hidden' }}>
@@ -185,8 +188,10 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
           </div>
         </header>
 
+        <ScrollProgress targetRef={scrollRef} />
+
         {/* Page content */}
-        <main style={{ flex: 1, padding: '1.5rem', overflowY: 'auto' }}>
+        <main ref={scrollRef} style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', scrollBehavior: 'smooth' }}>
           <div className="animate-fade-up" style={{ maxWidth: '72rem', margin: '0 auto' }}>
             {children}
           </div>

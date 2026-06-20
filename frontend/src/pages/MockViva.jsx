@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { Mic, BookOpen, BarChart3, AlertCircle, ChevronRight, Clock, History, Zap } from 'lucide-react';
+import Reveal from '../components/Reveal';
 
 const SUBJECTS = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
 const DIFFICULTIES = [
@@ -56,9 +57,9 @@ const MockViva = () => {
 
         {/* Header card */}
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
-          <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--teal-dim) 0%, transparent 70%)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+          <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--teal-dim) 0%, transparent 70%)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifycontent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-              <div className="animate-float" style={{ width: '3rem', height: '3rem', borderRadius: 'var(--radius-md)', background: 'var(--teal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="animate-float" style={{ width: '3rem', height: '3rem', borderRadius: 'var(--radius-md)', background: 'var(--teal)', display: 'flex', alignItems: 'center', justifycontent: 'center' }}>
                 <Mic size={18} color="#0a0a0f" />
               </div>
               <div>
@@ -75,7 +76,7 @@ const MockViva = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid var(--border)' }}>
             {HOW.map(h => (
               <div key={h.label} style={{ padding: '1.125rem 0.875rem', textAlign: 'center', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: h.col + '18', border: `1px solid ${h.col}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: h.col + '18', border: `1px solid ${h.col}30`, display: 'flex', alignItems: 'center', justifycontent: 'center' }}>
                   <h.icon size={13} style={{ color: h.col }} />
                 </div>
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-primary)' }}>{h.label}</div>
@@ -86,70 +87,76 @@ const MockViva = () => {
         </div>
 
         {/* Config */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {/* Subject */}
-          <div>
-            <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><BookOpen size={12} /> Subject</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-              {SUBJECTS.map(s => <Pill key={s} active={subject === s} col="var(--teal)" onClick={() => setSubject(s)}>{s}</Pill>)}
+        <Reveal variant="up" delay={50}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Subject */}
+            <div>
+              <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><BookOpen size={12} /> Subject</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {SUBJECTS.map(s => <Pill key={s} active={subject === s} col="var(--teal)" onClick={() => setSubject(s)}>{s}</Pill>)}
+              </div>
+            </div>
+
+            {/* Difficulty */}
+            <div>
+              <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><Zap size={12} /> Difficulty</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
+                {DIFFICULTIES.map(d => (
+                  <button key={d.label} onClick={() => setDifficulty(d.label)} style={{
+                    padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${difficulty === d.label ? d.color : 'var(--border-strong)'}`,
+                    background: difficulty === d.label ? d.color + '15' : 'var(--bg-elevated)',
+                    color: difficulty === d.label ? d.color : 'var(--text-secondary)',
+                    cursor: 'pointer', transition: 'all var(--transition)', textAlign: 'left',
+                  }}>
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.8125rem' }}>{d.label}</div>
+                    <div style={{ fontSize: '0.65rem', opacity: 0.65, marginTop: '0.125rem' }}>{d.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Count */}
+            <div>
+              <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><Clock size={12} /> Questions</label>
+              <div style={{ display: 'flex', gap: '0.625rem' }}>
+                {COUNTS.map(n => <Pill key={n} active={questionCount === n} col="var(--amber)" onClick={() => setQuestionCount(n)}>{n} Qs</Pill>)}
+              </div>
             </div>
           </div>
+        </Reveal>
 
-          {/* Difficulty */}
-          <div>
-            <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><Zap size={12} /> Difficulty</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
-              {DIFFICULTIES.map(d => (
-                <button key={d.label} onClick={() => setDifficulty(d.label)} style={{
-                  padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${difficulty === d.label ? d.color : 'var(--border-strong)'}`,
-                  background: difficulty === d.label ? d.color + '15' : 'var(--bg-elevated)',
-                  color: difficulty === d.label ? d.color : 'var(--text-secondary)',
-                  cursor: 'pointer', transition: 'all var(--transition)', textAlign: 'left',
-                }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.8125rem' }}>{d.label}</div>
-                  <div style={{ fontSize: '0.65rem', opacity: 0.65, marginTop: '0.125rem' }}>{d.desc}</div>
-                </button>
+        {/* Preview */}
+        <Reveal variant="up" delay={100}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--teal-border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem 1.25rem' }}>
+            <p className="label" style={{ marginBottom: '0.75rem' }}>Session Preview</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.5rem' }}>
+              {[
+                { l: 'Subject', v: subject },
+                { l: 'Level', v: difficulty },
+                { l: 'Questions', v: `${questionCount}` },
+                { l: 'Est. Time', v: `~${questionCount * 3}m` },
+              ].map(p => (
+                <div key={p.l} style={{ textAlign: 'center', padding: '0.625rem', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                  <div className="label" style={{ marginBottom: '0.25rem' }}>{p.l}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{p.v}</div>
+                </div>
               ))}
             </div>
           </div>
-
-          {/* Count */}
-          <div>
-            <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><Clock size={12} /> Questions</label>
-            <div style={{ display: 'flex', gap: '0.625rem' }}>
-              {COUNTS.map(n => <Pill key={n} active={questionCount === n} col="var(--amber)" onClick={() => setQuestionCount(n)}>{n} Qs</Pill>)}
-            </div>
-          </div>
-        </div>
-
-        {/* Preview */}
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--teal-border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem 1.25rem' }}>
-          <p className="label" style={{ marginBottom: '0.75rem' }}>Session Preview</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.5rem' }}>
-            {[
-              { l: 'Subject', v: subject },
-              { l: 'Level', v: difficulty },
-              { l: 'Questions', v: `${questionCount}` },
-              { l: 'Est. Time', v: `~${questionCount * 3}m` },
-            ].map(p => (
-              <div key={p.l} style={{ textAlign: 'center', padding: '0.625rem', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                <div className="label" style={{ marginBottom: '0.25rem' }}>{p.l}</div>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{p.v}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        </Reveal>
 
         {error && <div className="alert alert-error"><AlertCircle size={15} style={{ flexShrink: 0 }} />{error}</div>}
 
-        <button id="start-viva-btn" onClick={start} disabled={loading} className="btn btn-xl btn-block"
-          style={{ background: 'linear-gradient(135deg, var(--teal), #0d9488)', color: '#0a0a0f', border: 'none', fontWeight: 800 }}
-        >
-          {loading
-            ? <><span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(10,10,15,0.3)', borderTop: '2px solid #0a0a0f', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} /> Generating Questions…</>
-            : <><Mic size={18} /> Start Mock Viva <ChevronRight size={18} /></>
-          }
-        </button>
+        <Reveal variant="up" delay={150}>
+          <button id="start-viva-btn" onClick={start} disabled={loading} className="btn btn-xl btn-block"
+            style={{ background: 'linear-gradient(135deg, var(--teal), #0d9488)', color: '#0a0a0f', border: 'none', fontWeight: 800 }}
+          >
+            {loading
+              ? <><span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(10,10,15,0.3)', borderTop: '2px solid #0a0a0f', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} /> Generating Questions…</>
+              : <><Mic size={18} /> Start Mock Viva <ChevronRight size={18} /></>
+            }
+          </button>
+        </Reveal>
         <p style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
           Questions generated exclusively from your uploaded notes via RAG semantic search.
         </p>

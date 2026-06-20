@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { History, ArrowLeft, RefreshCcw, Search, Calendar, TrendingUp, TrendingDown, Minus, Inbox } from 'lucide-react';
+import Reveal from '../components/Reveal';
 
 const SUBJECT_COLORS = {
   'DSA':                { color: 'var(--amber)',  dim: 'var(--amber-dim)',  border: 'var(--amber-border)' },
@@ -72,21 +73,25 @@ export const RevisionHistoryContent = ({ onBack }) => {
             { label: 'Total Revisions', value: totalRevisions, col: 'var(--text-primary)' },
             { label: 'Avg Retention Gain', value: `+${avgImprovement}%`, col: 'var(--teal)' },
             { label: 'Topics Revised', value: uniqueTopics, col: 'var(--amber)' },
-          ].map(s => (
-            <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem', textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.625rem', color: s.col }}>{s.value}</div>
-              <div className="label" style={{ marginTop: '0.25rem' }}>{s.label}</div>
-            </div>
+          ].map((s, idx) => (
+            <Reveal key={s.label} variant="pop" delay={idx * 60} style={{ width: '100%' }}>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem', textAlign: 'center', height: '100%' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.625rem', color: s.col }}>{s.value}</div>
+                <div className="label" style={{ marginTop: '0.25rem' }}>{s.label}</div>
+              </div>
+            </Reveal>
           ))}
         </div>
       )}
 
       {/* Search */}
       {!loading && history.length > 0 && (
-        <div className="input-icon">
-          <Search size={15} className="icon" />
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by topic or subject…" className="input-field" />
-        </div>
+        <Reveal variant="up" delay={180}>
+          <div className="input-icon">
+            <Search size={15} className="icon" />
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by topic or subject…" className="input-field" />
+          </div>
+        </Reveal>
       )}
 
       {error && <div className="alert alert-error">{error}</div>}
@@ -113,45 +118,47 @@ export const RevisionHistoryContent = ({ onBack }) => {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-          {filtered.map(item => {
+          {filtered.map((item, i) => {
             const delta = item.retention_after - item.retention_before;
             const deltaCol = delta > 0 ? 'var(--teal)' : delta < -1 ? '#f87171' : 'var(--text-muted)';
             const cfg = getSubjectCfg(item.subject);
             return (
-              <div key={item.history_id} style={{
-                display: 'flex', alignItems: 'center', gap: '1rem',
-                background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
-                padding: '1rem 1.25rem', transition: 'all var(--transition)',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.transform = 'translateX(2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
-              >
-                {/* Icon */}
-                <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <DeltaIcon before={item.retention_before} after={item.retention_after} />
+              <Reveal key={item.history_id} variant="up" delay={Math.min(i, 6) * 60}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '1rem',
+                  background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
+                  padding: '1rem 1.25rem', transition: 'all var(--transition)',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.transform = 'translateX(2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+                >
+                  {/* Icon */}
+                  <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <DeltaIcon before={item.retention_before} after={item.retention_after} />
+                  </div>
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.topic}</span>
+                      <span style={{ display: 'inline-flex', padding: '0.125rem 0.5rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700, background: cfg.dim, border: `1px solid ${cfg.border}`, color: cfg.color, flexShrink: 0 }}>{item.subject}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <Calendar size={11} /> {item.revision_date}
+                    </div>
+                  </div>
+                  {/* Retention */}
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end', marginBottom: '0.125rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: retColor(item.retention_before) }}>{item.retention_before.toFixed(0)}%</span>
+                      <span style={{ color: 'var(--border-strong)' }}>→</span>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: retColor(item.retention_after) }}>{item.retention_after.toFixed(0)}%</span>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: deltaCol }}>
+                      {delta > 0 ? '+' : ''}{delta.toFixed(0)}% change
+                    </div>
+                  </div>
                 </div>
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.topic}</span>
-                    <span style={{ display: 'inline-flex', padding: '0.125rem 0.5rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700, background: cfg.dim, border: `1px solid ${cfg.border}`, color: cfg.color, flexShrink: 0 }}>{item.subject}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    <Calendar size={11} /> {item.revision_date}
-                  </div>
-                </div>
-                {/* Retention */}
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end', marginBottom: '0.125rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: retColor(item.retention_before) }}>{item.retention_before.toFixed(0)}%</span>
-                    <span style={{ color: 'var(--border-strong)' }}>→</span>
-                    <span style={{ fontSize: '0.875rem', fontWeight: 700, color: retColor(item.retention_after) }}>{item.retention_after.toFixed(0)}%</span>
-                  </div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: deltaCol }}>
-                    {delta > 0 ? '+' : ''}{delta.toFixed(0)}% change
-                  </div>
-                </div>
-              </div>
+              </Reveal>
             );
           })}
         </div>

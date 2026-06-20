@@ -4,6 +4,7 @@ import { Plus, Search, FileText, Sparkles, AlertCircle } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import QuizCard from '../components/QuizCard';
 import API from '../api/axios';
+import Reveal from '../components/Reveal';
 
 const SUBJECTS = ['All', 'DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
 
@@ -81,13 +82,14 @@ const QuizHistory = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {filtered.map(a => (
-              <QuizCard 
-                key={a.result_id} 
-                attempt={a} 
-                onRetake={() => navigate(`/quiz/attempt/${a.quiz_id}`)} 
-                onViewResults={() => navigate(`/quiz/result/${a.result_id}`)}
-              />
+            {filtered.map((a, i) => (
+              <Reveal key={a.result_id} variant="up" delay={Math.min(i, 6) * 60}>
+                <QuizCard 
+                  attempt={a} 
+                  onRetake={() => navigate(`/quiz/attempt/${a.quiz_id}`)} 
+                  onViewResults={() => navigate(`/quiz/result/${a.result_id}`)}
+                />
+              </Reveal>
             ))}
           </div>
         )}

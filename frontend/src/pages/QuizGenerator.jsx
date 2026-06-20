@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, BrainCircuit, Play, AlertCircle, ChevronRight, History } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import API from '../api/axios';
+import Reveal from '../components/Reveal';
 
 const SUBJECTS = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
 const DIFFICULTIES = [
@@ -112,62 +113,72 @@ const QuizGenerator = () => {
               )}
 
               {/* Subject + Topic */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Subject</label>
-                  <select value={subject} onChange={e => setSubject(e.target.value)} className="input-field" style={{ cursor: 'pointer', background: 'var(--bg-elevated)' }}>
-                    {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+              <Reveal variant="up" delay={50}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Subject</label>
+                    <select value={subject} onChange={e => setSubject(e.target.value)} className="input-field" style={{ cursor: 'pointer', background: 'var(--bg-elevated)' }}>
+                      {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Topic</label>
+                    <input type="text" value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g. AVL Trees…" className="input-field" />
+                  </div>
                 </div>
-                <div>
-                  <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Topic</label>
-                  <input type="text" value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g. AVL Trees…" className="input-field" />
-                </div>
-              </div>
+              </Reveal>
 
               {/* Difficulty */}
-              <div>
-                <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Difficulty</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
-                  {DIFFICULTIES.map(d => (
-                    <SelBtn key={d.label} active={difficulty === d.label} onClick={() => setDifficulty(d.label)} col={d.col}>
-                      <div style={{ fontWeight: 700 }}>{d.label}</div>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.65, marginTop: '0.125rem' }}>{d.desc}</div>
-                    </SelBtn>
-                  ))}
+              <Reveal variant="up" delay={100}>
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Difficulty</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
+                    {DIFFICULTIES.map(d => (
+                      <SelBtn key={d.label} active={difficulty === d.label} onClick={() => setDifficulty(d.label)} col={d.col}>
+                        <div style={{ fontWeight: 700 }}>{d.label}</div>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.65, marginTop: '0.125rem' }}>{d.desc}</div>
+                      </SelBtn>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </Reveal>
 
               {/* Count */}
-              <div>
-                <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Questions</label>
-                <div style={{ display: 'flex', gap: '0.625rem' }}>
-                  {COUNTS.map(n => (
-                    <SelBtn key={n} active={count === n} onClick={() => setCount(n)}>
-                      <span style={{ display: 'flex', justifyContent: 'center', fontWeight: 700 }}>{n}</span>
-                    </SelBtn>
-                  ))}
+              <Reveal variant="up" delay={150}>
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Questions</label>
+                  <div style={{ display: 'flex', gap: '0.625rem' }}>
+                    {COUNTS.map(n => (
+                      <SelBtn key={n} active={count === n} onClick={() => setCount(n)}>
+                        <span style={{ display: 'flex', justifyContent: 'center', fontWeight: 700 }}>{n}</span>
+                      </SelBtn>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </Reveal>
 
               {/* Quiz Type */}
-              <div>
-                <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Mode</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
-                  {TYPES.map(t => (
-                    <SelBtn key={t.value} active={quizType === t.value} onClick={() => setQuizType(t.value)}>
-                      <div style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>{t.icon}</div>
-                      <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{t.label}</div>
-                      <div style={{ fontSize: '0.65rem', opacity: 0.6, marginTop: '0.125rem' }}>{t.desc}</div>
-                    </SelBtn>
-                  ))}
+              <Reveal variant="up" delay={200}>
+                <div>
+                  <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Mode</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
+                    {TYPES.map(t => (
+                      <SelBtn key={t.value} active={quizType === t.value} onClick={() => setQuizType(t.value)}>
+                        <div style={{ fontSize: '1.125rem', marginBottom: '0.25rem' }}>{t.icon}</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{t.label}</div>
+                        <div style={{ fontSize: '0.65rem', opacity: 0.6, marginTop: '0.125rem' }}>{t.desc}</div>
+                      </SelBtn>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </Reveal>
 
               <div className="divider" />
-              <button type="submit" className="btn btn-primary btn-block btn-lg">
-                <Play size={16} /> Generate & Start Quiz
-              </button>
+              <Reveal variant="up" delay={250}>
+                <button type="submit" className="btn btn-primary btn-block btn-lg">
+                  <Play size={16} /> Generate & Start Quiz
+                </button>
+              </Reveal>
             </form>
           )}
         </div>

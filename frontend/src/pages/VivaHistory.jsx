@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { History, ArrowLeft, Mic, BarChart3, Search, Calendar, Inbox } from 'lucide-react';
+import Reveal from '../components/Reveal';
 
 const GRADE = (avg) => {
   if (avg === null || avg === undefined) return { label: 'Pending',          col: 'var(--text-muted)', dim: 'var(--border)', border: 'var(--border-strong)' };
@@ -64,21 +65,25 @@ const VivaHistory = () => {
               { label: 'Sessions',  value: history.length,                         col: 'var(--text-primary)' },
               { label: 'Avg Score', value: avgScore,                               col: 'var(--teal)' },
               { label: 'Subjects',  value: new Set(history.map(h => h.subject)).size, col: 'var(--amber)' },
-            ].map(s => (
-              <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.625rem', color: s.col }}>{s.value}</div>
-                <div className="label" style={{ marginTop: '0.25rem' }}>{s.label}</div>
-              </div>
+            ].map((s, idx) => (
+              <Reveal key={s.label} variant="pop" delay={idx * 60} style={{ width: '100%' }}>
+                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem', textAlign: 'center', height: '100%' }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.625rem', color: s.col }}>{s.value}</div>
+                  <div className="label" style={{ marginTop: '0.25rem' }}>{s.label}</div>
+                </div>
+              </Reveal>
             ))}
           </div>
         )}
 
         {/* Search */}
         {!loading && history.length > 0 && (
-          <div className="input-icon">
-            <Search size={15} className="icon" />
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by subject or difficulty…" className="input-field" />
-          </div>
+          <Reveal variant="up" delay={180}>
+            <div className="input-icon">
+              <Search size={15} className="icon" />
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by subject or difficulty…" className="input-field" />
+            </div>
+          </Reveal>
         )}
 
         {error && <div className="alert alert-error">{error}</div>}
@@ -107,48 +112,50 @@ const VivaHistory = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-            {filtered.map(session => {
+            {filtered.map((session, i) => {
               const pct = session.avg_score !== null ? Math.round(session.avg_score * 10) : null;
               const g = GRADE(session.avg_score);
               return (
-                <div key={session.viva_id}
-                  onClick={() => navigate('/viva/results', { state: { vivaId: session.viva_id } })}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '1rem',
-                    background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
-                    padding: '1rem 1.25rem', cursor: 'pointer', transition: 'all var(--transition)',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--teal-border)'; e.currentTarget.style.transform = 'translateX(2px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
-                >
-                  {/* Icon */}
-                  <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Mic size={14} style={{ color: 'var(--teal)' }} />
+                <Reveal key={session.viva_id} variant="up" delay={Math.min(i, 6) * 60}>
+                  <div 
+                    onClick={() => navigate('/viva/results', { state: { vivaId: session.viva_id } })}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '1rem',
+                      background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
+                      padding: '1rem 1.25rem', cursor: 'pointer', transition: 'all var(--transition)',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--teal-border)'; e.currentTarget.style.transform = 'translateX(2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+                  >
+                    {/* Icon */}
+                    <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Mic size={14} style={{ color: 'var(--teal)' }} />
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{session.subject}</span>
+                        <span style={{ display: 'inline-flex', padding: '0.125rem 0.5rem', borderRadius: '100px', fontSize: '0.6rem', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.05em', textTransform: 'uppercase', background: g.dim, border: `1px solid ${g.border}`, color: g.col }}>{g.label}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Calendar size={11} />{new Date(session.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        <span>{session.difficulty}</span>
+                        <span>{session.question_count} Questions</span>
+                      </div>
+                    </div>
+
+                    {/* Score */}
+                    {pct !== null && (
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', color: pct >= 70 ? 'var(--teal)' : pct >= 50 ? 'var(--amber)' : '#f87171' }}>{pct}%</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{session.avg_score}/10 avg</div>
+                      </div>
+                    )}
+
+                    <BarChart3 size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   </div>
-
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{session.subject}</span>
-                      <span style={{ display: 'inline-flex', padding: '0.125rem 0.5rem', borderRadius: '100px', fontSize: '0.6rem', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.05em', textTransform: 'uppercase', background: g.dim, border: `1px solid ${g.border}`, color: g.col }}>{g.label}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Calendar size={11} />{new Date(session.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                      <span>{session.difficulty}</span>
-                      <span>{session.question_count} Questions</span>
-                    </div>
-                  </div>
-
-                  {/* Score */}
-                  {pct !== null && (
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', color: pct >= 70 ? 'var(--teal)' : pct >= 50 ? 'var(--amber)' : '#f87171' }}>{pct}%</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{session.avg_score}/10 avg</div>
-                    </div>
-                  )}
-
-                  <BarChart3 size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                </div>
+                </Reveal>
               );
             })}
           </div>
