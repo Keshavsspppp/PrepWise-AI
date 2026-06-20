@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
 const FeedbackCard = ({ score, feedback, missing_concepts = [], strengths = [], correctness_summary, reference_answer, question_number }) => {
   const [showRef, setShowRef] = useState(false);
-  const scoreColor = score >= 8 ? 'text-emerald-400' : score >= 5 ? 'text-amber-400' : 'text-red-400';
+  const scoreColor = score >= 8 ? 'text-emerald-400' : score >= 5 ? 'text-brand-400' : 'text-red-400';
   const scoreBg   = score >= 8 ? 'bg-emerald-500/15 border-emerald-500/20' : score >= 5 ? 'bg-amber-500/15 border-amber-500/20' : 'bg-red-500/15 border-red-500/20';
   const Icon = score >= 8 ? CheckCircle2 : score >= 5 ? AlertCircle : XCircle;
   return (

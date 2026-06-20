@@ -17,7 +17,7 @@ const MemoryHealthCard = ({ topics = [] }) => {
   const healthLabel = healthScore >= 80 ? 'Excellent' : healthScore >= 60 ? 'Good' : healthScore >= 40 ? 'Fair' : 'Needs Attention';
   const healthColor = healthScore >= 80 ? 'var(--color-success)' : healthScore >= 60 ? 'var(--color-dbms-from)' : healthScore >= 40 ? 'var(--color-warning)' : 'var(--color-danger)';
   const healthGrad = healthScore >= 80 
-    ? 'linear-gradient(to right, var(--color-success), var(--teal))' 
+    ? 'linear-gradient(to right, var(--color-success), var(--color-accent))' 
     : healthScore >= 60 
     ? 'linear-gradient(to right, var(--color-dbms-from), var(--color-dsa-from))' 
     : healthScore >= 40 

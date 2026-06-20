@@ -58,7 +58,7 @@ const QuizHistory = () => {
         {/* Content */}
         {loading ? (
           <div style={{ padding: '5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--color-primary-dim)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading attempts…</p>
           </div>
         ) : error ? (

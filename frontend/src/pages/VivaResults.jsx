@@ -24,7 +24,7 @@ const VivaResults = () => {
   if (loading) return (
     <DashboardLayout currentPage="Viva Results">
       <div style={{ padding: '6rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--teal-dim)', borderTop: '2px solid var(--teal)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--color-accent-dim)', borderTop: '2px solid var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <p style={{ color: 'var(--text-muted)' }}>Loading results…</p>
       </div>
     </DashboardLayout>
@@ -47,7 +47,7 @@ const VivaResults = () => {
             <button onClick={() => navigate('/viva/history')} className="btn btn-ghost btn-sm">
               <History size={13} /> History
             </button>
-            <button onClick={() => navigate('/viva')} className="btn btn-teal btn-sm">
+            <button onClick={() => navigate('/viva')} className="btn btn-accent btn-sm">
               <RotateCcw size={13} /> Retake
             </button>
           </div>

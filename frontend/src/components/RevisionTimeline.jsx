@@ -1,12 +1,12 @@
 import { Calendar, Clock, CalendarDays, CheckCircle2 } from 'lucide-react';
 const BUCKET_CONFIG = {
   today:     { icon: Clock,        label: 'Today',     color: 'text-red-400',    bg: 'bg-red-500/8',    border: 'border-red-500/20' },
-  tomorrow:  { icon: Calendar,     label: 'Tomorrow',  color: 'text-amber-400',  bg: 'bg-amber-500/8',  border: 'border-amber-500/20' },
+  tomorrow:  { icon: Calendar,     label: 'Tomorrow',  color: 'text-brand-400',  bg: 'bg-amber-500/8',  border: 'border-amber-500/20' },
   this_week: { icon: CalendarDays, label: 'This Week', color: 'text-indigo-400', bg: 'bg-indigo-500/8', border: 'border-indigo-500/20' },
 };
 const TimelineItem = ({ topic, subject, retention_score, risk_level, next_revision, onRevise, markingId, topicId }) => {
   const isLoading = markingId === topicId;
-  const riskColor = risk_level === 'High' ? 'text-red-400' : risk_level === 'Medium' ? 'text-amber-400' : 'text-emerald-400';
+  const riskColor = risk_level === 'High' ? 'text-red-400' : risk_level === 'Medium' ? 'text-brand-400' : 'text-emerald-400';
   const dotColor  = risk_level === 'High' ? 'bg-red-400'  : risk_level === 'Medium' ? 'bg-amber-400'  : 'bg-emerald-400';
   return (
     <div className="flex items-start gap-3 py-2.5 border-b border-slate-800/40 last:border-0 group">

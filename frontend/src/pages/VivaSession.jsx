@@ -56,19 +56,19 @@ const VivaSession = () => {
     }
   };
   if (!state?.vivaId) return null;
-  const diffCol = difficulty === 'Easy' ? 'var(--teal)' : difficulty === 'Hard' ? '#f87171' : 'var(--amber)';
+  const diffCol = difficulty === 'Easy' ? 'var(--color-accent)' : difficulty === 'Hard' ? 'var(--color-danger)' : 'var(--color-primary)';
   return (
     <DashboardLayout currentPage="Viva Session">
       <div style={{ maxWidth: '42rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1rem 1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-            <button onClick={() => navigate('/viva')} className="btn btn-ghost btn-sm" style={{ padding: '0.375rem' }}>
+            <button onClick={() => navigate('/viva')} className="btn btn-ghost btn-sm" style={{ padding: '0.375rem' }} aria-label="Back to Mock Viva">
               <ArrowLeft size={14} />
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Mic size={13} style={{ color: 'var(--teal)' }} />
+              <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Mic size={13} style={{ color: 'var(--color-accent)' }} />
               </div>
               <div>
                 <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>{subject} Viva</p>
@@ -84,7 +84,7 @@ const VivaSession = () => {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
               <div style={{ display: 'flex', gap: '3px' }}>
                 {[...Array(totalQuestions)].map((_, i) => (
-                  <div key={i} style={{ width: '18px', height: '4px', borderRadius: '100px', background: i < questionNumber ? 'var(--teal)' : i === questionNumber - 1 ? 'var(--amber)' : 'var(--border)', transition: 'all 0.3s' }} />
+                  <div key={i} style={{ width: '18px', height: '4px', borderRadius: '100px', background: i < questionNumber ? 'var(--color-accent)' : i === questionNumber - 1 ? 'var(--color-primary)' : 'var(--border)', transition: 'all 0.3s' }} />
                 ))}
               </div>
               <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{questionNumber}/{totalQuestions}</span>
@@ -120,7 +120,7 @@ const VivaSession = () => {
         {/* Evaluating state */}
         {submitting && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2.5rem 1rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
-            <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--teal-dim)', borderTop: '2px solid var(--teal)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--color-accent-dim)', borderTop: '2px solid var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             <div>
               <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Evaluating with Gemini AI…</p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Grounding answer against your study notes</p>
@@ -137,14 +137,14 @@ const VivaSession = () => {
                   setQuestionNumber(n => n + 1);
                   handleNextQuestion();
                 }}
-                className="btn btn-teal btn-block btn-lg"
+                className="btn btn-accent btn-block btn-lg"
               >
                 Next Question <ChevronRight size={16} />
               </button>
             ) : (
               <button onClick={handleCompleteViva} disabled={completing}
                 className="btn btn-block btn-lg"
-                style={{ background: 'linear-gradient(135deg, var(--teal), #0d9488)', color: '#0a0a0f', border: 'none', fontWeight: 800 }}
+                style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-light))', color: 'var(--btn-primary-text)', border: 'none', fontWeight: 800 }}
               >
                 {completing ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
                 {completing ? 'Completing…' : 'Complete Viva & View Results'}
@@ -166,9 +166,9 @@ const VivaSession = () => {
         {/* Loading next question */}
         {phase === 'answering' && !currentQuestion && questionNumber > 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '3rem 1rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
-            <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--teal-dim)', borderTop: '2px solid var(--teal)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--color-accent-dim)', borderTop: '2px solid var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading next question…</p>
-            <button onClick={handleCompleteViva} disabled={completing} className="btn btn-teal btn-sm">
+            <button onClick={handleCompleteViva} disabled={completing} className="btn btn-accent btn-sm">
               <CheckCircle2 size={14} /> View My Results
             </button>
           </div>

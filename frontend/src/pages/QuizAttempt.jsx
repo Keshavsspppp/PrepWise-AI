@@ -76,7 +76,7 @@ const QuizAttempt = () => {
   if (loading) return (
     <DashboardLayout currentPage="Quiz Attempt">
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '6rem 0' }}>
-        <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--color-primary-dim)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <p style={{ color: 'var(--text-muted)' }}>Loading quiz questions…</p>
       </div>
     </DashboardLayout>
@@ -85,7 +85,7 @@ const QuizAttempt = () => {
   if (error || !quiz) return (
     <DashboardLayout currentPage="Quiz Attempt">
       <div style={{ maxWidth: '24rem', margin: '4rem auto', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-        <AlertCircle size={32} style={{ color: '#f87171' }} />
+        <AlertCircle size={32} style={{ color: 'var(--color-danger)' }} />
         <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>Error Loading Quiz</h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{error || 'Quiz not found.'}</p>
         <button onClick={() => navigate('/quiz/history')} className="btn btn-ghost">Back to History</button>
@@ -102,8 +102,8 @@ const QuizAttempt = () => {
       {/* Submitting overlay */}
       {submitting && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(8px)', zIndex: 99, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.5rem' }}>
-          <div style={{ width: '3.5rem', height: '3.5rem', background: 'var(--amber)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'float 1.5s ease-in-out infinite' }}>
-            <CheckCircle2 size={22} color="#0a0a0f" />
+          <div style={{ width: '3.5rem', height: '3.5rem', background: 'var(--color-primary)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'float 1.5s ease-in-out infinite' }}>
+            <CheckCircle2 size={22} color="var(--btn-primary-text)" />
           </div>
           <div style={{ textAlign: 'center' }}>
             <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem', marginBottom: '0.5rem' }}>Grading with AI Tutor</h3>
@@ -118,12 +118,12 @@ const QuizAttempt = () => {
           {/* Quiz header */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <span className="badge badge-amber">{quiz.subject}</span>
+              <span className="badge badge-primary">{quiz.subject}</span>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{quiz.quiz_type}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 0.875rem', background: urgent ? 'rgba(239,68,68,0.1)' : 'var(--bg-elevated)', border: `1px solid ${urgent ? 'rgba(239,68,68,0.3)' : 'var(--border)'}`, borderRadius: '100px', animation: urgent ? 'pulse-glow 1s infinite' : 'none' }}>
-              <Clock size={13} style={{ color: urgent ? '#f87171' : 'var(--text-secondary)' }} />
-              <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.9rem', color: urgent ? '#f87171' : 'var(--text-primary)' }}>{formatTime(timeLeft)}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.375rem 0.875rem', background: urgent ? 'var(--color-danger-dim)' : 'var(--bg-elevated)', border: `1px solid ${urgent ? 'var(--color-danger-border)' : 'var(--border)'}`, borderRadius: '100px', animation: urgent ? 'pulse-glow 1s infinite' : 'none' }}>
+              <Clock size={13} style={{ color: urgent ? 'var(--color-danger)' : 'var(--text-secondary)' }} />
+              <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.9rem', color: urgent ? 'var(--color-danger)' : 'var(--text-primary)' }}>{formatTime(timeLeft)}</span>
             </div>
           </div>
 
@@ -160,9 +160,9 @@ const QuizAttempt = () => {
               return (
                 <button key={idx} onClick={() => setCurrentIndex(idx)} style={{
                   height: '2.25rem', borderRadius: 'var(--radius-sm)',
-                  border: `1px solid ${current ? 'var(--amber)' : answered ? 'rgba(45,212,191,0.3)' : 'var(--border)'}`,
-                  background: current ? 'var(--amber-dim)' : answered ? 'var(--teal-dim)' : 'var(--bg-elevated)',
-                  color: current ? 'var(--amber)' : answered ? 'var(--teal)' : 'var(--text-muted)',
+                  border: `1px solid ${current ? 'var(--color-primary)' : answered ? 'rgba(45,212,191,0.3)' : 'var(--border)'}`,
+                  background: current ? 'var(--color-primary-dim)' : answered ? 'var(--color-accent-dim)' : 'var(--bg-elevated)',
+                  color: current ? 'var(--color-primary)' : answered ? 'var(--color-accent)' : 'var(--text-muted)',
                   fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.75rem',
                   cursor: 'pointer', transition: 'all var(--transition)',
                   transform: current ? 'scale(1.05)' : 'none',
@@ -173,8 +173,8 @@ const QuizAttempt = () => {
           <div className="divider" />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
             {[
-              { col: 'var(--amber)', label: 'Current' },
-              { col: 'var(--teal)', label: 'Answered' },
+              { col: 'var(--color-primary)', label: 'Current' },
+              { col: 'var(--color-accent)', label: 'Answered' },
               { col: 'var(--text-muted)', label: 'Unanswered' },
             ].map(k => (
               <div key={k.label} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', color: 'var(--text-muted)' }}>

@@ -2,7 +2,7 @@ import { Sparkles, Lightbulb, Target, TrendingUp, AlertCircle, BookOpen } from '
 const ICONS = [Lightbulb, Target, TrendingUp, AlertCircle, BookOpen, Sparkles];
 const STYLES = [
   { border: 'border-indigo-500/20', bg: 'bg-indigo-500/6',  icon: 'text-indigo-400',  badge: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/20' },
-  { border: 'border-amber-500/20',  bg: 'bg-amber-500/6',   icon: 'text-amber-400',   badge: 'bg-amber-500/15 text-amber-300 border-amber-500/20' },
+  { border: 'border-amber-500/20',  bg: 'bg-amber-500/6',   icon: 'text-brand-400',   badge: 'bg-amber-500/15 text-brand-300 border-amber-500/20' },
   { border: 'border-cyan-500/20',   bg: 'bg-cyan-500/6',    icon: 'text-cyan-400',    badge: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20' },
   { border: 'border-violet-500/20', bg: 'bg-violet-500/6',  icon: 'text-violet-400',  badge: 'bg-violet-500/15 text-violet-300 border-violet-500/20' },
   { border: 'border-rose-500/20',   bg: 'bg-rose-500/6',    icon: 'text-rose-400',    badge: 'bg-rose-500/15 text-rose-300 border-rose-500/20' },

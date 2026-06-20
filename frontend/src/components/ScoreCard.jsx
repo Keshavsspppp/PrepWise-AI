@@ -34,9 +34,9 @@ const ScoreCard = ({ score, total, percentage }) => {
             />
             <defs>
               <linearGradient id="scoreNeonGradient" x1="1" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366F1" />
-                <stop offset="50%" stopColor="#8B5CF6" />
-                <stop offset="100%" stopColor="#06B6D4" />
+                <stop offset="0%" stopColor="var(--color-dsa-from)" />
+                <stop offset="50%" stopColor="var(--color-dsa-to)" />
+                <stop offset="100%" stopColor="var(--color-dbms-from)" />
               </linearGradient>
             </defs>
           </svg>
@@ -55,7 +55,7 @@ const ScoreCard = ({ score, total, percentage }) => {
           </p>
         </div>
         <div className="flex items-center gap-2.5 text-xs font-bold text-slate-450 mt-6 pt-4 border-t border-slate-800/40 uppercase tracking-wider">
-          <Award className="h-4 w-4 text-amber-500 animate-pulse" />
+          <Award className="h-4 w-4 text-brand-500 animate-pulse" />
           <span>Performance Rank</span>
         </div>
       </div>

@@ -22,9 +22,9 @@ const LearningScoreCard = ({ score }) => {
           />
           <defs>
             <linearGradient id="dnaGradient" x1="1" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6366F1" />
-              <stop offset="50%" stopColor="#8B5CF6" />
-              <stop offset="100%" stopColor="#06B6D4" />
+              <stop offset="0%" stopColor="var(--color-dsa-from)" />
+              <stop offset="50%" stopColor="var(--color-dsa-to)" />
+              <stop offset="100%" stopColor="var(--color-dbms-from)" />
             </linearGradient>
           </defs>
         </svg>

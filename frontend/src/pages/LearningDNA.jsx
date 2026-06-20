@@ -15,7 +15,7 @@ import { ExamReadinessContent } from './ExamReadiness';
 import Reveal from '../components/Reveal';
 
 /* ─── shared sub-components ─────────────────────────────────────────────── */
-const StatusTag = ({ label, col = 'var(--teal)', dim, border }) => (
+const StatusTag = ({ label, col = 'var(--color-accent)', dim, border }) => (
   <span style={{
     display: 'inline-flex', alignItems: 'center', gap: '5px',
     padding: '0.2rem 0.625rem', borderRadius: '100px',
@@ -116,8 +116,8 @@ const LearningDNA = () => {
             {/* ── Header ── */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Dna size={16} style={{ color: 'var(--amber)' }} />
+                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Dna size={16} style={{ color: 'var(--color-primary)' }} />
                 </div>
                 <div>
                   <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', lineHeight: 1.15 }}>Your Learning DNA</h1>
@@ -148,13 +148,13 @@ const LearningDNA = () => {
             {/* ── Empty state ── */}
             {isEmpty && !error && (
               <div style={{ padding: '5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1.25rem' }}>
-                <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Brain size={24} style={{ color: 'var(--amber)' }} />
+                <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Brain size={24} style={{ color: 'var(--color-primary)' }} />
                 </div>
                 <div>
                   <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.5rem' }}>No DNA Profile Yet</h2>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '24rem', lineHeight: 1.6 }}>
-                    Your Learning DNA is built from quiz performance and study sessions. Click <strong style={{ color: 'var(--amber)' }}>Recalculate DNA</strong> after completing some activities.
+                    Your Learning DNA is built from quiz performance and study sessions. Click <strong style={{ color: 'var(--color-primary)' }}>Recalculate DNA</strong> after completing some activities.
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -173,16 +173,16 @@ const LearningDNA = () => {
                 {/* Status tags */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
                   {profile.strong_subjects?.length > 0 && (
-                    <StatusTag label={`Strong in ${profile.strong_subjects.slice(0,2).join(', ')}`} col="var(--teal)" />
+                    <StatusTag label={`Strong in ${profile.strong_subjects.slice(0,2).join(', ')}`} col="var(--color-accent)" />
                   )}
                   {profile.weak_subjects?.length > 0 && (
                     <StatusTag label={`Needs work: ${profile.weak_subjects.slice(0,2).join(', ')}`} col="var(--color-danger)" />
                   )}
                   {profile.learning_speed && (
-                    <StatusTag label={`${speedLabel} Learner`} col="var(--amber)" />
+                    <StatusTag label={`${speedLabel} Learner`} col="var(--color-primary)" />
                   )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginLeft: 'auto' }}>
-                    <CheckCircle2 size={13} style={{ color: 'var(--teal)' }} />
+                    <CheckCircle2 size={13} style={{ color: 'var(--color-accent)' }} />
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>DNA up to date</span>
                   </div>
                 </div>
@@ -273,8 +273,8 @@ const LearningDNA = () => {
                   display: 'flex', alignItems: 'center', gap: '0.5rem',
                   padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)',
                   fontSize: '0.8125rem', fontWeight: 600, border: 'none',
-                  background: active ? 'var(--amber-dim)' : 'transparent',
-                  color: active ? 'var(--amber)' : 'var(--text-secondary)',
+                  background: active ? 'var(--color-primary-dim)' : 'transparent',
+                  color: active ? 'var(--color-primary)' : 'var(--text-secondary)',
                   cursor: 'pointer', transition: 'all var(--transition)',
                 }}
                 onMouseEnter={e => { if(!active) e.currentTarget.style.color = 'var(--text-primary)'; }}

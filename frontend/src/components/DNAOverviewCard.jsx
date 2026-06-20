@@ -28,7 +28,7 @@ const DNAOverviewCard = ({ speed, consistency, streak, discipline }) => {
       <div className="bg-slate-900/30 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs backdrop-blur-md">
         <div className="flex items-center justify-between">
           <span className="text-[9px] font-bold text-slate-450 uppercase tracking-wider">Daily Streak</span>
-          <Flame className="h-4 w-4 text-amber-500 animate-pulse" />
+          <Flame className="h-4 w-4 text-brand-500 animate-pulse" />
         </div>
         <div className="mt-4">
           <p className="text-2xl font-extrabold text-white tracking-tight">{streak} Days</p>

@@ -8,11 +8,11 @@ import Reveal from '../components/Reveal';
 const SUBJECTS = ['All', 'DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
 
 const SUBJECT_COLORS = {
-  DSA:               { color: 'var(--amber)', dim: 'var(--amber-dim)', border: 'var(--amber-border)' },
-  DBMS:              { color: '#818cf8', dim: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' },
-  'Operating Systems':{ color: '#fb923c', dim: 'rgba(251,146,60,0.1)', border: 'rgba(251,146,60,0.25)' },
-  'Computer Networks':{ color: 'var(--teal)', dim: 'var(--teal-dim)', border: 'var(--teal-border)' },
-  Aptitude:          { color: '#f472b6', dim: 'rgba(244,114,182,0.1)', border: 'rgba(244,114,182,0.25)' },
+  DSA:               { color: 'var(--color-primary)', dim: 'var(--color-primary-dim)', border: 'var(--color-primary-border)' },
+  DBMS:              { color: 'var(--color-purple)', dim: 'var(--color-purple-dim)', border: 'var(--color-purple-border)' },
+  'Operating Systems':{ color: 'var(--color-orange)', dim: 'var(--color-orange-dim)', border: 'var(--color-orange-border)' },
+  'Computer Networks':{ color: 'var(--color-accent)', dim: 'var(--color-accent-dim)', border: 'var(--color-accent-border)' },
+  Aptitude:          { color: 'var(--color-pink)', dim: 'var(--color-pink-dim)', border: 'var(--color-pink-border)' },
   Other:             { color: 'var(--text-muted)', dim: 'var(--border)', border: 'var(--border-strong)' },
 };
 
@@ -168,9 +168,9 @@ const NotesList = () => {
             borderRadius: 'var(--radius-lg)', overflow: 'hidden',
           }}>
             {/* Header */}
-            <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, var(--amber-dim) 0%, transparent 70%)', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-              <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CloudUpload size={15} color="#0a0a0f" />
+            <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, var(--color-primary-dim) 0%, transparent 70%)', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+              <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CloudUpload size={15} color="var(--btn-primary-text)" />
               </div>
               <div>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.9375rem' }}>Upload Study Notes</h3>
@@ -204,38 +204,38 @@ const NotesList = () => {
                     onDragEnter={onDrag} onDragOver={onDrag} onDragLeave={() => setDrag(false)} onDrop={onDrop}
                     onClick={() => fileRef.current.click()}
                     style={{
-                      border: `2px dashed ${drag ? 'var(--amber)' : 'var(--border-strong)'}`,
+                      border: `2px dashed ${drag ? 'var(--color-primary)' : 'var(--border-strong)'}`,
                       borderRadius: 'var(--radius-md)',
                       padding: '2rem 1rem',
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem',
                       textAlign: 'center', cursor: 'pointer',
-                      background: drag ? 'var(--amber-dim)' : 'var(--bg-elevated)',
+                      background: drag ? 'var(--color-primary-dim)' : 'var(--bg-elevated)',
                       transition: 'all var(--transition)',
                       transform: drag ? 'scale(1.01)' : 'none',
                     }}
                   >
                     <input ref={fileRef} type="file" accept=".pdf" onChange={e => pickUpload(e.target.files[0])} style={{ display: 'none' }} />
-                    <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: drag ? 'var(--amber)' : 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Upload size={16} style={{ color: drag ? '#0a0a0f' : 'var(--amber)' }} />
+                    <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: drag ? 'var(--color-primary)' : 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Upload size={16} style={{ color: drag ? 'var(--btn-primary-text)' : 'var(--color-primary)' }} />
                     </div>
                     <div>
                       <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.85rem' }}>
-                        Drop PDF here, or <span style={{ color: 'var(--amber)' }}>browse</span>
+                        Drop PDF here, or <span style={{ color: 'var(--color-primary)' }}>browse</span>
                       </p>
                       <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.125rem' }}>PDF only · Max 20 MB</p>
                     </div>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)' }}>
-                    <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <FileText size={14} style={{ color: '#f87171' }} />
+                    <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-danger-dim)', border: '1px solid var(--color-danger-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FileText size={14} style={{ color: 'var(--color-danger)' }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontWeight: 600, fontSize: '0.8125rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{uploadFile.name}</p>
                       <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{(uploadFile.size/1048576).toFixed(2)} MB</p>
                     </div>
                     {!uploading && (
-                      <button type="button" onClick={() => setUploadFile(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }}>
+                      <button type="button" onClick={() => setUploadFile(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }} aria-label="Remove selected file">
                         <X size={14} />
                       </button>
                     )}
@@ -248,7 +248,7 @@ const NotesList = () => {
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '0.375rem' }}>
                     <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Uploading & indexing…</span>
-                    <span style={{ color: 'var(--amber)', fontWeight: 700 }}>{progress}%</span>
+                    <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{progress}%</span>
                   </div>
                   <div className="progress-track" style={{ height: '4px' }}>
                     <div className="progress-fill" style={{ width: `${progress}%` }} />
@@ -274,7 +274,7 @@ const NotesList = () => {
               className={subject === s ? '' : 'tag'}
               style={subject === s ? {
                 padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.8rem',
-                background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', color: 'var(--amber)',
+                background: 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)', color: 'var(--color-primary)',
                 cursor: 'pointer', fontWeight: 600, transition: 'all var(--transition)',
               } : { cursor: 'pointer' }}
             >{s}</button>
@@ -285,7 +285,7 @@ const NotesList = () => {
 
         {loading ? (
           <div style={{ padding: '6rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--color-primary-dim)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading documents…</p>
           </div>
         ) : notes.length === 0 ? (
@@ -343,7 +343,7 @@ const NotesList = () => {
                         </button>
                         <button onClick={() => startDelete(note)} disabled={deleting === note.id} className="btn btn-danger btn-sm" style={{ justifyContent: 'center' }} aria-label={`Delete ${note.title}`}>
                           {deleting === note.id
-                            ? <span style={{ width: '12px', height: '12px', border: '2px solid rgba(248,113,113,0.3)', borderTop: '2px solid #f87171', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+                            ? <span style={{ width: '12px', height: '12px', border: '2px solid var(--color-danger-border)', borderTop: '2px solid var(--color-danger)', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
                             : <Trash2 size={13} />} Delete
                         </button>
                       </div>
@@ -393,10 +393,10 @@ const NotesList = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(8px)'
           }}>
-            <div className="card animate-fade-up" style={{ width: '100%', maxWidth: '24rem', border: '1px solid rgba(239, 68, 68, 0.25)', background: 'var(--bg-card)' }}>
+            <div className="card animate-fade-up" style={{ width: '100%', maxWidth: '24rem', border: '1px solid var(--color-danger-border)', background: 'var(--bg-card)' }}>
               <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f87171' }}>
+                  <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--color-danger-dim)', border: '1px solid var(--color-danger-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-danger)' }}>
                     <AlertCircle size={16} />
                   </div>
                   <div>
@@ -421,9 +421,9 @@ const NotesList = () => {
           <div className="animate-fade-in" style={{
             position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 99,
             padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', fontWeight: 600,
-            background: toast.type === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
-            border: `1px solid ${toast.type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
-            color: toast.type === 'error' ? '#f87171' : '#34d399',
+            background: 'var(--bg-card)',
+            border: `1px solid ${toast.type === 'error' ? 'var(--color-danger)' : 'var(--color-success)'}`,
+            color: toast.type === 'error' ? 'var(--color-danger)' : 'var(--color-success)',
             backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
           }}>{toast.msg}</div>
         )}

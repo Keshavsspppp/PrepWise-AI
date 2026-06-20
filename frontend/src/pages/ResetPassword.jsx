@@ -47,15 +47,15 @@ const ResetPassword = () => {
       <div style={S.wrap}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', alignSelf: 'center', marginBottom: '0.5rem' }}>
-          <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, var(--amber), #e07b09)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: '0.9rem', color: '#fff' }}>✦</span>
+          <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '0.9rem', color: 'var(--btn-primary-text)' }}>✦</span>
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>PrepWise AI</span>
         </div>
         {success ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', textAlign: 'center', alignItems: 'center' }}>
-            <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', background: 'rgba(45,212,191,0.1)', border: '1px solid rgba(45,212,191,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CheckCircle2 size={24} style={{ color: 'var(--teal)' }} />
+            <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CheckCircle2 size={24} style={{ color: 'var(--color-accent)' }} />
             </div>
             <div>
               <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.5rem' }}>Password reset complete</h2>
@@ -69,8 +69,8 @@ const ResetPassword = () => {
           </div>
         ) : !token || !email ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', textAlign: 'center', alignItems: 'center' }}>
-            <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <AlertCircle size={24} style={{ color: '#f87171' }} />
+            <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', background: 'var(--color-danger-dim)', border: '1px solid var(--color-danger-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertCircle size={24} style={{ color: 'var(--color-danger)' }} />
             </div>
             <div>
               <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.5rem' }}>Invalid reset link</h2>
@@ -103,7 +103,7 @@ const ResetPassword = () => {
                 <div className="input-icon">
                   <Lock size={15} className="icon" />
                   <input type={show ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="input-field has-right" />
-                  <button type="button" onClick={() => setShow(!show)} className="icon icon-right" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  <button type="button" onClick={() => setShow(!show)} className="icon icon-right" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} aria-label={show ? "Hide password" : "Show password"}>
                     {show ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>

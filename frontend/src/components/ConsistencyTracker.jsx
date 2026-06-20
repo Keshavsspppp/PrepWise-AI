@@ -15,7 +15,7 @@ const ConsistencyTracker = ({ streak = 0, consistency_score = 0, active_days_lis
   // Day labels: Mon, Tue, Wed, Thu, Fri, Sat, Sun headers
   const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   // Streak fire color logic
-  const streakColor = streak >= 7 ? 'text-amber-400' : streak >= 3 ? 'text-orange-400' : 'text-slate-500';
+  const streakColor = streak >= 7 ? 'text-brand-400' : streak >= 3 ? 'text-orange-400' : 'text-slate-500';
   const streakBg = streak >= 7 ? 'bg-amber-500/10 border-amber-500/20' : streak >= 3 ? 'bg-orange-500/10 border-orange-500/20' : 'bg-slate-800/30 border-slate-700/30';
   return (
     <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 shadow-xs backdrop-blur-md">
@@ -100,7 +100,7 @@ const ConsistencyTracker = ({ streak = 0, consistency_score = 0, active_days_lis
           {consistency_score >= 70 ? 'On Track' : 'Keep Going'}
         </div>
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold
-          ${streak >= 7 ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-slate-800/40 border-slate-700/30 text-slate-500'}`}>
+          ${streak >= 7 ? 'bg-amber-500/10 border-amber-500/20 text-brand-400' : 'bg-slate-800/40 border-slate-700/30 text-slate-500'}`}>
           <Flame className="h-3 w-3" />
           {streak >= 7 ? 'On Fire! 🔥' : streak >= 3 ? 'Building Habit' : 'Start Streak'}
         </div>

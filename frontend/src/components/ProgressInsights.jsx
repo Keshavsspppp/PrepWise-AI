@@ -42,7 +42,7 @@ const ProgressInsights = ({ activity = {} }) => {
         <div className="flex-shrink-0 flex flex-col items-center">
           <div className="relative h-24 w-24">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r={radius} stroke="#1e293b" strokeWidth="8" fill="transparent" />
+              <circle cx="50" cy="50" r={radius} stroke="var(--chart-bg-bar)" strokeWidth="8" fill="transparent" />
               <circle
                 cx="50"
                 cy="50"
@@ -56,8 +56,8 @@ const ProgressInsights = ({ activity = {} }) => {
               />
               <defs>
                 <linearGradient id="progressGrad" x1="1" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#06B6D4" />
-                  <stop offset="100%" stopColor="#6366F1" />
+                  <stop offset="0%" stopColor="var(--color-dbms-from)" />
+                  <stop offset="100%" stopColor="var(--color-primary)" />
                 </linearGradient>
               </defs>
             </svg>
@@ -94,7 +94,7 @@ const ProgressInsights = ({ activity = {} }) => {
             icon={MessageCircle}
             label="AI Questions"
             value={questions_asked}
-            color="text-amber-400"
+            color="text-brand-400"
           />
           <StatRow
             icon={BookOpen}

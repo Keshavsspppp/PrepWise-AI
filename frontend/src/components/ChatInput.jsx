@@ -44,6 +44,7 @@ const ChatInput = ({ value, onChange, onSubmit, loading, placeholder = "Ask a qu
           type="submit"
           disabled={loading || !value.trim()}
           className="flex items-center justify-center h-10 w-10 rounded-xl bg-neon-gradient text-white hover:opacity-90 disabled:opacity-40 disabled:hover:opacity-40 transition-all duration-200 cursor-pointer shadow-md shadow-primary/20"
+          aria-label="Send message"
         >
           <Send className="h-4 w-4" />
         </button>

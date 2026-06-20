@@ -6,9 +6,9 @@ import API from '../api/axios';
 import Reveal from '../components/Reveal';
 const SUBJECTS = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
 const DIFFICULTIES = [
-  { label: 'Easy',   desc: 'Basic recall', col: 'var(--teal)' },
-  { label: 'Medium', desc: 'Applied',      col: 'var(--amber)' },
-  { label: 'Hard',   desc: 'Edge cases',   col: '#f87171' },
+  { label: 'Easy',   desc: 'Basic recall', col: 'var(--color-accent)', dim: 'var(--color-accent-dim)' },
+  { label: 'Medium', desc: 'Applied',      col: 'var(--color-primary)', dim: 'var(--color-primary-dim)' },
+  { label: 'Hard',   desc: 'Edge cases',   col: 'var(--color-danger)', dim: 'var(--color-danger-dim)' },
 ];
 const COUNTS = [5, 10, 20];
 const TYPES = [
@@ -17,11 +17,11 @@ const TYPES = [
   { value: 'Mixed',        label: 'Mixed Mode',    icon: '⚡', desc: 'MCQ + Short hybrid' },
 ];
 const STEPS = ['Searching ChromaDB…', 'Extracting context…', 'Consulting Gemini…', 'Building questions…', 'Saving to DB…'];
-const SelBtn = ({ active, onClick, children, col }) => (
+const SelBtn = ({ active, onClick, children, col, dim }) => (
   <button onClick={onClick} style={{
-    padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${active ? col || 'var(--amber)' : 'var(--border-strong)'}`,
-    background: active ? (col ? col + '18' : 'var(--amber-dim)') : 'var(--bg-elevated)',
-    color: active ? (col || 'var(--amber)') : 'var(--text-secondary)',
+    padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${active ? col || 'var(--color-primary)' : 'var(--border-strong)'}`,
+    background: active ? (dim || 'var(--color-primary-dim)') : 'var(--bg-elevated)',
+    color: active ? (col || 'var(--color-primary)') : 'var(--text-secondary)',
     fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.8125rem',
     cursor: 'pointer', transition: 'all var(--transition)', textAlign: 'left',
   }}>
@@ -65,10 +65,10 @@ const QuizGenerator = () => {
       <div style={{ maxWidth: '38rem', margin: '0 auto' }}>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
           {/* Header */}
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, var(--amber-dim) 0%, transparent 70%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, var(--color-primary-dim) 0%, transparent 70%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Sparkles size={16} color="#0a0a0f" />
+              <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Sparkles size={16} color="var(--btn-primary-text)" />
               </div>
               <div>
                 <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem' }}>AI Quiz Generator</h2>
@@ -82,20 +82,20 @@ const QuizGenerator = () => {
           {loading ? (
             <div style={{ padding: '4rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', textAlign: 'center' }}>
               <div className="animate-float" style={{ position: 'relative' }}>
-                <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-glow)' }}>
-                  <BrainCircuit size={24} color="#0a0a0f" />
+                <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-glow)' }}>
+                  <BrainCircuit size={24} color="var(--btn-primary-text)" />
                 </div>
-                <div style={{ position: 'absolute', inset: '-4px', border: '2px solid var(--amber-border)', borderRadius: 'var(--radius-xl)', animation: 'pulse-glow 2s infinite' }} />
+                <div style={{ position: 'absolute', inset: '-4px', border: '2px solid var(--color-primary-border)', borderRadius: 'var(--radius-xl)', animation: 'pulse-glow 2s infinite' }} />
               </div>
               <div>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem', marginBottom: '0.5rem' }}>Generating Your Quiz</h3>
-                <p style={{ color: 'var(--amber)', fontSize: '0.875rem', fontWeight: 500, animation: 'fadeIn 0.5s' }}>{STEPS[step]}</p>
+                <p style={{ color: 'var(--color-primary)', fontSize: '0.875rem', fontWeight: 500, animation: 'fadeIn 0.5s' }}>{STEPS[step]}</p>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.375rem' }}>15–30 seconds depending on note size</p>
               </div>
               {/* Step dots */}
               <div style={{ display: 'flex', gap: '6px' }}>
                 {STEPS.map((_, i) => (
-                  <div key={i} style={{ height: '5px', borderRadius: '100px', transition: 'all 0.3s', background: i === step ? 'var(--amber)' : 'var(--border)', width: i === step ? '1.5rem' : '5px' }} />
+                  <div key={i} style={{ height: '5px', borderRadius: '100px', transition: 'all 0.3s', background: i === step ? 'var(--color-primary)' : 'var(--border)', width: i === step ? '1.5rem' : '5px' }} />
                 ))}
               </div>
             </div>
@@ -127,7 +127,7 @@ const QuizGenerator = () => {
                   <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Difficulty</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.625rem' }}>
                     {DIFFICULTIES.map(d => (
-                      <SelBtn key={d.label} active={difficulty === d.label} onClick={() => setDifficulty(d.label)} col={d.col}>
+                      <SelBtn key={d.label} active={difficulty === d.label} onClick={() => setDifficulty(d.label)} col={d.col} dim={d.dim}>
                         <div style={{ fontWeight: 700 }}>{d.label}</div>
                         <div style={{ fontSize: '0.7rem', opacity: 0.65, marginTop: '0.125rem' }}>{d.desc}</div>
                       </SelBtn>

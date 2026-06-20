@@ -6,10 +6,10 @@ import { History, ArrowLeft, Mic, BarChart3, Search, Calendar, Inbox } from 'luc
 import Reveal from '../components/Reveal';
 const GRADE = (avg) => {
   if (avg === null || avg === undefined) return { label: 'Pending',          col: 'var(--text-muted)', dim: 'var(--border)', border: 'var(--border-strong)' };
-  if (avg >= 8.5) return { label: 'Distinction',    col: 'var(--teal)',  dim: 'var(--teal-dim)',  border: 'var(--teal-border)' };
-  if (avg >= 7.0) return { label: 'Merit',           col: 'var(--amber)', dim: 'var(--amber-dim)', border: 'var(--amber-border)' };
-  if (avg >= 5.0) return { label: 'Pass',            col: '#818cf8', dim: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' };
-  return            { label: 'Needs Improvement', col: '#f87171', dim: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)' };
+  if (avg >= 8.5) return { label: 'Distinction',    col: 'var(--color-accent)',  dim: 'var(--color-accent-dim)',  border: 'var(--color-accent-border)' };
+  if (avg >= 7.0) return { label: 'Merit',           col: 'var(--color-primary)', dim: 'var(--color-primary-dim)', border: 'var(--color-primary-border)' };
+  if (avg >= 5.0) return { label: 'Pass',            col: 'var(--color-purple)',  dim: 'var(--color-purple-dim)',  border: 'var(--color-purple-border)' };
+  return            { label: 'Needs Improvement', col: 'var(--color-danger)',  dim: 'var(--color-danger-dim)',  border: 'var(--color-danger-border)' };
 };
 const VivaHistory = () => {
   const navigate = useNavigate();
@@ -36,18 +36,18 @@ const VivaHistory = () => {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-            <button onClick={() => navigate('/viva')} className="btn btn-ghost btn-sm" style={{ padding: '0.375rem' }}>
+            <button onClick={() => navigate('/viva')} className="btn btn-ghost btn-sm" style={{ padding: '0.375rem' }} aria-label="Back to Mock Viva">
               <ArrowLeft size={15} />
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              <History size={16} style={{ color: 'var(--teal)' }} />
+              <History size={16} style={{ color: 'var(--color-accent)' }} />
               <div>
                 <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem' }}>Viva History</h1>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>All completed mock viva sessions</p>
               </div>
             </div>
           </div>
-          <button onClick={() => navigate('/viva')} className="btn btn-teal btn-sm">
+          <button onClick={() => navigate('/viva')} className="btn btn-accent btn-sm">
             <Mic size={13} /> New Viva
           </button>
         </div>
@@ -56,8 +56,8 @@ const VivaHistory = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
             {[
               { label: 'Sessions',  value: history.length,                         col: 'var(--text-primary)' },
-              { label: 'Avg Score', value: avgScore,                               col: 'var(--teal)' },
-              { label: 'Subjects',  value: new Set(history.map(h => h.subject)).size, col: 'var(--amber)' },
+              { label: 'Avg Score', value: avgScore,                               col: 'var(--color-accent)' },
+              { label: 'Subjects',  value: new Set(history.map(h => h.subject)).size, col: 'var(--color-primary)' },
             ].map((s, idx) => (
               <Reveal key={s.label} variant="pop" delay={idx * 60} style={{ width: '100%' }}>
                 <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem', textAlign: 'center', height: '100%' }}>
@@ -80,7 +80,7 @@ const VivaHistory = () => {
         {error && <div className="alert alert-error">{error}</div>}
         {loading ? (
           <div style={{ padding: '4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--teal-dim)', borderTop: '2px solid var(--teal)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--color-accent-dim)', borderTop: '2px solid var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading sessions…</p>
           </div>
         ) : filtered.length === 0 ? (
@@ -95,7 +95,7 @@ const VivaHistory = () => {
               </p>
             </div>
             {history.length === 0 && (
-              <button onClick={() => navigate('/viva')} className="btn btn-teal">
+              <button onClick={() => navigate('/viva')} className="btn btn-accent">
                 <Mic size={14} /> Start First Viva
               </button>
             )}
@@ -114,12 +114,12 @@ const VivaHistory = () => {
                       background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
                       padding: '1rem 1.25rem', cursor: 'pointer', transition: 'all var(--transition)',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--teal-border)'; e.currentTarget.style.transform = 'translateX(2px)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-accent-border)'; e.currentTarget.style.transform = 'translateX(2px)'; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
                   >
                     {/* Icon */}
-                    <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Mic size={14} style={{ color: 'var(--teal)' }} />
+                    <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Mic size={14} style={{ color: 'var(--color-accent)' }} />
                     </div>
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -136,7 +136,7 @@ const VivaHistory = () => {
                     {/* Score */}
                     {pct !== null && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', color: pct >= 70 ? 'var(--teal)' : pct >= 50 ? 'var(--amber)' : '#f87171' }}>{pct}%</div>
+                        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', color: pct >= 70 ? 'var(--color-accent)' : pct >= 50 ? 'var(--color-primary)' : 'var(--color-danger)' }}>{pct}%</div>
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{session.avg_score}/10 avg</div>
                       </div>
                     )}

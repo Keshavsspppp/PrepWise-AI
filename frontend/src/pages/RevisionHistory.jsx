@@ -5,19 +5,19 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { History, ArrowLeft, Search, Calendar, TrendingUp, TrendingDown, Minus, Inbox } from 'lucide-react';
 import Reveal from '../components/Reveal';
 const SUBJECT_COLORS = {
-  'DSA':                { color: 'var(--amber)',  dim: 'var(--amber-dim)',  border: 'var(--amber-border)' },
-  'DBMS':               { color: 'var(--teal)',   dim: 'var(--teal-dim)',   border: 'var(--teal-border)' },
-  'Operating Systems':  { color: '#fb923c', dim: 'rgba(251,146,60,0.1)', border: 'rgba(251,146,60,0.25)' },
-  'Computer Networks':  { color: '#818cf8', dim: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' },
-  'Aptitude':           { color: '#f472b6', dim: 'rgba(244,114,182,0.1)', border: 'rgba(244,114,182,0.25)' },
+  'DSA':                { color: 'var(--color-primary)',  dim: 'var(--color-primary-dim)',  border: 'var(--color-primary-border)' },
+  'DBMS':               { color: 'var(--color-accent)',   dim: 'var(--color-accent-dim)',   border: 'var(--color-accent-border)' },
+  'Operating Systems':  { color: 'var(--color-orange)',   dim: 'var(--color-orange-dim)',   border: 'var(--color-orange-border)' },
+  'Computer Networks':  { color: 'var(--color-purple)',   dim: 'var(--color-purple-dim)',   border: 'var(--color-purple-border)' },
+  'Aptitude':           { color: 'var(--color-pink)',     dim: 'var(--color-pink-dim)',     border: 'var(--color-pink-border)' },
 };
 const getSubjectCfg = (s) => SUBJECT_COLORS[s] || { color: 'var(--text-secondary)', dim: 'var(--border)', border: 'var(--border-strong)' };
-const retColor = (p) => p < 50 ? '#ef4444' : p < 75 ? 'var(--amber)' : 'var(--teal)';
+const retColor = (p) => p < 50 ? 'var(--color-danger)' : p < 75 ? 'var(--color-primary)' : 'var(--color-accent)';
 const DeltaIcon = ({ before, after }) => {
   const d = after - before;
   if (Math.abs(d) < 1) return <Minus size={14} style={{ color: 'var(--text-muted)' }} />;
-  if (d > 0) return <TrendingUp size={14} style={{ color: 'var(--teal)' }} />;
-  return <TrendingDown size={14} style={{ color: '#f87171' }} />;
+  if (d > 0) return <TrendingUp size={14} style={{ color: 'var(--color-accent)' }} />;
+  return <TrendingDown size={14} style={{ color: 'var(--color-danger)' }} />;
 };
 export const RevisionHistoryContent = ({ onBack }) => {
   const [history, setHistory] = useState([]);
@@ -44,12 +44,12 @@ export const RevisionHistoryContent = ({ onBack }) => {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
           {onBack && (
-            <button onClick={onBack} className="btn btn-ghost btn-sm" style={{ padding: '0.375rem' }}>
+            <button onClick={onBack} className="btn btn-ghost btn-sm" style={{ padding: '0.375rem' }} aria-label="Back to Revision Dashboard">
               <ArrowLeft size={15} />
             </button>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-            <History size={16} style={{ color: 'var(--amber)' }} />
+            <History size={16} style={{ color: 'var(--color-primary)' }} />
             <div>
               <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem' }}>Revision History</h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>Your complete revision log with retention changes</p>
@@ -62,8 +62,8 @@ export const RevisionHistoryContent = ({ onBack }) => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
           {[
             { label: 'Total Revisions', value: totalRevisions, col: 'var(--text-primary)' },
-            { label: 'Avg Retention Gain', value: `+${avgImprovement}%`, col: 'var(--teal)' },
-            { label: 'Topics Revised', value: uniqueTopics, col: 'var(--amber)' },
+            { label: 'Avg Retention Gain', value: `+${avgImprovement}%`, col: 'var(--color-accent)' },
+            { label: 'Topics Revised', value: uniqueTopics, col: 'var(--color-primary)' },
           ].map((s, idx) => (
             <Reveal key={s.label} variant="pop" delay={idx * 60} style={{ width: '100%' }}>
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem', textAlign: 'center', height: '100%' }}>
@@ -86,7 +86,7 @@ export const RevisionHistoryContent = ({ onBack }) => {
       {error && <div className="alert alert-error">{error}</div>}
       {loading ? (
         <div style={{ padding: '4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--color-primary-dim)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading revision log…</p>
         </div>
       ) : filtered.length === 0 ? (
@@ -108,7 +108,7 @@ export const RevisionHistoryContent = ({ onBack }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
           {filtered.map((item, i) => {
             const delta = item.retention_after - item.retention_before;
-            const deltaCol = delta > 0 ? 'var(--teal)' : delta < -1 ? '#f87171' : 'var(--text-muted)';
+            const deltaCol = delta > 0 ? 'var(--color-accent)' : delta < -1 ? 'var(--color-danger)' : 'var(--text-muted)';
             const cfg = getSubjectCfg(item.subject);
             return (
               <Reveal key={item.history_id} variant="up" delay={Math.min(i, 6) * 60}>

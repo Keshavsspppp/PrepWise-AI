@@ -66,14 +66,14 @@ const Dashboard = () => {
     })();
   }, []);
   const cards = [
-    { icon: FileText, label: 'Notes Uploaded',   value: stats ? `${stats.noteCount}` : '—',    sub: 'PDF documents',       color: 'var(--amber)',  href: '#/notes/list', numeric: stats?.noteCount },
-    { icon: Award,    label: 'Quiz Accuracy',     value: stats ? `${stats.avgScore}%` : '—',    sub: 'Average all quizzes', color: 'var(--teal)',   href: '#/quiz/history', numeric: stats?.avgScore, suffix: '%' },
+    { icon: FileText, label: 'Notes Uploaded',   value: stats ? `${stats.noteCount}` : '—',    sub: 'PDF documents',       color: 'var(--color-primary)',  href: '#/notes/list', numeric: stats?.noteCount },
+    { icon: Award,    label: 'Quiz Accuracy',     value: stats ? `${stats.avgScore}%` : '—',    sub: 'Average all quizzes', color: 'var(--color-accent)',   href: '#/quiz/history', numeric: stats?.avgScore, suffix: '%' },
     { icon: Brain,    label: 'Quizzes Attempted', value: stats ? `${stats.quizCount}` : '—',    sub: 'All time',            color: 'var(--color-purple)', href: '#/quiz/history', numeric: stats?.quizCount },
     { icon: TrendingUp, label: 'Exam Readiness', value: '—',                                    sub: 'Calculate now',       color: 'var(--color-pink)', href: '#/readiness' },
   ];
   const actions = [
-    { icon: Play,     label: 'Generate Quiz',   desc: 'AI quiz from your notes',    href: '/quiz/generator', color: 'var(--amber)' },
-    { icon: Brain,    label: 'Ask AI',           desc: 'Grounded Q&A',              href: '/ai/ask',         color: 'var(--teal)' },
+    { icon: Play,     label: 'Generate Quiz',   desc: 'AI quiz from your notes',    href: '/quiz/generator', color: 'var(--color-primary)' },
+    { icon: Brain,    label: 'Ask AI',           desc: 'Grounded Q&A',              href: '/ai/ask',         color: 'var(--color-accent)' },
     { icon: FileText, label: 'Upload Notes',     desc: 'Add a PDF',                 href: '/notes/upload',   color: 'var(--color-purple)' },
     { icon: Target,   label: 'Readiness',        desc: 'Exam score check',          href: '/readiness',      color: 'var(--color-pink)' },
   ];
@@ -83,12 +83,12 @@ const Dashboard = () => {
         {/* ── Hero ── */}
         <div style={{
           borderRadius: 'var(--radius-xl)', padding: '2rem 2.25rem', position: 'relative', overflow: 'hidden',
-          background: 'linear-gradient(135deg, var(--amber-dim) 0%, var(--teal-dim) 100%)',
-          border: '1px solid var(--amber-border)',
+          background: 'linear-gradient(135deg, var(--color-primary-dim) 0%, var(--color-accent-dim) 100%)',
+          border: '1px solid var(--color-primary-border)',
         }}>
           <div style={{ position: 'absolute', right: '-2rem', top: '-2rem', width: '10rem', height: '10rem', borderRadius: '50%', background: 'rgba(245,158,11,0.06)', filter: 'blur(40px)', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div className="badge badge-amber" style={{ marginBottom: '0.875rem' }}>✦ PrepWise Intelligence</div>
+            <div className="badge badge-primary" style={{ marginBottom: '0.875rem' }}>✦ PrepWise Intelligence</div>
             <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.625rem', marginBottom: '0.5rem' }}>
               Good day, {firstName}! 👋
             </h2>
@@ -116,7 +116,7 @@ const Dashboard = () => {
         {/* ── Quick actions ── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <Zap size={15} style={{ color: 'var(--amber)' }} />
+            <Zap size={15} style={{ color: 'var(--color-primary)' }} />
             <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1rem' }}>Quick Actions</h3>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
@@ -147,8 +147,8 @@ const Dashboard = () => {
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                  <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Brain size={14} style={{ color: 'var(--amber)' }} />
+                  <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Brain size={14} style={{ color: 'var(--color-primary)' }} />
                   </div>
                   <div>
                     <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem' }}>Learning DNA</h3>
@@ -176,12 +176,12 @@ const Dashboard = () => {
           </Reveal>
           {/* Forgetting Curve */}
           <Reveal variant="right" delay={100}>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--amber-border)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--color-primary-border)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-                <ShieldAlert size={15} style={{ color: 'var(--amber)' }} />
+                <ShieldAlert size={15} style={{ color: 'var(--color-primary)' }} />
                 <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem' }}>Forgetting Curve</h3>
               </div>
-              <div className="alert alert-amber" style={{ marginBottom: '1rem', fontSize: '0.8125rem' }}>
+              <div className="alert alert-primary" style={{ marginBottom: '1rem', fontSize: '0.8125rem' }}>
                 <ShieldAlert size={14} style={{ flexShrink: 0 }} />
                 Retrieval practice for <strong>Dynamic Programming</strong> is due today.
               </div>
@@ -215,8 +215,8 @@ const Dashboard = () => {
             </div>
             <div className="divider" style={{ marginBottom: '0.75rem' }} />
             {[
-              { letter: 'Q', color: 'var(--teal)',   title: 'Completed Quiz: DBMS Transactions', sub: '10 Questions · Easy', score: '90%', time: '2h ago' },
-              { letter: 'N', color: 'var(--amber)',  title: 'Uploaded Notes: CN_Routing.pdf', sub: 'Computer Networks · 45 pages', score: 'Indexed', time: 'Yesterday' },
+              { letter: 'Q', color: 'var(--color-accent)',   title: 'Completed Quiz: DBMS Transactions', sub: '10 Questions · Easy', score: '90%', time: '2h ago' },
+              { letter: 'N', color: 'var(--color-primary)',  title: 'Uploaded Notes: CN_Routing.pdf', sub: 'Computer Networks · 45 pages', score: 'Indexed', time: 'Yesterday' },
               { letter: 'V', color: 'var(--color-purple)',       title: 'AI Mock Viva: Operating Systems', sub: 'Process synchronization', score: '75%', time: '3 days ago' },
             ].map((a, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.875rem 0', borderBottom: i < 2 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}>

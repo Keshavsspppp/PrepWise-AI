@@ -6,26 +6,31 @@ import { Mic, BookOpen, BarChart3, AlertCircle, ChevronRight, Clock, History, Za
 import Reveal from '../components/Reveal';
 const SUBJECTS = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
 const DIFFICULTIES = [
-  { label: 'Easy',   desc: 'Foundational recall',      color: 'var(--teal)' },
-  { label: 'Medium', desc: 'Conceptual understanding', color: 'var(--amber)' },
-  { label: 'Hard',   desc: 'Analysis & edge cases',    color: 'var(--color-danger)' },
+  { label: 'Easy',   desc: 'Foundational recall',      color: 'var(--color-accent)', dim: 'var(--color-accent-dim)' },
+  { label: 'Medium', desc: 'Conceptual understanding', color: 'var(--color-primary)', dim: 'var(--color-primary-dim)' },
+  { label: 'Hard',   desc: 'Analysis & edge cases',    color: 'var(--color-danger)', dim: 'var(--color-danger-dim)' },
 ];
 const COUNTS = [5, 10, 15];
 const HOW = [
-  { icon: BookOpen, label: 'RAG Retrieval',   desc: 'Questions from your notes via semantic search', col: 'var(--amber)' },
-  { icon: Mic,      label: 'AI Evaluation',   desc: 'Gemini grades your answers in real-time',       col: 'var(--teal)' },
-  { icon: BarChart3,label: 'Detailed Report', desc: 'Score, feedback & improvement suggestions',     col: 'var(--color-purple)' },
+  { icon: BookOpen, label: 'RAG Retrieval',   desc: 'Questions from your notes via semantic search', col: 'var(--color-primary)', dim: 'var(--color-primary-dim)', border: 'var(--color-primary-border)' },
+  { icon: Mic,      label: 'AI Evaluation',   desc: 'Gemini grades your answers in real-time',       col: 'var(--color-accent)', dim: 'var(--color-accent-dim)', border: 'var(--color-accent-border)' },
+  { icon: BarChart3,label: 'Detailed Report', desc: 'Score, feedback & improvement suggestions',     col: 'var(--color-purple)', dim: 'var(--color-purple-dim)', border: 'var(--color-purple-border)' },
 ];
-const Pill = ({ active, col, onClick, children }) => (
-  <button onClick={onClick} style={{
-    padding: '0.5rem 0.875rem', borderRadius: 'var(--radius-md)',
-    border: `1px solid ${active ? col : 'var(--border-strong)'}`,
-    background: active ? col + '18' : 'var(--bg-elevated)',
-    color: active ? col : 'var(--text-secondary)',
-    fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.8125rem',
-    cursor: 'pointer', transition: 'all var(--transition)',
-  }}>{children}</button>
-);
+const Pill = ({ active, col, onClick, children }) => {
+  const isAccent = col === 'var(--color-accent)';
+  const dimColor = isAccent ? 'var(--color-accent-dim)' : 'var(--color-primary-dim)';
+  const borderColor = isAccent ? 'var(--color-accent-border)' : 'var(--color-primary-border)';
+  return (
+    <button onClick={onClick} style={{
+      padding: '0.5rem 0.875rem', borderRadius: 'var(--radius-md)',
+      border: `1px solid ${active ? borderColor : 'var(--border-strong)'}`,
+      background: active ? dimColor : 'var(--bg-elevated)',
+      color: active ? col : 'var(--text-secondary)',
+      fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.8125rem',
+      cursor: 'pointer', transition: 'all var(--transition)',
+    }}>{children}</button>
+  );
+};
 const MockViva = () => {
   const navigate = useNavigate();
   const [subject, setSubject] = useState('DSA');
@@ -48,10 +53,10 @@ const MockViva = () => {
       <div style={{ maxWidth: '36rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {/* Header card */}
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
-          <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--teal-dim) 0%, transparent 70%)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifycontent: 'space-between' }}>
+          <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--color-accent-dim) 0%, transparent 70%)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifycontent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-              <div className="animate-float" style={{ width: '3rem', height: '3rem', borderRadius: 'var(--radius-md)', background: 'var(--teal)', display: 'flex', alignItems: 'center', justifycontent: 'center' }}>
-                <Mic size={18} color="#0a0a0f" />
+              <div className="animate-float" style={{ width: '3rem', height: '3rem', borderRadius: 'var(--radius-md)', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifycontent: 'center' }}>
+                <Mic size={18} color="var(--btn-primary-text)" />
               </div>
               <div>
                 <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem' }}>AI Mock Viva</h1>
@@ -66,7 +71,7 @@ const MockViva = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid var(--border)' }}>
             {HOW.map(h => (
               <div key={h.label} style={{ padding: '1.125rem 0.875rem', textAlign: 'center', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: h.col + '18', border: `1px solid ${h.col}30`, display: 'flex', alignItems: 'center', justifycontent: 'center' }}>
+                <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: h.dim, border: `1px solid ${h.border}`, display: 'flex', alignItems: 'center', justifycontent: 'center' }}>
                   <h.icon size={13} style={{ color: h.col }} />
                 </div>
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-primary)' }}>{h.label}</div>
@@ -82,7 +87,7 @@ const MockViva = () => {
             <div>
               <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><BookOpen size={12} /> Subject</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {SUBJECTS.map(s => <Pill key={s} active={subject === s} col="var(--teal)" onClick={() => setSubject(s)}>{s}</Pill>)}
+                {SUBJECTS.map(s => <Pill key={s} active={subject === s} col="var(--color-accent)" onClick={() => setSubject(s)}>{s}</Pill>)}
               </div>
             </div>
             {/* Difficulty */}
@@ -92,7 +97,7 @@ const MockViva = () => {
                 {DIFFICULTIES.map(d => (
                   <button key={d.label} onClick={() => setDifficulty(d.label)} style={{
                     padding: '0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${difficulty === d.label ? d.color : 'var(--border-strong)'}`,
-                    background: difficulty === d.label ? d.color + '15' : 'var(--bg-elevated)',
+                    background: difficulty === d.label ? d.dim : 'var(--bg-elevated)',
                     color: difficulty === d.label ? d.color : 'var(--text-secondary)',
                     cursor: 'pointer', transition: 'all var(--transition)', textAlign: 'left',
                   }}>
@@ -106,14 +111,14 @@ const MockViva = () => {
             <div>
               <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><Clock size={12} /> Questions</label>
               <div style={{ display: 'flex', gap: '0.625rem' }}>
-                {COUNTS.map(n => <Pill key={n} active={questionCount === n} col="var(--amber)" onClick={() => setQuestionCount(n)}>{n} Qs</Pill>)}
+                {COUNTS.map(n => <Pill key={n} active={questionCount === n} col="var(--color-primary)" onClick={() => setQuestionCount(n)}>{n} Qs</Pill>)}
               </div>
             </div>
           </div>
         </Reveal>
         {/* Preview */}
         <Reveal variant="up" delay={100}>
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--teal-border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem 1.25rem' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--color-accent-border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem 1.25rem' }}>
             <p className="label" style={{ marginBottom: '0.75rem' }}>Session Preview</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.5rem' }}>
               {[
@@ -133,10 +138,10 @@ const MockViva = () => {
         {error && <div className="alert alert-error"><AlertCircle size={15} style={{ flexShrink: 0 }} />{error}</div>}
         <Reveal variant="up" delay={150}>
           <button id="start-viva-btn" onClick={start} disabled={loading} className="btn btn-xl btn-block"
-            style={{ background: 'linear-gradient(135deg, var(--teal), #0d9488)', color: '#0a0a0f', border: 'none', fontWeight: 800 }}
+            style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent-light))', color: 'var(--btn-primary-text)', border: 'none', fontWeight: 800 }}
           >
             {loading
-              ? <><span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(10,10,15,0.3)', borderTop: '2px solid #0a0a0f', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} /> Generating Questions…</>
+              ? <><span style={{ width: '1.125rem', height: '1.125rem', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid var(--btn-primary-text)', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} /> Generating Questions…</>
               : <><Mic size={18} /> Start Mock Viva <ChevronRight size={18} /></>
             }
           </button>

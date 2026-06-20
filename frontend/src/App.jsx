@@ -1,23 +1,25 @@
+import { lazy, Suspense } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Sparkles } from 'lucide-react';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Dashboard from './pages/Dashboard';
-import NotesList from './pages/NotesList';
-import AskAI from './pages/AskAI';
-import QuizGenerator from './pages/QuizGenerator';
-import QuizAttempt from './pages/QuizAttempt';
-import QuizResult from './pages/QuizResult';
-import QuizHistory from './pages/QuizHistory';
-import LearningDNA from './pages/LearningDNA';
-import MockViva from './pages/MockViva';
-import VivaSession from './pages/VivaSession';
-import VivaResults from './pages/VivaResults';
-import VivaHistory from './pages/VivaHistory';
+
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const NotesList = lazy(() => import('./pages/NotesList'));
+const AskAI = lazy(() => import('./pages/AskAI'));
+const QuizGenerator = lazy(() => import('./pages/QuizGenerator'));
+const QuizAttempt = lazy(() => import('./pages/QuizAttempt'));
+const QuizResult = lazy(() => import('./pages/QuizResult'));
+const QuizHistory = lazy(() => import('./pages/QuizHistory'));
+const LearningDNA = lazy(() => import('./pages/LearningDNA'));
+const MockViva = lazy(() => import('./pages/MockViva'));
+const VivaSession = lazy(() => import('./pages/VivaSession'));
+const VivaResults = lazy(() => import('./pages/VivaResults'));
+const VivaHistory = lazy(() => import('./pages/VivaHistory'));
 import './App.css';
 // Public routes wrapper to redirect logged-in users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -161,11 +163,29 @@ function AppRoutes() {
     </Routes>
   );
 }
+const LoadingScreen = () => (
+  <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col items-center justify-center space-y-4">
+    <div className="relative flex items-center justify-center">
+      {/* Animated pulsing outer rings */}
+      <div className="absolute h-16 w-16 rounded-full border-2 border-brand-500/20 animate-ping"></div>
+      <div className="absolute h-12 w-12 rounded-full border-2 border-indigo-500/30 animate-pulse"></div>
+      <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-linear-to-tr from-brand-600 to-indigo-500 text-white shadow-lg shadow-brand-500/25">
+        <Sparkles className="h-5 w-5 animate-spin" style={{ animationDuration: '3s' }} />
+      </div>
+    </div>
+    <p className="text-xs font-semibold tracking-wider text-slate-400 dark:text-zinc-500 uppercase animate-pulse">
+      Loading Page...
+    </p>
+  </div>
+);
+
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <AppRoutes />
+        <Suspense fallback={<LoadingScreen />}>
+          <AppRoutes />
+        </Suspense>
       </Router>
     </AuthProvider>
   );

@@ -1,5 +1,5 @@
 // Reusable animated progress ring
-const ProgressRing = ({ score = 0, size = 80, strokeWidth = 8, color = '#6366f1', label, sublabel, animate = true }) => {
+const ProgressRing = ({ score = 0, size = 80, strokeWidth = 8, color = 'var(--color-primary)', label, sublabel, animate = true }) => {
   const radius = (size - strokeWidth) / 2;
   const circ = 2 * Math.PI * radius;
   const offset = circ - (score / 100) * circ;
@@ -14,10 +14,10 @@ const ProgressRing = ({ score = 0, size = 80, strokeWidth = 8, color = '#6366f1'
               <stop offset="100%" stopColor={color} stopOpacity="0.4" />
             </linearGradient>
           </defs>
-          <circle cx={center} cy={center} r={radius} stroke="#1e293b" strokeWidth={strokeWidth} fill="transparent" />
+          <circle cx={center} cy={center} r={radius} stroke="var(--chart-bg-bar)" strokeWidth={strokeWidth} fill="transparent" />
           <circle cx={center} cy={center} r={radius} stroke={`url(#prGrad_${label})`} strokeWidth={strokeWidth}
             strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round" fill="transparent"
-            style={{ transition: animate ? 'stroke-dashoffset 0.9s ease-out' : 'none', filter: `drop-shadow(0 0 4px ${color}55)` }} />
+            style={{ transition: animate ? 'stroke-dashoffset 0.9s ease-out' : 'none', filter: color.startsWith('var') ? `drop-shadow(0 0 4px ${color})` : `drop-shadow(0 0 4px ${color}55)` }} />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-extrabold text-white" style={{ fontSize: size * 0.22 }}>{Math.round(score)}</span>

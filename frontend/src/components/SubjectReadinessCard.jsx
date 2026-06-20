@@ -1,7 +1,7 @@
 const STATUS_CONFIG = {
   'Ready':            { bar: 'from-emerald-500 to-teal-400', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' },
   'Good':             { bar: 'from-cyan-500 to-indigo-500',  badge: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20' },
-  'Needs Improvement':{ bar: 'from-amber-500 to-yellow-400', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/20' },
+  'Needs Improvement':{ bar: 'from-amber-500 to-yellow-400', badge: 'bg-amber-500/15 text-brand-400 border-amber-500/20' },
   'High Risk':        { bar: 'from-red-500 to-rose-400',     badge: 'bg-red-500/15 text-red-400 border-red-500/20' },
 };
 const getStatusConfig = s => STATUS_CONFIG[s] || STATUS_CONFIG['Needs Improvement'];

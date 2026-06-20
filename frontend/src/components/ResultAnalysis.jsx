@@ -13,7 +13,7 @@ const ResultAnalysis = ({ feedback, score, total }) => {
       return {
         title: "Study Recommendation: Targeted Review",
         content: "Decent understanding, but some knowledge gaps exist. Review the explanations in the incorrect answers section below, review the corresponding chapters in your uploaded PDF notes, and retake the quiz.",
-        style: "border-amber-500/20 bg-amber-500/5 text-amber-400",
+        style: "border-amber-500/20 bg-amber-500/5 text-brand-400",
         icon: Sparkles
       };
     } else {

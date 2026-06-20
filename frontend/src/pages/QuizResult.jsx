@@ -46,7 +46,7 @@ const QuizResult = () => {
   if (loading) return (
     <DashboardLayout currentPage="Quiz Results">
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '6rem 0' }}>
-        <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: '2.5rem', height: '2.5rem', border: '2px solid var(--color-primary-dim)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <p style={{ color: 'var(--text-muted)' }}>Loading quiz results…</p>
       </div>
     </DashboardLayout>
@@ -55,7 +55,7 @@ const QuizResult = () => {
   if (error || !result || !quizDetails) return (
     <DashboardLayout currentPage="Quiz Results">
       <div style={{ maxWidth: '24rem', margin: '4rem auto', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '2rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-        <AlertCircle size={32} style={{ color: 'var(--amber)' }} />
+        <AlertCircle size={32} style={{ color: 'var(--color-primary)' }} />
         <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>No Results Found</h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{error || "Please complete a quiz to see results, or check your history."}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
@@ -98,8 +98,8 @@ const QuizResult = () => {
                   />
                   {/* Explanation */}
                   <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.25rem', display: 'flex', gap: '1rem' }}>
-                    <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <HelpCircle size={14} style={{ color: 'var(--amber)' }} />
+                    <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <HelpCircle size={14} style={{ color: 'var(--color-primary)' }} />
                     </div>
                     <div>
                       <p className="label" style={{ marginBottom: '0.375rem' }}>AI Explanation</p>
@@ -133,9 +133,9 @@ const QuizResult = () => {
                   {allEvaluations.map((ev, idx) => (
                     <button key={idx} onClick={() => setReviewIndex(idx)} style={{
                       height: '2.25rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', transition: 'all var(--transition)',
-                      border: `1px solid ${idx === reviewIndex ? 'var(--amber)' : ev.is_correct ? 'rgba(45,212,191,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                      background: idx === reviewIndex ? 'var(--amber-dim)' : ev.is_correct ? 'var(--teal-dim)' : 'rgba(239,68,68,0.08)',
-                      color: idx === reviewIndex ? 'var(--amber)' : ev.is_correct ? 'var(--teal)' : '#f87171',
+                      border: `1px solid ${idx === reviewIndex ? 'var(--color-primary)' : ev.is_correct ? 'var(--color-accent-border)' : 'var(--color-danger-border)'}`,
+                      background: idx === reviewIndex ? 'var(--color-primary-dim)' : ev.is_correct ? 'var(--color-accent-dim)' : 'var(--color-danger-dim)',
+                      color: idx === reviewIndex ? 'var(--color-primary)' : ev.is_correct ? 'var(--color-accent)' : 'var(--color-danger)',
                       fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.75rem',
                       transform: idx === reviewIndex ? 'scale(1.05)' : 'none',
                     }}>{idx + 1}</button>

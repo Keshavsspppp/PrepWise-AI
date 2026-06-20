@@ -1,7 +1,7 @@
 import { AlertTriangle, TrendingDown, CheckCircle2, BookOpen } from 'lucide-react';
 const RISK_CONFIG = {
   High:   { icon: AlertTriangle, iconColor: 'text-red-400',    bg: 'bg-red-500/8',    border: 'border-red-500/20',    bar: 'from-red-500 to-rose-400',    badge: 'bg-red-500/15 text-red-400 border-red-500/20',   dot: 'bg-red-400' },
-  Medium: { icon: TrendingDown,  iconColor: 'text-amber-400',  bg: 'bg-amber-500/8',  border: 'border-amber-500/20',  bar: 'from-amber-500 to-yellow-400', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/20', dot: 'bg-amber-400' },
+  Medium: { icon: TrendingDown,  iconColor: 'text-brand-400',  bg: 'bg-amber-500/8',  border: 'border-amber-500/20',  bar: 'from-amber-500 to-yellow-400', badge: 'bg-amber-500/15 text-brand-400 border-amber-500/20', dot: 'bg-amber-400' },
   Low:    { icon: CheckCircle2,  iconColor: 'text-emerald-400',bg: 'bg-emerald-500/8',border: 'border-emerald-500/20',bar: 'from-emerald-500 to-teal-400', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20', dot: 'bg-emerald-400' },
 };
 const TopicRiskCard = ({ topic, subject, retention_score, risk_level, revision_priority, days_since_studied, num_revisions, next_revision, onRevise, loading }) => {
@@ -65,7 +65,7 @@ const TopicRiskCard = ({ topic, subject, retention_score, risk_level, revision_p
                 ${risk_level === 'High'
                   ? 'bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/25'
                   : risk_level === 'Medium'
-                  ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/25'
+                  ? 'bg-amber-500/20 hover:bg-amber-500/30 text-brand-300 border border-amber-500/25'
                   : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/20'
                 }
                 disabled:opacity-50 disabled:cursor-not-allowed`}

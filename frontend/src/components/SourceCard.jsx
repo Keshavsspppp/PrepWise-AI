@@ -5,7 +5,7 @@ const SourceCard = ({ filename, subject }) => {
     switch (sub) {
       case 'DSA': return 'bg-rose-550/20 text-rose-400 border border-rose-500/30';
       case 'DBMS': return 'bg-cyan-550/20 text-cyan-400 border border-cyan-500/30';
-      case 'Operating Systems': return 'bg-amber-550/20 text-amber-400 border border-amber-500/30';
+      case 'Operating Systems': return 'bg-amber-550/20 text-brand-400 border border-amber-500/30';
       case 'Computer Networks': return 'bg-emerald-550/20 text-emerald-400 border border-emerald-500/30';
       case 'Aptitude': return 'bg-indigo-550/20 text-indigo-400 border border-indigo-500/30';
       default: return 'bg-slate-550/20 text-slate-400 border border-slate-500/30';

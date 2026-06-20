@@ -3,16 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle, ArrowRight, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 const Spinner = () => (
-  <span style={{ width: '1rem', height: '1rem', border: '2px solid rgba(10,10,15,0.3)', borderTop: '2px solid #0a0a0f', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+  <span style={{ width: '1rem', height: '1rem', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid var(--btn-primary-text)', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
 );
 const getStrength = (pwd) => {
   if (!pwd) return null;
   const checks = [pwd.length >= 8, /[A-Z]/.test(pwd), /[0-9]/.test(pwd), /[^A-Za-z0-9]/.test(pwd)];
   const score = checks.filter(Boolean).length;
-  if (score < 2) return { label: 'Weak',   w: '25%',  color: '#ef4444' };
-  if (score < 3) return { label: 'Fair',   w: '50%',  color: '#f59e0b' };
-  if (score < 4) return { label: 'Good',   w: '75%',  color: '#06b6d4' };
-  return           { label: 'Strong', w: '100%', color: '#10b981' };
+  if (score < 2) return { label: 'Weak',   w: '25%',  color: 'var(--color-danger)' };
+  if (score < 3) return { label: 'Fair',   w: '50%',  color: 'var(--color-warning)' };
+  if (score < 4) return { label: 'Good',   w: '75%',  color: 'var(--color-primary)' };
+  return           { label: 'Strong', w: '100%', color: 'var(--color-success)' };
 };
 const perks = [
   'AI Q&A grounded in your uploaded PDFs',
@@ -45,13 +45,13 @@ const Register = () => {
       {/* Left side */}
       <div className="auth-side">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
-          <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, var(--amber), #e07b09)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: '1rem' }}>✦</span>
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem' }}>PrepWise AI</span>
         </div>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.875rem', fontWeight: 800, marginBottom: '0.75rem', lineHeight: 1.15 }}>
-          Start your AI<br /><span style={{ color: 'var(--amber)' }}>learning journey</span>
+          Start your AI<br /><span style={{ color: 'var(--color-primary)' }}>learning journey</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem', lineHeight: 1.6 }}>
           Free forever. No credit card required.
@@ -59,7 +59,7 @@ const Register = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginBottom: '2.5rem' }}>
           {perks.map(p => (
             <div key={p} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <CheckCircle size={14} style={{ color: 'var(--teal)', flexShrink: 0 }} />
+              <CheckCircle size={14} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
               <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{p}</span>
             </div>
           ))}
@@ -111,7 +111,7 @@ const Register = () => {
               <div className="input-icon">
                 <Lock size={15} className="icon" />
                 <input id="register-password" type={show ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters" className="input-field has-right" />
-                <button type="button" onClick={() => setShow(!show)} className="icon icon-right" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <button type="button" onClick={() => setShow(!show)} className="icon icon-right" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} aria-label={show ? "Hide password" : "Show password"}>
                   {show ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
@@ -133,7 +133,7 @@ const Register = () => {
           </form>
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
             Already have an account?{' '}
-            <a href="#/login" style={{ color: 'var(--amber)', fontWeight: 600 }}>Sign in</a>
+            <a href="#/login" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Sign in</a>
           </div>
         </div>
       </div>

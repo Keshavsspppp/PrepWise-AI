@@ -16,9 +16,9 @@ const Toast = ({ msg, type }) => (
     position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 99,
     padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)',
     fontSize: '0.875rem', fontWeight: 600,
-    background: type === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
-    border: `1px solid ${type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
-    color: type === 'error' ? '#f87171' : '#34d399',
+    background: type === 'error' ? 'var(--color-danger-dim)' : 'var(--color-success-dim)',
+    border: `1px solid ${type === 'error' ? 'var(--color-danger-border)' : 'var(--color-success-border)'}`,
+    color: type === 'error' ? 'var(--color-danger)' : 'var(--color-success)',
     backdropFilter: 'blur(8px)',
     boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
   }}>
@@ -38,7 +38,7 @@ const StatCard = ({ label, value, col = 'var(--text-secondary)' }) => (
 );
 
 const FILTER_COLORS = {
-  All: 'var(--text-secondary)', High: '#f87171', Medium: 'var(--amber)', Low: 'var(--teal)'
+  All: 'var(--text-secondary)', High: 'var(--color-danger)', Medium: 'var(--color-primary)', Low: 'var(--color-accent)'
 };
 
 /* ── main ─────────────────────────────────────────────────────────────── */
@@ -124,8 +124,8 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Brain size={16} style={{ color: 'var(--teal)' }} />
+          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Brain size={16} style={{ color: 'var(--color-accent)' }} />
           </div>
           <div>
             <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem' }}>Smart Revision Engine</h1>
@@ -134,7 +134,7 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button onClick={() => setShowHistory(true)} className="btn btn-ghost btn-sm"><History size={13} /> History</button>
-          <button id="recalculate-revision-btn" onClick={handleRecalculate} disabled={recalculating || loading} className="btn btn-teal btn-sm">
+          <button id="recalculate-revision-btn" onClick={handleRecalculate} disabled={recalculating || loading} className="btn btn-accent btn-sm">
             {recalculating ? <Loader2 size={13} className="animate-spin" /> : <RefreshCcw size={13} />}
             {recalculating ? 'Analyzing…' : 'Recalculate'}
           </button>
@@ -144,13 +144,13 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
       {error && (
         <div className="alert alert-error">
           <AlertCircle size={15} style={{ flexShrink: 0 }} /> {error}
-          <button onClick={fetchAll} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontSize: '0.8rem', textDecoration: 'underline' }}>Retry</button>
+          <button onClick={fetchAll} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.8rem', textDecoration: 'underline' }}>Retry</button>
         </div>
       )}
 
       {loading ? (
         <div style={{ padding: '5rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--teal-dim)', borderTop: '2px solid var(--teal)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--color-accent-dim)', borderTop: '2px solid var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading revision data…</p>
         </div>
       ) : (
@@ -158,13 +158,13 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
             <Reveal variant="pop" delay={50} style={{ width: '100%' }}>
-              <StatCard label="Avg Retention" value={`${avgRetention}%`} col="var(--teal)" />
+              <StatCard label="Avg Retention" value={`${avgRetention}%`} col="var(--color-accent)" />
             </Reveal>
             <Reveal variant="pop" delay={100} style={{ width: '100%' }}>
-              <StatCard label="High Risk" value={highRisk.length} col="#f87171" />
+              <StatCard label="High Risk" value={highRisk.length} col="var(--color-danger)" />
             </Reveal>
             <Reveal variant="pop" delay={150} style={{ width: '100%' }}>
-              <StatCard label="Medium Risk" value={mediumRisk.length} col="var(--amber)" />
+              <StatCard label="Medium Risk" value={mediumRisk.length} col="var(--color-primary)" />
             </Reveal>
             <Reveal variant="pop" delay={200} style={{ width: '100%' }}>
               <StatCard label="Topics Tracked" value={retention.length} col="var(--text-secondary)" />
@@ -247,8 +247,8 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
           {/* Empty state */}
           {retention.length === 0 && !error && (
             <div style={{ padding: '5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1.25rem' }}>
-              <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <TrendingDown size={24} style={{ color: 'var(--teal)' }} />
+              <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <TrendingDown size={24} style={{ color: 'var(--color-accent)' }} />
               </div>
               <div>
                 <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.5rem' }}>No Retention Data Yet</h2>
@@ -258,7 +258,7 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <a href="#/quiz/generator" className="btn btn-ghost">Take a Quiz <ChevronRight size={14} /></a>
-                <button onClick={handleRecalculate} disabled={recalculating} className="btn btn-teal">
+                <button onClick={handleRecalculate} disabled={recalculating} className="btn btn-accent">
                   {recalculating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                   {recalculating ? 'Analyzing…' : 'Run Analysis'}
                 </button>

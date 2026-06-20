@@ -1,7 +1,7 @@
 import { HelpCircle, Lightbulb, Code, BookOpen, Cpu } from 'lucide-react';
 const TYPE_CONFIG = {
   Definition:   { icon: BookOpen,  color: 'text-indigo-400',  bg: 'bg-indigo-500/10',  border: 'border-indigo-500/20' },
-  Conceptual:   { icon: Lightbulb, color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20' },
+  Conceptual:   { icon: Lightbulb, color: 'text-brand-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20' },
   Scenario:     { icon: Cpu,       color: 'text-cyan-400',    bg: 'bg-cyan-500/10',    border: 'border-cyan-500/20' },
   Application:  { icon: Code,      color: 'text-violet-400',  bg: 'bg-violet-500/10',  border: 'border-violet-500/20' },
 };

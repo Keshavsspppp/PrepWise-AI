@@ -49,9 +49,9 @@ const UploadNotes = () => {
       <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
           {/* Header */}
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, var(--amber-dim) 0%, transparent 70%)', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CloudUpload size={16} color="#0a0a0f" />
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', background: 'linear-gradient(135deg, var(--color-primary-dim) 0%, transparent 70%)', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <CloudUpload size={16} color="var(--btn-primary-text)" />
             </div>
             <div>
               <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem' }}>Upload Study Notes</h2>
@@ -82,38 +82,38 @@ const UploadNotes = () => {
                   onDragEnter={onDrag} onDragOver={onDrag} onDragLeave={() => setDrag(false)} onDrop={onDrop}
                   onClick={() => fileRef.current.click()}
                   style={{
-                    border: `2px dashed ${drag ? 'var(--amber)' : 'var(--border-strong)'}`,
+                    border: `2px dashed ${drag ? 'var(--color-primary)' : 'var(--border-strong)'}`,
                     borderRadius: 'var(--radius-lg)',
                     padding: '3rem 1.5rem',
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.875rem',
                     textAlign: 'center', cursor: 'pointer',
-                    background: drag ? 'var(--amber-dim)' : 'var(--bg-elevated)',
+                    background: drag ? 'var(--color-primary-dim)' : 'var(--bg-elevated)',
                     transition: 'all var(--transition)',
                     transform: drag ? 'scale(1.01)' : 'none',
                   }}
                 >
                   <input ref={fileRef} type="file" accept=".pdf" onChange={e => pick(e.target.files[0])} style={{ display: 'none' }} />
-                  <div style={{ width: '3rem', height: '3rem', borderRadius: 'var(--radius-md)', background: drag ? 'var(--amber)' : 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Upload size={18} style={{ color: drag ? '#0a0a0f' : 'var(--amber)' }} />
+                  <div style={{ width: '3rem', height: '3rem', borderRadius: 'var(--radius-md)', background: drag ? 'var(--color-primary)' : 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Upload size={18} style={{ color: drag ? 'var(--btn-primary-text)' : 'var(--color-primary)' }} />
                   </div>
                   <div>
                     <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                      Drop PDF here, or <span style={{ color: 'var(--amber)' }}>browse</span>
+                      Drop PDF here, or <span style={{ color: 'var(--color-primary)' }}>browse</span>
                     </p>
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>PDF only · Max 20 MB</p>
                   </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '1rem', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)' }}>
-                  <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-sm)', background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <FileText size={15} style={{ color: '#f87171' }} />
+                  <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-danger-dim)', border: '1px solid var(--color-danger-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileText size={15} style={{ color: 'var(--color-danger)' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontWeight: 600, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</p>
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{(file.size/1048576).toFixed(2)} MB</p>
                   </div>
                   {!uploading && (
-                    <button type="button" onClick={() => setFile(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }}>
+                    <button type="button" onClick={() => setFile(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }} aria-label="Remove selected file">
                       <X size={15} />
                     </button>
                   )}
@@ -125,7 +125,7 @@ const UploadNotes = () => {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
                   <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Uploading & indexing…</span>
-                  <span style={{ color: 'var(--amber)', fontWeight: 700 }}>{progress}%</span>
+                  <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{progress}%</span>
                 </div>
                 <div className="progress-track">
                   <div className="progress-fill" style={{ width: `${progress}%` }} />

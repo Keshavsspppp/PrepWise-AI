@@ -1,7 +1,7 @@
 const RISK_COLORS = {
-  High:   { ring: '#ef4444', glow: 'shadow-red-500/20',   badge: 'bg-red-500/15 text-red-400 border-red-500/25',   label: 'High Risk' },
-  Medium: { ring: '#f59e0b', glow: 'shadow-amber-500/20', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/25', label: 'Medium Risk' },
-  Low:    { ring: '#22c55e', glow: 'shadow-emerald-500/20', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', label: 'Low Risk' },
+  High:   { ring: 'var(--color-danger)', glow: 'shadow-red-500/20',   badge: 'bg-red-500/15 text-red-400 border-red-500/25',   label: 'High Risk' },
+  Medium: { ring: 'var(--color-warning)', glow: 'shadow-amber-500/20', badge: 'bg-amber-500/15 text-brand-400 border-amber-500/25', label: 'Medium Risk' },
+  Low:    { ring: 'var(--color-success)', glow: 'shadow-emerald-500/20', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', label: 'Low Risk' },
 };
 const RetentionCard = ({ topic, subject, retention_score, risk_level, next_revision, days_since_studied, compact = false }) => {
   const risk = RISK_COLORS[risk_level] || RISK_COLORS.Low;
@@ -14,7 +14,7 @@ const RetentionCard = ({ topic, subject, retention_score, risk_level, next_revis
         {/* Ring gauge */}
         <div className="relative flex-shrink-0 h-20 w-20">
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 90 90">
-            <circle cx="45" cy="45" r={radius} stroke="#1e293b" strokeWidth="7" fill="transparent" />
+            <circle cx="45" cy="45" r={radius} stroke="var(--chart-bg-bar)" strokeWidth="7" fill="transparent" />
             <circle
               cx="45" cy="45" r={radius}
               stroke={risk.ring}
@@ -23,7 +23,7 @@ const RetentionCard = ({ topic, subject, retention_score, risk_level, next_revis
               strokeDashoffset={offset}
               strokeLinecap="round"
               fill="transparent"
-              style={{ transition: 'stroke-dashoffset 0.6s ease-out', filter: `drop-shadow(0 0 4px ${risk.ring}55)` }}
+              style={{ transition: 'stroke-dashoffset 0.6s ease-out', filter: risk.ring.startsWith('var') ? `drop-shadow(0 0 4px ${risk.ring})` : `drop-shadow(0 0 4px ${risk.ring}55)` }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">

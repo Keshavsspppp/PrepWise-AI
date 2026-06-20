@@ -15,14 +15,14 @@ const Bubble = ({ msg }) => {
   const isUser = msg.sender === 'user';
   return (
     <div style={{ display: 'flex', gap: '0.625rem', flexDirection: isUser ? 'row-reverse' : 'row', alignItems: 'flex-start' }}>
-      <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: 'var(--radius-sm)', background: isUser ? 'var(--amber-dim)' : 'var(--teal-dim)', border: `1px solid ${isUser ? 'var(--amber-border)' : 'var(--teal-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.25rem' }}>
-        {isUser ? <User size={12} style={{ color: 'var(--amber)' }} /> : <Bot size={12} style={{ color: 'var(--teal)' }} />}
+      <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: 'var(--radius-sm)', background: isUser ? 'var(--color-primary-dim)' : 'var(--color-accent-dim)', border: `1px solid ${isUser ? 'var(--color-primary-border)' : 'var(--color-accent-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.25rem' }}>
+        {isUser ? <User size={12} style={{ color: 'var(--color-primary)' }} /> : <Bot size={12} style={{ color: 'var(--color-accent)' }} />}
       </div>
       <div style={{ maxWidth: '78%', display: 'flex', flexDirection: 'column', gap: '0.375rem', alignItems: isUser ? 'flex-end' : 'flex-start' }}>
         <div style={{
           padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
-          background: isUser ? 'var(--amber)' : msg.error ? 'rgba(239,68,68,0.08)' : 'var(--bg-elevated)',
-          border: `1px solid ${isUser ? 'var(--amber)' : msg.error ? 'rgba(239,68,68,0.2)' : 'var(--border-strong)'}`,
+          background: isUser ? 'var(--color-primary)' : msg.error ? 'rgba(239,68,68,0.08)' : 'var(--bg-elevated)',
+          border: `1px solid ${isUser ? 'var(--color-primary)' : msg.error ? 'rgba(239,68,68,0.2)' : 'var(--border-strong)'}`,
           color: isUser ? 'var(--btn-primary-text)' : msg.error ? 'var(--color-danger)' : 'var(--text-primary)',
           fontSize: '0.9rem', lineHeight: 1.65,
           borderTopRightRadius: isUser ? 'var(--radius-sm)' : 'var(--radius-md)',
@@ -33,7 +33,7 @@ const Bubble = ({ msg }) => {
         {msg.sources?.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
             {msg.sources.map((s, i) => (
-              <span key={i} className="badge badge-teal" style={{ fontSize: '0.65rem' }}>
+              <span key={i} className="badge badge-accent" style={{ fontSize: '0.65rem' }}>
                 📄 {typeof s === 'string' ? s : s.filename || s.source || 'Source'}
               </span>
             ))}
@@ -45,8 +45,8 @@ const Bubble = ({ msg }) => {
 };
 const Typing = () => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-    <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-      <Bot size={12} style={{ color: 'var(--teal)' }} />
+    <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <Bot size={12} style={{ color: 'var(--color-accent)' }} />
     </div>
     <div style={{ display: 'flex', gap: '4px', padding: '0.625rem 0.875rem', background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius-md)', borderTopLeftRadius: 'var(--radius-sm)' }}>
       {[0, 1, 2].map(i => (
@@ -87,8 +87,8 @@ const AskAI = () => {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Bot size={14} style={{ color: 'var(--teal)' }} />
+              <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Bot size={14} style={{ color: 'var(--color-accent)' }} />
               </div>
               <div>
                 <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Gemini Study Assistant</p>
@@ -96,8 +96,8 @@ const AskAI = () => {
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <span className="badge badge-teal">
-                <span className="dot-live" style={{ background: 'var(--teal)', animation: 'pulse-glow 2s infinite' }} />
+              <span className="badge badge-accent">
+                <span className="dot-live" style={{ background: 'var(--color-accent)', animation: 'pulse-glow 2s infinite' }} />
                 RAG Active
               </span>
               {messages.length > 0 && (
@@ -115,8 +115,8 @@ const AskAI = () => {
             {messages.length === 0 && (
               <Reveal variant="up" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '1.75rem', paddingBottom: '2rem' }}>
                 <div className="animate-float">
-                  <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                    <Sparkles size={20} style={{ color: 'var(--teal)' }} />
+                  <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: 'var(--radius-lg)', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                    <Sparkles size={20} style={{ color: 'var(--color-accent)' }} />
                   </div>
                 </div>
                 <div>
@@ -132,11 +132,11 @@ const AskAI = () => {
                         background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)',
                         borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all var(--transition)',
                       }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--amber-border)'; }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-primary-border)'; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
                       >
                         <p style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.375rem' }}>{q.text}</p>
-                        <span className="badge badge-amber">{q.subject}</span>
+                        <span className="badge badge-primary">{q.subject}</span>
                       </button>
                     ))}
                   </div>
@@ -161,7 +161,7 @@ const AskAI = () => {
                 className="input-field"
                 style={{ flex: 1, resize: 'none', minHeight: '2.75rem', maxHeight: '8rem' }}
               />
-              <button onClick={() => send()} disabled={!input.trim() || loading} className="btn btn-primary" style={{ padding: '0.625rem 0.875rem', flexShrink: 0 }}>
+              <button onClick={() => send()} disabled={!input.trim() || loading} className="btn btn-primary" style={{ padding: '0.625rem 0.875rem', flexShrink: 0 }} aria-label="Send question">
                 <Send size={15} />
               </button>
             </div>

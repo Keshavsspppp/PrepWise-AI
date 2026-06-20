@@ -43,7 +43,7 @@ const Login = () => {
       <div style={S.side} className="auth-side">
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem' }}>
-          <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, var(--amber), #e07b09)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: '1rem' }}>✦</span>
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)' }}>PrepWise AI</span>
@@ -51,7 +51,7 @@ const Login = () => {
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, lineHeight: 1.15, marginBottom: '0.75rem' }}>
             Study smarter,<br />
-            <span style={{ color: 'var(--amber)' }}>not harder.</span>
+            <span style={{ color: 'var(--color-primary)' }}>not harder.</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6 }}>
             Your AI companion that learns how <em>you</em> learn.
@@ -93,12 +93,12 @@ const Login = () => {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <label className="label">Password</label>
-                <a href="#/forgot-password" style={{ fontSize: '0.75rem', color: 'var(--amber)', fontWeight: 500 }}>Forgot?</a>
+                <a href="#/forgot-password" style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: 500 }}>Forgot?</a>
               </div>
               <div className="input-icon">
                 <Lock size={15} className="icon" />
                 <input id="login-password" type={show ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="input-field has-right" />
-                <button type="button" onClick={() => setShow(!show)} className="icon icon-right" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <button type="button" onClick={() => setShow(!show)} className="icon icon-right" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }} aria-label={show ? "Hide password" : "Show password"}>
                   {show ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
@@ -109,7 +109,7 @@ const Login = () => {
           </form>
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
             New to PrepWise?{' '}
-            <a href="#/register" style={{ color: 'var(--amber)', fontWeight: 600 }}>Create account</a>
+            <a href="#/register" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Create account</a>
           </div>
         </div>
       </div>
@@ -118,8 +118,8 @@ const Login = () => {
 };
 const Spinner = () => (
   <span style={{
-    width: '1rem', height: '1rem', border: '2px solid rgba(10,10,15,0.3)',
-    borderTop: '2px solid #0a0a0f', borderRadius: '50%',
+    width: '1rem', height: '1rem', border: '2px solid rgba(255,255,255,0.3)',
+    borderTop: '2px solid var(--btn-primary-text)', borderRadius: '50%',
     display: 'inline-block', animation: 'spin 0.8s linear infinite',
   }} />
 );

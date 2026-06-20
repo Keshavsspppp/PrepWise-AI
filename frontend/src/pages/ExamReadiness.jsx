@@ -32,7 +32,7 @@ const StatCard = ({ label, value, sub, col = 'var(--text-primary)' }) => (
   </div>
 );
 
-const retColor = (p) => p >= 75 ? 'var(--teal)' : p >= 50 ? 'var(--amber)' : 'var(--color-danger)';
+const retColor = (p) => p >= 75 ? 'var(--color-accent)' : p >= 50 ? 'var(--color-primary)' : 'var(--color-danger)';
 
 export const ExamReadinessContent = () => {
   const [data, setData] = useState(null);
@@ -84,8 +84,8 @@ export const ExamReadinessContent = () => {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <GraduationCap size={16} style={{ color: 'var(--amber)' }} />
+          <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <GraduationCap size={16} style={{ color: 'var(--color-primary)' }} />
           </div>
           <div>
             <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem' }}>Exam Readiness</h1>
@@ -110,7 +110,7 @@ export const ExamReadinessContent = () => {
 
       {loading ? (
         <div style={{ padding: '5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--color-primary-dim)', borderTop: '2px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Calculating readiness…</p>
         </div>
       ) : (
@@ -118,16 +118,16 @@ export const ExamReadinessContent = () => {
           {/* Summary stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
             <Reveal variant="pop" delay={50} style={{ width: '100%' }}>
-              <StatCard label="Overall Readiness" value={`${Math.round(overall)}%`} col="var(--amber)" />
+              <StatCard label="Overall Readiness" value={`${Math.round(overall)}%`} col="var(--color-primary)" />
             </Reveal>
             <Reveal variant="pop" delay={100} style={{ width: '100%' }}>
-              <StatCard label="Exam Prediction" value={data?.prediction_status || '—'} col="var(--teal)" />
+              <StatCard label="Exam Prediction" value={data?.prediction_status || '—'} col="var(--color-accent)" />
             </Reveal>
             <Reveal variant="pop" delay={150} style={{ width: '100%' }}>
               <StatCard label="High Risk Subjects" value={highRisk.length} sub={highRisk.map(s => s.subject).join(', ') || 'None'} col="var(--color-danger)" />
             </Reveal>
             <Reveal variant="pop" delay={200} style={{ width: '100%' }}>
-              <StatCard label="Exam Ready" value={ready.length} sub={`out of ${subjects.length} subjects`} col="var(--teal)" />
+              <StatCard label="Exam Ready" value={ready.length} sub={`out of ${subjects.length} subjects`} col="var(--color-accent)" />
             </Reveal>
           </div>
 
@@ -189,9 +189,9 @@ export const ExamReadinessContent = () => {
                       {['Weak', 'Strong', 'All'].map(f => (
                         <button key={f} onClick={() => setTopicFilter(f)} style={{
                           padding: '0.2rem 0.625rem', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 700,
-                          border: `1px solid ${topicFilter === f ? 'var(--amber-border)' : 'var(--border-strong)'}`,
-                          background: topicFilter === f ? 'var(--amber-dim)' : 'transparent',
-                          color: topicFilter === f ? 'var(--amber)' : 'var(--text-muted)',
+                          border: `1px solid ${topicFilter === f ? 'var(--color-primary-border)' : 'var(--border-strong)'}`,
+                          background: topicFilter === f ? 'var(--color-primary-dim)' : 'transparent',
+                          color: topicFilter === f ? 'var(--color-primary)' : 'var(--text-muted)',
                           cursor: 'pointer', transition: 'all var(--transition)',
                         }}>{f}</button>
                       ))}
@@ -225,8 +225,8 @@ export const ExamReadinessContent = () => {
           {/* Empty state */}
           {!data && !error && (
             <div style={{ padding: '5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1.25rem' }}>
-              <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--amber-dim)', border: '1px solid var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <GraduationCap size={24} style={{ color: 'var(--amber)' }} />
+              <div style={{ width: '4rem', height: '4rem', borderRadius: 'var(--radius-lg)', background: 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <GraduationCap size={24} style={{ color: 'var(--color-primary)' }} />
               </div>
               <div>
                 <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.5rem' }}>No Readiness Data Yet</h2>

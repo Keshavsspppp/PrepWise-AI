@@ -8,14 +8,14 @@ const QuizCard = ({ attempt, onRetake, onViewResults }) => {
   const getDifficultyColor = (diff) => {
     switch (diff) {
       case 'Easy': return 'bg-emerald-550/15 text-emerald-400 border border-emerald-500/25';
-      case 'Medium': return 'bg-amber-550/15 text-amber-400 border border-amber-500/25';
+      case 'Medium': return 'bg-amber-550/15 text-brand-400 border border-amber-500/25';
       case 'Hard': return 'bg-rose-550/15 text-rose-400 border border-rose-500/25';
       default: return 'bg-slate-550/15 text-slate-400 border border-slate-500/25';
     }
   };
   const getPercentageColor = (pct) => {
     if (pct >= 80) return 'text-emerald-400';
-    if (pct >= 50) return 'text-amber-400';
+    if (pct >= 50) return 'text-brand-400';
     return 'text-red-400';
   };
   return (

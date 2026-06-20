@@ -26,7 +26,7 @@ const NavLink = ({ item, current }) => {
     <a href={item.href} className={`nav-link${active ? ' active' : ''}`}>
       <span className="nav-icon"><Icon size={15} /></span>
       {item.name}
-      {active && <ChevronRight size={12} style={{ marginLeft: 'auto', color: 'var(--amber)' }} />}
+      {active && <ChevronRight size={12} style={{ marginLeft: 'auto', color: 'var(--color-primary)' }} />}
     </a>
   );
 };
@@ -84,11 +84,11 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
         }}>
           <div style={{
             width: '2rem', height: '2rem', borderRadius: 'var(--radius-md)',
-            background: 'linear-gradient(135deg, var(--amber), #e07b09)',
+            background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <Sparkles size={14} color="#0a0a0f" />
+            <Sparkles size={14} color="var(--btn-primary-text)" />
           </div>
           <div>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.9375rem', color: 'var(--text-primary)', lineHeight: 1.1 }}>PrepWise</div>
@@ -110,9 +110,9 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', padding: '0.5rem 0.625rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{
               width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)',
-              background: 'var(--amber-dim)', border: '1px solid var(--amber-border)',
+              background: 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.7rem', color: 'var(--amber)',
+              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.7rem', color: 'var(--color-primary)',
               flexShrink: 0,
             }}>
               {initials(user?.name)}
@@ -125,7 +125,7 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
               onClick={logout}
               title="Sign out"
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem', borderRadius: 'var(--radius-sm)', transition: 'all var(--transition)' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--color-danger)'}
               onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
               aria-label="Sign out"
             >
@@ -154,7 +154,7 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
             {/* Live status */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.625rem', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', borderRadius: '100px', fontSize: '0.7rem', color: 'var(--teal)', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.25rem 0.625rem', background: 'var(--color-accent-dim)', border: '1px solid var(--color-accent-border)', borderRadius: '100px', fontSize: '0.7rem', color: 'var(--color-accent)', fontWeight: 600 }}>
               <span className="dot-live" style={{ animation: 'pulse-glow 2s infinite' }} />
               Gemini
             </div>
@@ -180,7 +180,7 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
                 aria-label="Toggle notifications menu"
               >
                 <Bell size={15} />
-                <span style={{ position: 'absolute', top: '0.25rem', right: '0.25rem', width: '5px', height: '5px', borderRadius: '50%', background: 'var(--amber)' }} />
+                <span style={{ position: 'absolute', top: '0.25rem', right: '0.25rem', width: '5px', height: '5px', borderRadius: '50%', background: 'var(--color-primary)' }} />
               </button>
 
               {bell && (
@@ -192,7 +192,7 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid var(--border)' }}>
                     <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.875rem' }}>Notifications</span>
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: 'var(--amber)', fontWeight: 600 }} aria-label="Mark all notifications as read">Mark read</button>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: 'var(--color-primary)', fontWeight: 600 }} aria-label="Mark all notifications as read">Mark read</button>
                   </div>
                   {[
                     { icon: '📉', t: 'Forgetting Curve Alert', m: '"Dynamic Programming" retention dropped below 50%' },
@@ -217,9 +217,9 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
             {/* Avatar */}
             <div style={{
               width: '1.875rem', height: '1.875rem', borderRadius: 'var(--radius-sm)',
-              background: 'var(--amber-dim)', border: '1px solid var(--amber-border)',
+              background: 'var(--color-primary-dim)', border: '1px solid var(--color-primary-border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.6875rem', color: 'var(--amber)',
+              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.6875rem', color: 'var(--color-primary)',
               cursor: 'default',
             }}>
               {initials(user?.name)}
