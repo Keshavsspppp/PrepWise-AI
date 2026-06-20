@@ -1,6 +1,4 @@
-import React from 'react';
 import { Trophy, Target, TrendingUp, AlertTriangle } from 'lucide-react';
-
 const RISK_CONFIG = {
   'Exam Ready':         { color: '#22c55e', grad: 'from-emerald-500 to-teal-400', label: 'Exam Ready',      icon: Trophy,       badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' },
   'Good Preparation':  { color: '#06b6d4', grad: 'from-cyan-500 to-indigo-500',   label: 'Good Prep',      icon: TrendingUp,   badge: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20' },
@@ -9,16 +7,13 @@ const RISK_CONFIG = {
   'Ready':             { color: '#22c55e', grad: 'from-emerald-500 to-teal-400',  label: 'Exam Ready',     icon: Trophy,       badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' },
   'Good':              { color: '#06b6d4', grad: 'from-cyan-500 to-indigo-500',   label: 'Good Prep',      icon: TrendingUp,   badge: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20' },
 };
-
 const getConfig = (status) => RISK_CONFIG[status] || RISK_CONFIG['Moderate Risk'];
-
 const ReadinessScoreCard = ({ overall_score = 0, prediction_status, exam_prediction, factor_breakdown }) => {
   const cfg = getConfig(prediction_status || exam_prediction);
   const Icon = cfg.icon;
   const radius = 60;
   const circ = 2 * Math.PI * radius;
   const offset = circ - (overall_score / 100) * circ;
-
   return (
     <div className="bg-slate-900/40 border border-slate-800/70 rounded-3xl p-6 backdrop-blur-md shadow-xs">
       <div className="flex flex-col items-center text-center mb-6">
@@ -41,14 +36,12 @@ const ReadinessScoreCard = ({ overall_score = 0, prediction_status, exam_predict
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">/ 100</span>
           </div>
         </div>
-
         <span className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border ${cfg.badge}`}>
           <Icon className="h-3.5 w-3.5" />
           {cfg.label}
         </span>
         <p className="text-[10px] text-slate-500 mt-2 font-medium max-w-[200px]">{exam_prediction}</p>
       </div>
-
       {/* Factor breakdown */}
       {factor_breakdown && (
         <div className="space-y-2 border-t border-slate-800/50 pt-4">
@@ -74,5 +67,4 @@ const ReadinessScoreCard = ({ overall_score = 0, prediction_status, exam_predict
     </div>
   );
 };
-
 export default ReadinessScoreCard;

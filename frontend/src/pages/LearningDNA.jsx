@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import API from '../api/axios';
-import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../layouts/DashboardLayout';
 import DNAOverviewCard from '../components/DNAOverviewCard';
 import LearningScoreCard from '../components/LearningScoreCard';
@@ -42,7 +41,6 @@ const SkRow = () => (
 );
 
 const LearningDNA = () => {
-  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'dna';
 
@@ -67,11 +65,12 @@ const LearningDNA = () => {
       if (err.response?.status === 404) { setProfile(null); setAnalytics(null); }
       else setError(err.response?.data?.detail || 'Failed to load Learning DNA data.');
     } finally { setLoading(false); }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'dna') {
-      fetchData();
+      const t = setTimeout(fetchData, 0);
+      return () => clearTimeout(t);
     }
   }, [fetchData, activeTab]);
 
@@ -139,7 +138,7 @@ const LearningDNA = () => {
               <div className="alert alert-error">
                 <AlertCircle size={15} style={{ flexShrink: 0 }} />
                 <div style={{ flex: 1 }}><strong>Failed to load DNA</strong> — {error}</div>
-                <button onClick={fetchData} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontSize: '0.8rem', textDecoration: 'underline' }}>Retry</button>
+                 <button onClick={fetchData} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.8rem', textDecoration: 'underline' }}>Retry</button>
               </div>
             )}
 
@@ -177,7 +176,7 @@ const LearningDNA = () => {
                     <StatusTag label={`Strong in ${profile.strong_subjects.slice(0,2).join(', ')}`} col="var(--teal)" />
                   )}
                   {profile.weak_subjects?.length > 0 && (
-                    <StatusTag label={`Needs work: ${profile.weak_subjects.slice(0,2).join(', ')}`} col="#f87171" />
+                    <StatusTag label={`Needs work: ${profile.weak_subjects.slice(0,2).join(', ')}`} col="var(--color-danger)" />
                   )}
                   {profile.learning_speed && (
                     <StatusTag label={`${speedLabel} Learner`} col="var(--amber)" />

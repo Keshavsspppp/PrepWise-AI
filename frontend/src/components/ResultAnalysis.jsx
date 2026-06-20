@@ -1,9 +1,6 @@
-import React from 'react';
-import { Sparkles, ThumbsUp, AlertTriangle, BookOpen } from 'lucide-react';
-
+import { Sparkles, ThumbsUp, AlertTriangle } from 'lucide-react';
 const ResultAnalysis = ({ feedback, score, total }) => {
   const percentage = total > 0 ? (score / total) * 100 : 0;
-
   const getRevisionTip = () => {
     if (percentage >= 80) {
       return {
@@ -28,10 +25,8 @@ const ResultAnalysis = ({ feedback, score, total }) => {
       };
     }
   };
-
   const tip = getRevisionTip();
   const Icon = tip.icon;
-
   return (
     <div className="space-y-6">
       {/* AI Evaluation */}
@@ -49,7 +44,6 @@ const ResultAnalysis = ({ feedback, score, total }) => {
           </div>
         </div>
       </div>
-
       {/* Suggested Revision Strategy */}
       <div className={`border rounded-3xl p-6 shadow-sm backdrop-blur-md transition-all ${tip.style}`}>
         <div className="flex items-start gap-4">
@@ -69,5 +63,4 @@ const ResultAnalysis = ({ feedback, score, total }) => {
     </div>
   );
 };
-
 export default ResultAnalysis;

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { History, ArrowLeft, RefreshCcw, Search, Calendar, TrendingUp, TrendingDown, Minus, Inbox } from 'lucide-react';
+import { History, ArrowLeft, Search, Calendar, TrendingUp, TrendingDown, Minus, Inbox } from 'lucide-react';
 import Reveal from '../components/Reveal';
-
 const SUBJECT_COLORS = {
   'DSA':                { color: 'var(--amber)',  dim: 'var(--amber-dim)',  border: 'var(--amber-border)' },
   'DBMS':               { color: 'var(--teal)',   dim: 'var(--teal-dim)',   border: 'var(--teal-border)' },
@@ -13,39 +12,32 @@ const SUBJECT_COLORS = {
   'Aptitude':           { color: '#f472b6', dim: 'rgba(244,114,182,0.1)', border: 'rgba(244,114,182,0.25)' },
 };
 const getSubjectCfg = (s) => SUBJECT_COLORS[s] || { color: 'var(--text-secondary)', dim: 'var(--border)', border: 'var(--border-strong)' };
-
 const retColor = (p) => p < 50 ? '#ef4444' : p < 75 ? 'var(--amber)' : 'var(--teal)';
-
 const DeltaIcon = ({ before, after }) => {
   const d = after - before;
   if (Math.abs(d) < 1) return <Minus size={14} style={{ color: 'var(--text-muted)' }} />;
   if (d > 0) return <TrendingUp size={14} style={{ color: 'var(--teal)' }} />;
   return <TrendingDown size={14} style={{ color: '#f87171' }} />;
 };
-
 export const RevisionHistoryContent = ({ onBack }) => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-
   useEffect(() => {
     API.get('/revision/history')
       .then(res => setHistory(res.data || []))
       .catch(err => setError(err.response?.data?.detail || 'Failed to load revision history.'))
       .finally(() => setLoading(false));
   }, []);
-
   const filtered = history.filter(h =>
     h.topic.toLowerCase().includes(search.toLowerCase()) ||
     h.subject.toLowerCase().includes(search.toLowerCase())
   );
-
   const totalRevisions = history.length;
   const avgImprovement = history.length
     ? Math.round(history.reduce((s, h) => s + (h.retention_after - h.retention_before), 0) / history.length) : 0;
   const uniqueTopics = new Set(history.map(h => h.topic)).size;
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Header */}
@@ -65,7 +57,6 @@ export const RevisionHistoryContent = ({ onBack }) => {
           </div>
         </div>
       </div>
-
       {/* Summary stats */}
       {!loading && history.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
@@ -83,7 +74,6 @@ export const RevisionHistoryContent = ({ onBack }) => {
           ))}
         </div>
       )}
-
       {/* Search */}
       {!loading && history.length > 0 && (
         <Reveal variant="up" delay={180}>
@@ -93,9 +83,7 @@ export const RevisionHistoryContent = ({ onBack }) => {
           </div>
         </Reveal>
       )}
-
       {error && <div className="alert alert-error">{error}</div>}
-
       {loading ? (
         <div style={{ padding: '4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
           <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--amber-dim)', borderTop: '2px solid var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -166,7 +154,6 @@ export const RevisionHistoryContent = ({ onBack }) => {
     </div>
   );
 };
-
 const RevisionHistory = () => {
   const navigate = useNavigate();
   return (
@@ -175,5 +162,4 @@ const RevisionHistory = () => {
     </DashboardLayout>
   );
 };
-
 export default RevisionHistory;

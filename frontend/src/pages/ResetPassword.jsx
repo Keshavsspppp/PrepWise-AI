@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import API from '../api/axios';
-
 const S = {
   page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)', fontFamily: 'var(--font-body)', padding: '2rem' },
   wrap: { width: '100%', maxWidth: '24rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' },
 };
-
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
   const email = searchParams.get('email') || '';
-
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [show, setShow] = useState(false);
@@ -20,7 +17,6 @@ const ResetPassword = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-
   const submit = async (e) => {
     e.preventDefault();
     if (!password || !confirmPassword) { setError('Please fill in all fields.'); return; }
@@ -32,7 +28,6 @@ const ResetPassword = () => {
     if (!/[A-Z]/.test(password)) { setError('Password must contain at least one uppercase letter.'); return; }
     if (!/[a-z]/.test(password)) { setError('Password must contain at least one lowercase letter.'); return; }
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) { setError('Password must contain at least one special character (!@#$%^&* etc.).'); return; }
-
     setError(''); setLoading(true);
     try {
       await API.post('/auth/reset-password', {
@@ -47,7 +42,6 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
-
   return (
     <div style={S.page}>
       <div style={S.wrap}>
@@ -58,7 +52,6 @@ const ResetPassword = () => {
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>PrepWise AI</span>
         </div>
-
         {success ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', textAlign: 'center', alignItems: 'center' }}>
             <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', background: 'rgba(45,212,191,0.1)', border: '1px solid rgba(45,212,191,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -97,14 +90,12 @@ const ResetPassword = () => {
                 Enter your new password below for {email}.
               </p>
             </div>
-
             {error && (
               <div className="alert alert-error">
                 <AlertCircle size={16} style={{ flexShrink: 0 }} />
                 {error}
               </div>
             )}
-
             <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
               {/* Password */}
               <div>
@@ -120,7 +111,6 @@ const ResetPassword = () => {
                   Must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character.
                 </p>
               </div>
-
               {/* Confirm Password */}
               <div>
                 <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Confirm New Password</label>
@@ -129,12 +119,10 @@ const ResetPassword = () => {
                   <input type={show ? 'text' : 'password'} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" className="input-field" />
                 </div>
               </div>
-
               <button type="submit" disabled={loading} className="btn btn-primary btn-block" style={{ padding: '0.875rem', marginTop: '0.5rem' }}>
                 {loading ? 'Resetting Password...' : 'Reset Password'}
               </button>
             </form>
-
             <button onClick={() => navigate('/login')} className="btn btn-ghost btn-block" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
               <ArrowLeft size={14} /> Back to Sign In
             </button>
@@ -144,5 +132,4 @@ const ResetPassword = () => {
     </div>
   );
 };
-
 export default ResetPassword;

@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Trash2, Sparkles, Send, Bot, User } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import API from '../api/axios';
 import Reveal from '../components/Reveal';
-
 const PROMPTS = [
   { text: 'Explain Merge Sort.',              subject: 'DSA' },
   { text: 'What is database normalization?',  subject: 'DBMS' },
@@ -12,7 +11,6 @@ const PROMPTS = [
   { text: 'Explain TCP/IP model layers.',     subject: 'CN' },
   { text: 'What is process scheduling?',      subject: 'OS' },
 ];
-
 const Bubble = ({ msg }) => {
   const isUser = msg.sender === 'user';
   return (
@@ -25,7 +23,7 @@ const Bubble = ({ msg }) => {
           padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
           background: isUser ? 'var(--amber)' : msg.error ? 'rgba(239,68,68,0.08)' : 'var(--bg-elevated)',
           border: `1px solid ${isUser ? 'var(--amber)' : msg.error ? 'rgba(239,68,68,0.2)' : 'var(--border-strong)'}`,
-          color: isUser ? '#0a0a0f' : msg.error ? '#f87171' : 'var(--text-primary)',
+          color: isUser ? 'var(--btn-primary-text)' : msg.error ? 'var(--color-danger)' : 'var(--text-primary)',
           fontSize: '0.9rem', lineHeight: 1.65,
           borderTopRightRadius: isUser ? 'var(--radius-sm)' : 'var(--radius-md)',
           borderTopLeftRadius: isUser ? 'var(--radius-md)' : 'var(--radius-sm)',
@@ -45,7 +43,6 @@ const Bubble = ({ msg }) => {
     </div>
   );
 };
-
 const Typing = () => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
     <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -58,7 +55,6 @@ const Typing = () => (
     </div>
   </div>
 );
-
 const AskAI = () => {
   const [messages, setMessages] = useState(() => {
     try { return JSON.parse(localStorage.getItem('prepwise_chat') || '[]'); } catch { return []; }
@@ -67,12 +63,10 @@ const AskAI = () => {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
-
   useEffect(() => {
     localStorage.setItem('prepwise_chat', JSON.stringify(messages));
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
   const send = async (text) => {
     const q = (text || input).trim();
     if (!q || loading) return;
@@ -86,7 +80,6 @@ const AskAI = () => {
       setMessages(p => [...p, { sender: 'ai', text: err.response?.data?.detail || 'Failed to get answer. Try again.', error: true }]);
     } finally { setLoading(false); inputRef.current?.focus(); }
   };
-
   return (
     <DashboardLayout currentPage="AI Study Assistant">
       <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 7rem)' }}>
@@ -117,7 +110,6 @@ const AskAI = () => {
               )}
             </div>
           </div>
-
           {/* Messages */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: 0 }}>
             {messages.length === 0 && (
@@ -155,7 +147,6 @@ const AskAI = () => {
             {loading && <Typing />}
             <div ref={bottomRef} />
           </div>
-
           {/* Input */}
           <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)', flexShrink: 0 }}>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end' }}>
@@ -181,7 +172,4 @@ const AskAI = () => {
     </DashboardLayout>
   );
 };
-
 export default AskAI;
-
-

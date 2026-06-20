@@ -1,6 +1,4 @@
-import React from 'react';
 import { BookOpen } from 'lucide-react';
-
 const SubjectStrengthChart = ({ performances }) => {
   const getSubjectColor = (sub) => {
     switch (sub) {
@@ -12,7 +10,6 @@ const SubjectStrengthChart = ({ performances }) => {
       default: return 'from-slate-500 to-slate-700';
     }
   };
-
   return (
     <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 shadow-xs backdrop-blur-md space-y-6">
       <div className="flex items-center gap-2">
@@ -43,5 +40,4 @@ const SubjectStrengthChart = ({ performances }) => {
     </div>
   );
 };
-
 export default SubjectStrengthChart;

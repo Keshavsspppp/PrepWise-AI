@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-
+import { useEffect, useState } from 'react';
 /**
  * ScrollProgress — thin amber→teal bar that fills as the user scrolls
  * down a given container. Pass the scrollable element's ref (the <main>
@@ -7,7 +6,6 @@ import React, { useEffect, useState } from 'react';
  */
 const ScrollProgress = ({ targetRef }) => {
   const [pct, setPct] = useState(0);
-
   useEffect(() => {
     const el = targetRef?.current || window;
     const getMetrics = () => {
@@ -18,12 +16,10 @@ const ScrollProgress = ({ targetRef }) => {
       }
       return { scrollTop: el.scrollTop, max: el.scrollHeight - el.clientHeight };
     };
-
     const onScroll = () => {
       const { scrollTop, max } = getMetrics();
       setPct(max > 0 ? Math.min(100, Math.max(0, (scrollTop / max) * 100)) : 0);
     };
-
     onScroll();
     el.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
@@ -32,12 +28,10 @@ const ScrollProgress = ({ targetRef }) => {
       window.removeEventListener('resize', onScroll);
     };
   }, [targetRef]);
-
   return (
     <div className="scroll-progress-track">
       <div className="scroll-progress-fill" style={{ width: `${pct}%` }} />
     </div>
   );
 };
-
 export default ScrollProgress;

@@ -1,6 +1,4 @@
-import React from 'react';
 import { useInView } from '../hooks/useInView';
-
 /**
  * Reveal — wraps any block and animates it in once it scrolls into view.
  *
@@ -26,7 +24,6 @@ const Reveal = ({
   ...rest
 }) => {
   const [ref, inView] = useInView({ once });
-
   return (
     <Tag
       ref={ref}
@@ -38,5 +35,4 @@ const Reveal = ({
     </Tag>
   );
 };
-
 export default Reveal;

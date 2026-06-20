@@ -1,13 +1,10 @@
-import React from 'react';
 import { Calendar, Award, ChevronRight, FileText } from 'lucide-react';
-
 const QuizCard = ({ attempt, onRetake, onViewResults }) => {
   const formattedDate = new Date(attempt.completed_at).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
   });
-
   const getDifficultyColor = (diff) => {
     switch (diff) {
       case 'Easy': return 'bg-emerald-550/15 text-emerald-400 border border-emerald-500/25';
@@ -16,13 +13,11 @@ const QuizCard = ({ attempt, onRetake, onViewResults }) => {
       default: return 'bg-slate-550/15 text-slate-400 border border-slate-500/25';
     }
   };
-
   const getPercentageColor = (pct) => {
     if (pct >= 80) return 'text-emerald-400';
     if (pct >= 50) return 'text-amber-400';
     return 'text-red-400';
   };
-
   return (
     <div className="bg-slate-900/30 border border-slate-800/80 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:border-slate-700/60 transition-all duration-205 shadow-xs group">
       <div className="flex items-start gap-4 cursor-pointer flex-1" onClick={() => onViewResults && onViewResults(attempt)}>
@@ -53,7 +48,6 @@ const QuizCard = ({ attempt, onRetake, onViewResults }) => {
           </div>
         </div>
       </div>
-
       <div className="flex items-center justify-between sm:justify-end gap-6 border-t sm:border-t-0 border-slate-800/40 pt-3 sm:pt-0">
         <div className="text-left sm:text-right">
           <span className="text-[9px] font-bold text-slate-550 uppercase tracking-wider block">Score</span>
@@ -73,5 +67,4 @@ const QuizCard = ({ attempt, onRetake, onViewResults }) => {
     </div>
   );
 };
-
 export default QuizCard;

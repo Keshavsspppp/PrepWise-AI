@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
@@ -7,21 +7,17 @@ import AnswerInput from '../components/AnswerInput';
 import FeedbackCard from '../components/FeedbackCard';
 import VivaTimer from '../components/VivaTimer';
 import { ArrowLeft, ChevronRight, CheckCircle2, Loader2, Flag, Mic } from 'lucide-react';
-
 const VivaSession = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state;
-
   useEffect(() => { if (!state?.vivaId) navigate('/viva'); }, [state, navigate]);
-
   const [currentQuestion, setCurrentQuestion] = useState(state?.firstQuestion || null);
   const [questionNumber, setQuestionNumber] = useState(1);
   const [totalQuestions] = useState(state?.totalQuestions || 5);
   const [vivaId] = useState(state?.vivaId || '');
   const [subject] = useState(state?.subject || '');
   const [difficulty] = useState(state?.difficulty || 'Medium');
-
   const [answer, setAnswer] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState(null);
@@ -30,7 +26,6 @@ const VivaSession = () => {
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState(null);
   const [timerPaused, setTimerPaused] = useState(false);
-
   const handleSubmitAnswer = async () => {
     if (!answer.trim() || !currentQuestion) return;
     try {
@@ -45,13 +40,11 @@ const VivaSession = () => {
       setError(err.response?.data?.detail || 'Failed to submit answer. Please try again.');
     } finally { setSubmitting(false); }
   };
-
   const handleNextQuestion = () => {
     if (!feedback) return;
     setCurrentQuestion(nextQuestion);
     setAnswer(''); setFeedback(null); setTimerPaused(false); setPhase('answering');
   };
-
   const handleCompleteViva = async () => {
     try {
       setCompleting(true);
@@ -62,15 +55,11 @@ const VivaSession = () => {
       setCompleting(false);
     }
   };
-
   if (!state?.vivaId) return null;
-
   const diffCol = difficulty === 'Easy' ? 'var(--teal)' : difficulty === 'Hard' ? '#f87171' : 'var(--amber)';
-
   return (
     <DashboardLayout currentPage="Viva Session">
       <div style={{ maxWidth: '42rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1rem 1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
@@ -89,7 +78,6 @@ const VivaSession = () => {
               </div>
             </div>
           </div>
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <VivaTimer paused={timerPaused} />
             {/* Progress counter */}
@@ -103,13 +91,11 @@ const VivaSession = () => {
             </div>
           </div>
         </div>
-
         {error && (
           <div className="alert alert-error">
             <p style={{ fontSize: '0.875rem' }}>{error}</p>
           </div>
         )}
-
         {/* Question */}
         {currentQuestion && (
           <VivaQuestionCard
@@ -121,7 +107,6 @@ const VivaSession = () => {
             difficulty={difficulty}
           />
         )}
-
         {/* Answer input */}
         {phase === 'answering' && (
           <AnswerInput
@@ -132,7 +117,6 @@ const VivaSession = () => {
             placeholder="Explain your answer clearly. Be thorough and use correct terminology..."
           />
         )}
-
         {/* Evaluating state */}
         {submitting && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2.5rem 1rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
@@ -143,12 +127,10 @@ const VivaSession = () => {
             </div>
           </div>
         )}
-
         {/* Feedback */}
         {phase === 'feedback' && feedback && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
             <FeedbackCard {...feedback} />
-
             {questionNumber < totalQuestions ? (
               <button
                 onClick={() => {
@@ -168,7 +150,6 @@ const VivaSession = () => {
                 {completing ? 'Completing…' : 'Complete Viva & View Results'}
               </button>
             )}
-
             {questionNumber < totalQuestions && (
               <div style={{ textAlign: 'center' }}>
                 <button onClick={handleCompleteViva} disabled={completing} style={{
@@ -182,7 +163,6 @@ const VivaSession = () => {
             )}
           </div>
         )}
-
         {/* Loading next question */}
         {phase === 'answering' && !currentQuestion && questionNumber > 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '3rem 1rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
@@ -197,5 +177,4 @@ const VivaSession = () => {
     </DashboardLayout>
   );
 };
-
 export default VivaSession;

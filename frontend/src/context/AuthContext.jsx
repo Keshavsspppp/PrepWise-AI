@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, useEffect } from 'react';
 import API from '../api/axios';
-
 const extractErrorMessage = (error, defaultMsg = "An error occurred. Please try again.") => {
   if (error.response?.data?.detail) {
     const detail = error.response.data.detail;
@@ -18,13 +18,10 @@ const extractErrorMessage = (error, defaultMsg = "An error occurred. Please try 
   }
   return error.response?.data?.message || error.message || defaultMsg;
 };
-
 const AuthContext = createContext(null);
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
   // Check if user is logged in on refresh/mount
   useEffect(() => {
     const checkUserLoggedIn = async () => {
@@ -42,10 +39,8 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     };
-
     checkUserLoggedIn();
   }, []);
-
   // Login action
   const login = async (email, password) => {
     try {
@@ -64,7 +59,6 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: message };
     }
   };
-
   // Register action
   const register = async (name, email, password) => {
     try {
@@ -77,21 +71,18 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: message };
     }
   };
-
   // Logout action
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     setUser(null);
   };
-
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
-
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

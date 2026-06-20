@@ -1,10 +1,7 @@
-import React from 'react';
-
 const LearningScoreCard = ({ score }) => {
   const radius = 56;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
-
   return (
     <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 flex flex-col items-center justify-center text-center shadow-xs backdrop-blur-md h-full">
       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-4">Overall Learning Index</span>
@@ -42,5 +39,4 @@ const LearningScoreCard = ({ score }) => {
     </div>
   );
 };
-
 export default LearningScoreCard;

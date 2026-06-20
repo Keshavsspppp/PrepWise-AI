@@ -1,17 +1,13 @@
-import React from 'react';
-
 const RISK_COLORS = {
   High:   { ring: '#ef4444', glow: 'shadow-red-500/20',   badge: 'bg-red-500/15 text-red-400 border-red-500/25',   label: 'High Risk' },
   Medium: { ring: '#f59e0b', glow: 'shadow-amber-500/20', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/25', label: 'Medium Risk' },
   Low:    { ring: '#22c55e', glow: 'shadow-emerald-500/20', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', label: 'Low Risk' },
 };
-
 const RetentionCard = ({ topic, subject, retention_score, risk_level, next_revision, days_since_studied, compact = false }) => {
   const risk = RISK_COLORS[risk_level] || RISK_COLORS.Low;
   const radius = 36;
   const circ = 2 * Math.PI * radius;
   const offset = circ - (retention_score / 100) * circ;
-
   return (
     <div className={`bg-slate-900/40 border border-slate-800/70 rounded-2xl p-4 backdrop-blur-md hover:border-slate-700/60 transition-all duration-200 ${compact ? '' : 'shadow-xs'}`}>
       <div className="flex items-center gap-3">
@@ -35,7 +31,6 @@ const RetentionCard = ({ topic, subject, retention_score, risk_level, next_revis
             <span className="text-[8px] text-slate-500 font-bold uppercase">Memory</span>
           </div>
         </div>
-
         {/* Info */}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-white truncate">{topic}</p>
@@ -60,5 +55,4 @@ const RetentionCard = ({ topic, subject, retention_score, risk_level, next_revis
     </div>
   );
 };
-
 export default RetentionCard;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AlertCircle, HelpCircle, ChevronLeft, ChevronRight, RotateCcw, Home } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
@@ -21,10 +21,7 @@ const QuizResult = () => {
   const [reviewIndex, setReviewIndex] = useState(0);
 
   useEffect(() => {
-    if (state?.result) {
-      setLoading(false);
-      return;
-    }
+    if (state?.result) return;
     
     const fetchResult = async () => {
       try {
@@ -43,10 +40,8 @@ const QuizResult = () => {
     
     if (resultId) {
       fetchResult();
-    } else {
-      setLoading(false);
     }
-  }, [resultId, state]);
+  }, [resultId, state?.result]);
 
   if (loading) return (
     <DashboardLayout currentPage="Quiz Results">

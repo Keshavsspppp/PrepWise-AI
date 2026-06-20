@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Award, Brain, TrendingUp, ArrowUpRight, Zap, Play, Target, ShieldAlert, Activity, ChevronRight } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
@@ -6,17 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import Reveal from '../components/Reveal';
 import useCountUp from '../hooks/useCountUp';
-
 /* ── helpers ──────────────────────────────────────────────────────────── */
 const pct = (n) => `${n}%`;
-
-const retColor = (p) => p < 50 ? '#ef4444' : p < 75 ? '#f59e0b' : '#10b981';
-
+const retColor = (p) => p < 50 ? 'var(--color-danger)' : p < 75 ? 'var(--color-warning)' : 'var(--color-success)';
 /* ── sub-components ───────────────────────────────────────────────────── */
 const StatCard = ({ icon: Icon, label, value, sub, color, href, numeric, suffix = '' }) => {
   const animatedValue = useCountUp(numeric, { duration: 1000, trigger: numeric != null });
   const displayValue = numeric != null ? `${animatedValue}${suffix}` : value;
-
   return (
     <a href={href || '#'} style={{
       display: 'block', background: 'var(--bg-card)', border: '1px solid var(--border)',
@@ -40,7 +36,6 @@ const StatCard = ({ icon: Icon, label, value, sub, color, href, numeric, suffix 
     </a>
   );
 };
-
 const TopicBar = ({ name, pct: p, note }) => (
   <div style={{ marginBottom: '1rem' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
@@ -53,14 +48,12 @@ const TopicBar = ({ name, pct: p, note }) => (
     {note && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{note}</div>}
   </div>
 );
-
 /* ── main ─────────────────────────────────────────────────────────────── */
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const firstName = user?.name?.split(' ')[0] || 'Student';
-
   useEffect(() => {
     (async () => {
       try {
@@ -72,29 +65,25 @@ const Dashboard = () => {
       } catch { setStats({ noteCount: 0, quizCount: 0, avgScore: 0 }); }
     })();
   }, []);
-
   const cards = [
     { icon: FileText, label: 'Notes Uploaded',   value: stats ? `${stats.noteCount}` : '—',    sub: 'PDF documents',       color: 'var(--amber)',  href: '#/notes/list', numeric: stats?.noteCount },
     { icon: Award,    label: 'Quiz Accuracy',     value: stats ? `${stats.avgScore}%` : '—',    sub: 'Average all quizzes', color: 'var(--teal)',   href: '#/quiz/history', numeric: stats?.avgScore, suffix: '%' },
-    { icon: Brain,    label: 'Quizzes Attempted', value: stats ? `${stats.quizCount}` : '—',    sub: 'All time',            color: '#818cf8', href: '#/quiz/history', numeric: stats?.quizCount },
-    { icon: TrendingUp, label: 'Exam Readiness', value: '—',                                    sub: 'Calculate now',       color: '#f472b6', href: '#/readiness' },
+    { icon: Brain,    label: 'Quizzes Attempted', value: stats ? `${stats.quizCount}` : '—',    sub: 'All time',            color: 'var(--color-purple)', href: '#/quiz/history', numeric: stats?.quizCount },
+    { icon: TrendingUp, label: 'Exam Readiness', value: '—',                                    sub: 'Calculate now',       color: 'var(--color-pink)', href: '#/readiness' },
   ];
-
   const actions = [
     { icon: Play,     label: 'Generate Quiz',   desc: 'AI quiz from your notes',    href: '/quiz/generator', color: 'var(--amber)' },
     { icon: Brain,    label: 'Ask AI',           desc: 'Grounded Q&A',              href: '/ai/ask',         color: 'var(--teal)' },
-    { icon: FileText, label: 'Upload Notes',     desc: 'Add a PDF',                 href: '/notes/upload',   color: '#818cf8' },
-    { icon: Target,   label: 'Readiness',        desc: 'Exam score check',          href: '/readiness',      color: '#f472b6' },
+    { icon: FileText, label: 'Upload Notes',     desc: 'Add a PDF',                 href: '/notes/upload',   color: 'var(--color-purple)' },
+    { icon: Target,   label: 'Readiness',        desc: 'Exam score check',          href: '/readiness',      color: 'var(--color-pink)' },
   ];
-
   return (
     <DashboardLayout currentPage="Dashboard">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-
         {/* ── Hero ── */}
         <div style={{
           borderRadius: 'var(--radius-xl)', padding: '2rem 2.25rem', position: 'relative', overflow: 'hidden',
-          background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(45,212,191,0.06) 100%)',
+          background: 'linear-gradient(135deg, var(--amber-dim) 0%, var(--teal-dim) 100%)',
           border: '1px solid var(--amber-border)',
         }}>
           <div style={{ position: 'absolute', right: '-2rem', top: '-2rem', width: '10rem', height: '10rem', borderRadius: '50%', background: 'rgba(245,158,11,0.06)', filter: 'blur(40px)', pointerEvents: 'none' }} />
@@ -116,7 +105,6 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-
         {/* ── Stats grid ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
           {cards.map((c, i) => (
@@ -125,7 +113,6 @@ const Dashboard = () => {
             </Reveal>
           ))}
         </div>
-
         {/* ── Quick actions ── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -153,7 +140,6 @@ const Dashboard = () => {
             ))}
           </div>
         </div>
-
         {/* ── DNA + Forgetting ── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
           {/* Learning DNA */}
@@ -188,7 +174,6 @@ const Dashboard = () => {
               </div>
             </div>
           </Reveal>
-
           {/* Forgetting Curve */}
           <Reveal variant="right" delay={100}>
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--amber-border)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
@@ -221,7 +206,6 @@ const Dashboard = () => {
             </div>
           </Reveal>
         </div>
-
         {/* ── Activity ── */}
         <Reveal variant="up">
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.5rem' }}>
@@ -233,7 +217,7 @@ const Dashboard = () => {
             {[
               { letter: 'Q', color: 'var(--teal)',   title: 'Completed Quiz: DBMS Transactions', sub: '10 Questions · Easy', score: '90%', time: '2h ago' },
               { letter: 'N', color: 'var(--amber)',  title: 'Uploaded Notes: CN_Routing.pdf', sub: 'Computer Networks · 45 pages', score: 'Indexed', time: 'Yesterday' },
-              { letter: 'V', color: '#818cf8',       title: 'AI Mock Viva: Operating Systems', sub: 'Process synchronization', score: '75%', time: '3 days ago' },
+              { letter: 'V', color: 'var(--color-purple)',       title: 'AI Mock Viva: Operating Systems', sub: 'Process synchronization', score: '75%', time: '3 days ago' },
             ].map((a, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.875rem 0', borderBottom: i < 2 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}>
                 <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: a.color + '18', border: `1px solid ${a.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.8rem', color: a.color, flexShrink: 0 }}>{a.letter}</div>
@@ -253,5 +237,4 @@ const Dashboard = () => {
     </DashboardLayout>
   );
 };
-
 export default Dashboard;

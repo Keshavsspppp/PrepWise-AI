@@ -1,31 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+@import "tailwindcss";
 
 :root {
   --font-display: 'Syne', sans-serif;
   --font-body: 'DM Sans', sans-serif;
 
-  /* Core palette */
-  --bg-base: #0a0e1a;
-  --bg-surface: #101626;
-  --bg-elevated: #172036;
-  --bg-card: rgba(23, 32, 54, 0.45);
-  --bg-card-hover: rgba(30, 41, 69, 0.65);
+  /* Core palette (Slate Dark Theme) */
+  --bg-base: #0b0f19;
+  --bg-surface: #131b2e;
+  --bg-elevated: #1e293b;
+  --bg-card: rgba(30, 41, 59, 0.45);
+  --bg-card-hover: rgba(30, 41, 59, 0.65);
 
-  --amber: #f59e0b;
-  --amber-light: #fcd34d;
-  --amber-dim: rgba(245, 158, 11, 0.12);
-  --amber-border: rgba(245, 158, 11, 0.3);
+  /* Primary brand color (Indigo) replacing --amber */
+  --amber: #6366f1;
+  --amber-light: #818cf8;
+  --amber-dim: rgba(99, 102, 241, 0.12);
+  --amber-border: rgba(99, 102, 241, 0.3);
 
-  --teal: #2dd4bf;
-  --teal-dim: rgba(45, 212, 191, 0.1);
-  --teal-border: rgba(45, 212, 191, 0.25);
+  /* Accent brand color (Emerald/Cyan) replacing --teal */
+  --teal: #10b981;
+  --teal-dim: rgba(16, 185, 129, 0.1);
+  --teal-border: rgba(16, 185, 129, 0.25);
 
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 
-  --border: rgba(255,255,255,0.05);
-  --border-strong: rgba(255,255,255,0.09);
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+
+  --btn-primary-text: #ffffff;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -33,9 +38,107 @@
   --radius-xl: 24px;
 
   --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
-  --shadow-glow: 0 0 40px rgba(245, 158, 11, 0.08);
+  --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.08);
+  --shadow-hover: 0 12px 30px rgba(0,0,0,0.4), 0 0 30px rgba(99, 102, 241, 0.1);
 
   --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Glow Orbs */
+  --glow-opacity: 0.06;
+  --glow-blend: screen;
+
+  /* Header Background */
+  --bg-header: rgba(11, 15, 25, 0.85);
+
+  /* Chart & Status Colors */
+  --color-dsa-from: #6366f1;
+  --color-dsa-to: #8b5cf6;
+  --color-dbms-from: #06b6d4;
+  --color-dbms-to: #0ea5e9;
+  --color-os-from: #f59e0b;
+  --color-os-to: #f97316;
+  --color-cn-from: #22c55e;
+  --color-cn-to: #10b981;
+  --color-apt-from: #ec4899;
+  --color-apt-to: #a855f7;
+  --color-other-from: #64748b;
+  --color-other-to: #94a3b8;
+
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-success: #10b981;
+
+  --chart-bg-bar: #1e293b;
+  --chart-text: #f8fafc;
+  --chart-grid: rgba(255, 255, 255, 0.05);
+
+  --color-purple: #818cf8;
+  --color-pink: #f472b6;
+}
+
+.light-theme {
+  /* Core palette (Slate Light Theme) */
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.7);
+  --bg-card-hover: rgba(255, 255, 255, 0.9);
+
+  /* Primary brand color (Indigo) replacing --amber */
+  --amber: #4f46e5;
+  --amber-light: #6366f1;
+  --amber-dim: rgba(79, 70, 229, 0.08);
+  --amber-border: rgba(79, 70, 229, 0.2);
+
+  /* Accent brand color (Emerald/Cyan) replacing --teal */
+  --teal: #059669;
+  --teal-dim: rgba(5, 150, 105, 0.08);
+  --teal-border: rgba(5, 150, 105, 0.25);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  --border: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(15, 23, 42, 0.15);
+
+  --btn-primary-text: #ffffff;
+
+  --shadow-card: 0 1px 3px rgba(15,23,42,0.05), 0 8px 24px rgba(15,23,42,0.08);
+  --shadow-glow: 0 0 40px rgba(79, 70, 229, 0.04);
+  --shadow-hover: 0 12px 30px rgba(15, 23, 42, 0.12), 0 0 30px rgba(79, 70, 229, 0.06);
+
+  /* Glow Orbs */
+  --glow-opacity: 0.04;
+  --glow-blend: multiply;
+
+  /* Header Background */
+  --bg-header: rgba(255, 255, 255, 0.85);
+
+  /* Chart & Status Colors */
+  --color-dsa-from: #4f46e5;
+  --color-dsa-to: #6366f1;
+  --color-dbms-from: #0891b2;
+  --color-dbms-to: #06b6d4;
+  --color-os-from: #d97706;
+  --color-os-to: #f59e0b;
+  --color-cn-from: #059669;
+  --color-cn-to: #10b981;
+  --color-apt-from: #db2777;
+  --color-apt-to: #ec4899;
+  --color-other-from: #475569;
+  --color-other-to: #64748b;
+
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+  --color-success: #059669;
+
+  --chart-bg-bar: #e2e8f0;
+  --chart-text: #0f172a;
+  --chart-grid: rgba(15, 23, 42, 0.1);
+
+  --color-purple: #4f46e5;
+  --color-pink: #db2777;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -151,11 +254,11 @@ input, textarea, select, button {
 
 /* ─── Glass ────────────────────────────────────────────────────────────── */
 .glass {
-  background: rgba(26, 26, 36, 0.45);
+  background: var(--bg-card);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
 }
 
 /* ─── Buttons ──────────────────────────────────────────────────────────── */
@@ -179,14 +282,14 @@ input, textarea, select, button {
 
 .btn-primary {
   background: var(--amber);
-  color: #0a0a0f;
+  color: var(--btn-primary-text);
   border-color: var(--amber);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--amber-light);
   border-color: var(--amber-light);
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(245,158,11,0.35);
+  box-shadow: 0 4px 20px var(--shadow-glow);
 }
 .btn-primary:active { transform: translateY(0); }
 
@@ -198,7 +301,7 @@ input, textarea, select, button {
 .btn-ghost:hover:not(:disabled) {
   background: var(--bg-elevated);
   color: var(--text-primary);
-  border-color: rgba(255,255,255,0.2);
+  border-color: var(--border-strong);
 }
 
 .btn-outline {
@@ -217,7 +320,7 @@ input, textarea, select, button {
   border-color: var(--teal-border);
 }
 .btn-teal:hover:not(:disabled) {
-  background: rgba(45,212,191,0.18);
+  background: var(--teal-dim);
 }
 
 .btn-danger {
@@ -236,10 +339,10 @@ input, textarea, select, button {
 
 /* ─── Card ─────────────────────────────────────────────────────────────── */
 .card {
-  background: rgba(26, 26, 36, 0.45);
+  background: var(--bg-card);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-card);
@@ -248,10 +351,10 @@ input, textarea, select, button {
 .card-sm .card-body { padding: 1rem; }
 
 .card-hover:hover {
-  border-color: rgba(245, 158, 11, 0.25);
-  background: rgba(32, 32, 45, 0.65);
+  border-color: var(--amber-border);
+  background: var(--bg-card-hover);
   transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.5), 0 0 30px rgba(245, 158, 11, 0.05);
+  box-shadow: var(--shadow-hover);
 }
 
 .card-amber {
@@ -705,7 +808,7 @@ input, textarea, select, button {
 }
 .nav-link.active {
   color: var(--text-primary);
-  background: rgba(245,158,11,0.08);
+  background: var(--amber-dim);
   border: 1px solid var(--amber-border);
 }
 .nav-link.active .nav-icon { color: var(--amber); }
@@ -721,7 +824,7 @@ input, textarea, select, button {
 .app-header {
   position: sticky; top: 0; z-index: 30;
   height: 3.5rem;
-  background: rgba(10, 14, 26, 0.85);
+  background: var(--bg-header);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);

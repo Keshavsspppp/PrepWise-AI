@@ -1,21 +1,16 @@
-import React from 'react';
 import OptionButton from './OptionButton';
-
 const QuestionCard = ({ question, index, total, selectedAnswer, onChange, mode = 'attempt' }) => {
   const isMCQ = question.options && question.options.length > 0;
-
   return (
     <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm backdrop-blur-md">
       {/* Index Badge */}
       <span className="inline-block text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
         Question {index + 1} of {total}
       </span>
-
       {/* Question Text */}
       <h3 className="text-base md:text-lg font-bold text-white leading-relaxed">
         {question.question}
       </h3>
-
       {/* Answer Options Grid / Input Textarea */}
       {isMCQ ? (
         <div className="grid grid-cols-1 gap-3">
@@ -58,7 +53,6 @@ const QuestionCard = ({ question, index, total, selectedAnswer, onChange, mode =
                   {selectedAnswer || "(No answer submitted)"}
                 </p>
               </div>
-
               {/* Reference correct answer */}
               <div className="bg-emerald-950/15 border border-emerald-900/30 rounded-2xl p-4 text-emerald-400">
                 <span className="text-[9px] font-bold text-emerald-450 uppercase tracking-wider block mb-1">Reference Correct Answer</span>
@@ -73,5 +67,4 @@ const QuestionCard = ({ question, index, total, selectedAnswer, onChange, mode =
     </div>
   );
 };
-
 export default QuestionCard;

@@ -1,9 +1,6 @@
-import React from 'react';
-
 const OptionButton = ({ text, index, isSelected, onClick, disabled, status = 'default' }) => {
   const letters = ['A', 'B', 'C', 'D'];
   const letter = letters[index] || String.fromCharCode(65 + index);
-
   // Style helpers based on states
   const getStyles = () => {
     if (status === 'correct') {
@@ -17,7 +14,6 @@ const OptionButton = ({ text, index, isSelected, onClick, disabled, status = 'de
     }
     return 'bg-slate-900/40 border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white';
   };
-
   const getLetterStyles = () => {
     if (status === 'correct') {
       return 'bg-emerald-500 text-white';
@@ -30,7 +26,6 @@ const OptionButton = ({ text, index, isSelected, onClick, disabled, status = 'de
     }
     return 'bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-white';
   };
-
   return (
     <button
       type="button"
@@ -45,5 +40,4 @@ const OptionButton = ({ text, index, isSelected, onClick, disabled, status = 'de
     </button>
   );
 };
-
 export default OptionButton;

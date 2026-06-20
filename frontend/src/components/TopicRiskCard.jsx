@@ -1,16 +1,12 @@
-import React from 'react';
 import { AlertTriangle, TrendingDown, CheckCircle2, BookOpen } from 'lucide-react';
-
 const RISK_CONFIG = {
   High:   { icon: AlertTriangle, iconColor: 'text-red-400',    bg: 'bg-red-500/8',    border: 'border-red-500/20',    bar: 'from-red-500 to-rose-400',    badge: 'bg-red-500/15 text-red-400 border-red-500/20',   dot: 'bg-red-400' },
   Medium: { icon: TrendingDown,  iconColor: 'text-amber-400',  bg: 'bg-amber-500/8',  border: 'border-amber-500/20',  bar: 'from-amber-500 to-yellow-400', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/20', dot: 'bg-amber-400' },
   Low:    { icon: CheckCircle2,  iconColor: 'text-emerald-400',bg: 'bg-emerald-500/8',border: 'border-emerald-500/20',bar: 'from-emerald-500 to-teal-400', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20', dot: 'bg-emerald-400' },
 };
-
 const TopicRiskCard = ({ topic, subject, retention_score, risk_level, revision_priority, days_since_studied, num_revisions, next_revision, onRevise, loading }) => {
   const cfg = RISK_CONFIG[risk_level] || RISK_CONFIG.Low;
   const Icon = cfg.icon;
-
   return (
     <div className={`group rounded-2xl border p-4 transition-all duration-200 hover:shadow-lg ${cfg.bg} ${cfg.border}`}>
       <div className="flex items-start gap-3">
@@ -18,7 +14,6 @@ const TopicRiskCard = ({ topic, subject, retention_score, risk_level, revision_p
         <div className={`flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-xl bg-slate-900/60 border ${cfg.border} text-xs font-extrabold text-white`}>
           #{revision_priority}
         </div>
-
         <div className="flex-1 min-w-0">
           {/* Header row */}
           <div className="flex items-start justify-between gap-2">
@@ -34,7 +29,6 @@ const TopicRiskCard = ({ topic, subject, retention_score, risk_level, revision_p
               {risk_level} Risk
             </span>
           </div>
-
           {/* Retention bar */}
           <div className="mt-3 space-y-1">
             <div className="flex justify-between text-[10px] font-medium">
@@ -48,7 +42,6 @@ const TopicRiskCard = ({ topic, subject, retention_score, risk_level, revision_p
               />
             </div>
           </div>
-
           {/* Meta row */}
           <div className="flex flex-wrap gap-2 mt-3">
             <span className="text-[9px] text-slate-500 bg-slate-800/50 border border-slate-700/40 px-2 py-0.5 rounded-full">
@@ -63,7 +56,6 @@ const TopicRiskCard = ({ topic, subject, retention_score, risk_level, revision_p
               </span>
             )}
           </div>
-
           {/* CTA */}
           {onRevise && (
             <button
@@ -86,5 +78,4 @@ const TopicRiskCard = ({ topic, subject, retention_score, risk_level, revision_p
     </div>
   );
 };
-
 export default TopicRiskCard;

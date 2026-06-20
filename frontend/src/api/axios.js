@@ -1,8 +1,30 @@
 import axios from 'axios';
 
+const rawBaseURL = import.meta.env.VITE_API_URL;
+if (!rawBaseURL && import.meta.env.PROD) {
+  console.error("CRITICAL CONFIGURATION ERROR: VITE_API_URL environment variable is not defined in production!");
+  if (typeof window !== 'undefined') {
+    const showBanner = () => {
+      const banner = document.createElement('div');
+      banner.id = 'vite-api-url-error-banner';
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ef4444;color:white;padding:14px 20px;text-align:center;z-index:99999;font-family:system-ui,sans-serif;font-weight:700;font-size:0.95rem;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+      banner.innerHTML = '⚠️ <strong>Configuration Error:</strong> VITE_API_URL is missing. Production deployment requires this environment variable.';
+      document.body.appendChild(banner);
+      document.body.style.paddingTop = '50px';
+    };
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', showBanner);
+    } else {
+      showBanner();
+    }
+  }
+}
+
+const finalBaseURL = rawBaseURL || 'http://localhost:8000';
+
 // Create a pre-configured instance of Axios
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: finalBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -42,7 +64,7 @@ API.interceptors.response.use(
       
       if (refreshToken) {
         try {
-          const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+          const baseURL = finalBaseURL;
           const refreshResponse = await axios.post(`${baseURL}/auth/refresh`, {
             refresh_token: refreshToken
           });

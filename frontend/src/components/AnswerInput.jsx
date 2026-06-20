@@ -1,9 +1,7 @@
-import React, { useRef, useEffect } from 'react';
-import { Send, Mic } from 'lucide-react';
-
+import { useRef, useEffect } from 'react';
+import { Send } from 'lucide-react';
 const AnswerInput = ({ value, onChange, onSubmit, disabled, placeholder = 'Type your answer here...' }) => {
   const textareaRef = useRef(null);
-
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
@@ -11,14 +9,12 @@ const AnswerInput = ({ value, onChange, onSubmit, disabled, placeholder = 'Type 
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 280)}px`;
     }
   }, [value]);
-
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && e.ctrlKey && !disabled) {
       e.preventDefault();
       onSubmit();
     }
   };
-
   return (
     <div className="bg-slate-900/40 border border-slate-800/70 rounded-3xl p-4 backdrop-blur-md shadow-xs">
       <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-2">Your Answer</label>
@@ -52,5 +48,4 @@ const AnswerInput = ({ value, onChange, onSubmit, disabled, placeholder = 'Type 
     </div>
   );
 };
-
 export default AnswerInput;

@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle, ArrowRight, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
 const Spinner = () => (
   <span style={{ width: '1rem', height: '1rem', border: '2px solid rgba(10,10,15,0.3)', borderTop: '2px solid #0a0a0f', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
 );
-
 const getStrength = (pwd) => {
   if (!pwd) return null;
   const checks = [pwd.length >= 8, /[A-Z]/.test(pwd), /[0-9]/.test(pwd), /[^A-Za-z0-9]/.test(pwd)];
@@ -16,14 +14,12 @@ const getStrength = (pwd) => {
   if (score < 4) return { label: 'Good',   w: '75%',  color: '#06b6d4' };
   return           { label: 'Strong', w: '100%', color: '#10b981' };
 };
-
 const perks = [
   'AI Q&A grounded in your uploaded PDFs',
   'Auto-scheduled Ebbinghaus revision engine',
   'Learning DNA mastery & retention profiling',
   'AI Mock Viva with live evaluation & scoring',
 ];
-
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,7 +29,6 @@ const Register = () => {
   const [error, setError] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
-
   const submit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password) { setError('Please fill in all fields.'); return; }
@@ -44,9 +39,7 @@ const Register = () => {
     if (r.success) navigate('/dashboard');
     else setError(r.error);
   };
-
   const strength = getStrength(password);
-
   return (
     <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg-base)', fontFamily: 'var(--font-body)' }}>
       {/* Left side */}
@@ -57,14 +50,12 @@ const Register = () => {
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem' }}>PrepWise AI</span>
         </div>
-
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.875rem', fontWeight: 800, marginBottom: '0.75rem', lineHeight: 1.15 }}>
           Start your AI<br /><span style={{ color: 'var(--amber)' }}>learning journey</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem', lineHeight: 1.6 }}>
           Free forever. No credit card required.
         </p>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', marginBottom: '2.5rem' }}>
           {perks.map(p => (
             <div key={p} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -73,7 +64,6 @@ const Register = () => {
             </div>
           ))}
         </div>
-
         {/* Testimonial */}
         <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -85,7 +75,6 @@ const Register = () => {
           </div>
         </div>
       </div>
-
       {/* Form panel */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
         <div style={{ width: '100%', maxWidth: '22rem' }}>
@@ -93,14 +82,12 @@ const Register = () => {
             <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.375rem' }}>Create account</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Join thousands of students studying smarter.</p>
           </div>
-
           {error && (
             <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
               <AlertCircle size={16} style={{ flexShrink: 0 }} />
               {error}
             </div>
           )}
-
           <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
             {/* Name */}
             <div>
@@ -110,7 +97,6 @@ const Register = () => {
                 <input id="register-name" type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" className="input-field" />
               </div>
             </div>
-
             {/* Email */}
             <div>
               <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Email Address</label>
@@ -119,7 +105,6 @@ const Register = () => {
                 <input id="register-email" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="input-field" />
               </div>
             </div>
-
             {/* Password */}
             <div>
               <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Password</label>
@@ -139,16 +124,13 @@ const Register = () => {
                 </div>
               )}
             </div>
-
             <button id="register-submit" type="submit" disabled={loading} className="btn btn-primary btn-block" style={{ padding: '0.875rem', marginTop: '0.5rem' }}>
               {loading ? <><Spinner /> Creating account…</> : <>Create Account <ArrowRight size={15} /></>}
             </button>
-
             <p style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
               By signing up you agree to our Terms & Privacy Policy.
             </p>
           </form>
-
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
             Already have an account?{' '}
             <a href="#/login" style={{ color: 'var(--amber)', fontWeight: 600 }}>Sign in</a>
@@ -158,5 +140,4 @@ const Register = () => {
     </div>
   );
 };
-
 export default Register;

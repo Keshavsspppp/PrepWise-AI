@@ -1,6 +1,4 @@
-import React from 'react';
 import { FileText } from 'lucide-react';
-
 const SourceCard = ({ filename, subject }) => {
   // Map subject to custom colored badge
   const getSubjectBadgeStyle = (sub) => {
@@ -13,7 +11,6 @@ const SourceCard = ({ filename, subject }) => {
       default: return 'bg-slate-550/20 text-slate-400 border border-slate-500/30';
     }
   };
-
   return (
     <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-750 hover:border-slate-700 transition-all duration-200 shadow-xs max-w-xs truncate group cursor-default">
       <FileText className="h-4 w-4 text-cyan-400 flex-shrink-0 group-hover:scale-110 transition-transform duration-200" />
@@ -28,5 +25,4 @@ const SourceCard = ({ filename, subject }) => {
     </div>
   );
 };
-
 export default SourceCard;

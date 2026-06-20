@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   BookOpen, LayoutDashboard, BrainCircuit, Calendar,
-  Mic, LogOut, Menu, Bell, Sparkles, Dna, RefreshCcw,
-  GraduationCap, X, ChevronRight,
+  Mic, LogOut, Menu, Bell, Sparkles, Dna,
+  X, ChevronRight, Sun, Moon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ScrollProgress from '../components/ScrollProgress';
@@ -34,8 +34,33 @@ const NavLink = ({ item, current }) => {
 const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
   const [open, setOpen] = useState(false);
   const [bell, setBell] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const { user, logout } = useAuth();
   const scrollRef = useRef(null);
+  const bellRef = useRef(null);
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (bellRef.current && !bellRef.current.contains(e.target)) {
+        setBell(false);
+      }
+    };
+    if (bell) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [bell]);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', fontFamily: 'var(--font-body)', position: 'relative', overflow: 'hidden' }}>
@@ -69,7 +94,7 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '0.9375rem', color: 'var(--text-primary)', lineHeight: 1.1 }}>PrepWise</div>
             <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.06em', fontWeight: 500 }}>AI STUDY</div>
           </div>
-          <button onClick={() => setOpen(false)} style={{ marginLeft: 'auto', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }} className="lg:hidden">
+          <button onClick={() => setOpen(false)} style={{ marginLeft: 'auto', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }} className="lg:hidden" aria-label="Close sidebar menu">
             <X size={15} />
           </button>
         </div>
@@ -102,6 +127,7 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem', borderRadius: 'var(--radius-sm)', transition: 'all var(--transition)' }}
               onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
               onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+              aria-label="Sign out"
             >
               <LogOut size={14} />
             </button>
@@ -117,6 +143,7 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
             onClick={() => setOpen(true)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', marginRight: '0.5rem', padding: '0.25rem' }}
             className="lg:hidden"
+            aria-label="Open sidebar menu"
           >
             <Menu size={18} />
           </button>
@@ -132,13 +159,25 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
               Gemini
             </div>
 
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+              style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.375rem', display: 'flex', alignItems: 'center', transition: 'all var(--transition)' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+              aria-label="Toggle light/dark theme"
+            >
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+
             {/* Bell */}
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }} ref={bellRef}>
               <button
                 onClick={() => setBell(!bell)}
                 style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.375rem', display: 'flex', alignItems: 'center', transition: 'all var(--transition)' }}
                 onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
                 onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                aria-label="Toggle notifications menu"
               >
                 <Bell size={15} />
                 <span style={{ position: 'absolute', top: '0.25rem', right: '0.25rem', width: '5px', height: '5px', borderRadius: '50%', background: 'var(--amber)' }} />
@@ -153,7 +192,7 @@ const DashboardLayout = ({ children, currentPage = 'Dashboard' }) => {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid var(--border)' }}>
                     <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.875rem' }}>Notifications</span>
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: 'var(--amber)', fontWeight: 600 }}>Mark read</button>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.7rem', color: 'var(--amber)', fontWeight: 600 }} aria-label="Mark all notifications as read">Mark read</button>
                   </div>
                   {[
                     { icon: '📉', t: 'Forgetting Curve Alert', m: '"Dynamic Programming" retention dropped below 50%' },

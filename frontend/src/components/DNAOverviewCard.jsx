@@ -1,6 +1,4 @@
-import React from 'react';
 import { Zap, Target, Flame, GraduationCap } from 'lucide-react';
-
 const DNAOverviewCard = ({ speed, consistency, streak, discipline }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -15,7 +13,6 @@ const DNAOverviewCard = ({ speed, consistency, streak, discipline }) => {
           <span className="text-[9px] text-slate-550 block mt-1.5 font-bold uppercase tracking-wide">Based on mastery</span>
         </div>
       </div>
-
       {/* Consistency */}
       <div className="bg-slate-900/30 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs backdrop-blur-md">
         <div className="flex items-center justify-between">
@@ -27,7 +24,6 @@ const DNAOverviewCard = ({ speed, consistency, streak, discipline }) => {
           <span className="text-[9px] text-slate-550 block mt-1.5 font-bold uppercase tracking-wide">Study frequency</span>
         </div>
       </div>
-
       {/* Study Streak */}
       <div className="bg-slate-900/30 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs backdrop-blur-md">
         <div className="flex items-center justify-between">
@@ -39,7 +35,6 @@ const DNAOverviewCard = ({ speed, consistency, streak, discipline }) => {
           <span className="text-[9px] text-slate-550 block mt-1.5 font-bold uppercase tracking-wide">Consecutive study</span>
         </div>
       </div>
-
       {/* Discipline Score */}
       <div className="bg-slate-900/30 border border-slate-800/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs backdrop-blur-md">
         <div className="flex items-center justify-between">
@@ -54,5 +49,4 @@ const DNAOverviewCard = ({ speed, consistency, streak, discipline }) => {
     </div>
   );
 };
-
 export default DNAOverviewCard;

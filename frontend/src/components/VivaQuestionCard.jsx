@@ -1,6 +1,4 @@
-import React from 'react';
 import { HelpCircle, Lightbulb, Code, BookOpen, Cpu } from 'lucide-react';
-
 const TYPE_CONFIG = {
   Definition:   { icon: BookOpen,  color: 'text-indigo-400',  bg: 'bg-indigo-500/10',  border: 'border-indigo-500/20' },
   Conceptual:   { icon: Lightbulb, color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20' },
@@ -8,12 +6,10 @@ const TYPE_CONFIG = {
   Application:  { icon: Code,      color: 'text-violet-400',  bg: 'bg-violet-500/10',  border: 'border-violet-500/20' },
 };
 const getType = t => TYPE_CONFIG[t] || { icon: HelpCircle, color: 'text-slate-400', bg: 'bg-slate-800/30', border: 'border-slate-700' };
-
 const VivaQuestionCard = ({ question, question_type, question_number, total_questions, subject, difficulty }) => {
   const cfg = getType(question_type);
   const Icon = cfg.icon;
   const pct = total_questions > 0 ? Math.round((question_number / total_questions) * 100) : 0;
-
   return (
     <div className="bg-slate-900/40 border border-slate-800/70 rounded-3xl p-6 backdrop-blur-md shadow-xs">
       {/* Header */}
@@ -27,13 +23,11 @@ const VivaQuestionCard = ({ question, question_type, question_number, total_ques
         </div>
         <span className="text-xs font-bold text-slate-400">Q{question_number}<span className="text-slate-600"> / {total_questions}</span></span>
       </div>
-
       {/* Progress */}
       <div className="h-1.5 w-full bg-slate-800/60 rounded-full overflow-hidden mb-5">
         <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-700"
           style={{ width: `${pct}%` }} />
       </div>
-
       {/* Question */}
       <div className={`p-5 rounded-2xl border ${cfg.border} ${cfg.bg}`}>
         <div className="flex gap-3 items-start">
@@ -43,7 +37,6 @@ const VivaQuestionCard = ({ question, question_type, question_number, total_ques
           <p className="text-base font-semibold text-white leading-relaxed">{question}</p>
         </div>
       </div>
-
       {/* Meta */}
       <p className="text-[10px] text-slate-600 mt-3 text-center">
         Subject: <span className="text-slate-400">{subject}</span> · Question {question_number} of {total_questions}
@@ -51,5 +44,4 @@ const VivaQuestionCard = ({ question, question_type, question_number, total_ques
     </div>
   );
 };
-
 export default VivaQuestionCard;

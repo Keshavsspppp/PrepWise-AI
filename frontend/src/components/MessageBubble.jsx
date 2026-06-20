@@ -1,7 +1,5 @@
-import React from 'react';
 import { Sparkles, User, BrainCircuit } from 'lucide-react';
 import SourceCard from './SourceCard';
-
 const parseInlineStyles = (line) => {
   // Support bold **text**
   const boldParts = line.split(/(\*\*.*?\*\*)/g);
@@ -24,7 +22,6 @@ const parseInlineStyles = (line) => {
     });
   });
 };
-
 const parseText = (text) => {
   if (!text) return '';
   
@@ -85,11 +82,9 @@ const parseText = (text) => {
     });
   });
 };
-
 const MessageBubble = ({ message }) => {
   const { sender, text, sources, error } = message;
   const isAI = sender === 'ai';
-
   return (
     <div className={`flex w-full gap-4 py-6 border-b border-slate-800/20 ${isAI ? 'bg-slate-900/10' : ''}`}>
       {/* Avatar column */}
@@ -104,7 +99,6 @@ const MessageBubble = ({ message }) => {
           </div>
         )}
       </div>
-
       {/* Message content column */}
       <div className="flex-1 space-y-4 overflow-hidden">
         {/* Header label */}
@@ -113,7 +107,6 @@ const MessageBubble = ({ message }) => {
             {isAI ? 'PrepWise AI' : 'You'}
           </span>
         </div>
-
         {/* Message Text / Markdown Output */}
         <div className="prose prose-invert max-w-none">
           {error ? (
@@ -124,7 +117,6 @@ const MessageBubble = ({ message }) => {
             parseText(text)
           )}
         </div>
-
         {/* Citations/Sources block */}
         {isAI && sources && sources.length > 0 && (
           <div className="space-y-2 pt-2 border-t border-slate-850">
@@ -145,5 +137,4 @@ const MessageBubble = ({ message }) => {
     </div>
   );
 };
-
 export default MessageBubble;

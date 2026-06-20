@@ -1,6 +1,4 @@
-import React from 'react';
-import { Sparkles, ChevronRight, Lightbulb, Target, TrendingUp, AlertCircle, BookOpen } from 'lucide-react';
-
+import { Sparkles, Lightbulb, Target, TrendingUp, AlertCircle, BookOpen } from 'lucide-react';
 const ICONS = [Lightbulb, Target, TrendingUp, AlertCircle, BookOpen, Sparkles];
 const STYLES = [
   { border: 'border-indigo-500/20', bg: 'bg-indigo-500/6',  icon: 'text-indigo-400',  badge: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/20' },
@@ -10,7 +8,6 @@ const STYLES = [
   { border: 'border-rose-500/20',   bg: 'bg-rose-500/6',    icon: 'text-rose-400',    badge: 'bg-rose-500/15 text-rose-300 border-rose-500/20' },
   { border: 'border-emerald-500/20',bg: 'bg-emerald-500/6', icon: 'text-emerald-400', badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' },
 ];
-
 const RecommendationPanel = ({ recommendations = [], onRecalculate, loading, generated_at }) => {
   if (!recommendations.length) {
     return (
@@ -26,7 +23,6 @@ const RecommendationPanel = ({ recommendations = [], onRecalculate, loading, gen
       </div>
     );
   }
-
   return (
     <div className="bg-slate-900/40 border border-slate-800/70 rounded-3xl p-6 backdrop-blur-md shadow-xs">
       <div className="flex items-center justify-between mb-5">
@@ -54,5 +50,4 @@ const RecommendationPanel = ({ recommendations = [], onRecalculate, loading, gen
     </div>
   );
 };
-
 export default RecommendationPanel;

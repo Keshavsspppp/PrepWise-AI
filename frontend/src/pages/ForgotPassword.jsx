@@ -1,20 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import API from '../api/axios';
-
 const S = {
   page: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)', fontFamily: 'var(--font-body)', padding: '2rem' },
   wrap: { width: '100%', maxWidth: '24rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' },
 };
-
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-
   const submit = async (e) => {
     e.preventDefault();
     if (!email) { setError('Please enter your email.'); return; }
@@ -28,7 +25,6 @@ const ForgotPassword = () => {
       setLoading(false);
     }
   };
-
   return (
     <div style={S.page}>
       <div style={S.wrap}>
@@ -39,7 +35,6 @@ const ForgotPassword = () => {
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>PrepWise AI</span>
         </div>
-
         {success ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', textAlign: 'center', alignItems: 'center' }}>
             <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', background: 'rgba(45,212,191,0.1)', border: '1px solid rgba(45,212,191,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -63,14 +58,12 @@ const ForgotPassword = () => {
                 Enter your email address and we'll generate a reset link for you.
               </p>
             </div>
-
             {error && (
               <div className="alert alert-error">
                 <AlertCircle size={16} style={{ flexShrink: 0 }} />
                 {error}
               </div>
             )}
-
             <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
                 <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>Email address</label>
@@ -79,12 +72,10 @@ const ForgotPassword = () => {
                   <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="input-field" />
                 </div>
               </div>
-
               <button type="submit" disabled={loading} className="btn btn-primary btn-block" style={{ padding: '0.875rem' }}>
                 {loading ? 'Sending Request...' : 'Send Reset Link'}
               </button>
             </form>
-
             <button onClick={() => navigate('/login')} className="btn btn-ghost btn-block" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
               <ArrowLeft size={14} /> Back to Sign In
             </button>
@@ -94,5 +85,4 @@ const ForgotPassword = () => {
     </div>
   );
 };
-
 export default ForgotPassword;

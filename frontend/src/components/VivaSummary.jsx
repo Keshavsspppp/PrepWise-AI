@@ -1,17 +1,13 @@
-import React from 'react';
-import { Trophy, TrendingUp, TrendingDown, Star, AlertTriangle, BookOpen } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 import ProgressRing from './ProgressRing';
-
 const GRADE_CONFIG = {
   'Distinction':        { color: '#22c55e', label: 'Distinction 🏆', badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20' },
   'Merit':              { color: '#06b6d4', label: 'Merit ⭐',        badge: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20' },
   'Pass':               { color: '#f59e0b', label: 'Pass 👍',         badge: 'bg-amber-500/15 text-amber-300 border-amber-500/20' },
   'Needs Improvement':  { color: '#ef4444', label: 'Needs Improvement', badge: 'bg-red-500/15 text-red-300 border-red-500/20' },
 };
-
 const VivaSummary = ({ subject, difficulty, total_score, max_possible, avg_score, percentage, grade, questions_answered, strengths = [], weaknesses = [], missing_concepts = [], answers = [] }) => {
   const cfg = GRADE_CONFIG[grade] || GRADE_CONFIG['Pass'];
-
   return (
     <div className="space-y-6">
       {/* Score hero */}
@@ -24,7 +20,6 @@ const VivaSummary = ({ subject, difficulty, total_score, max_possible, avg_score
         <p className="text-xs text-slate-500 mt-3">{subject} · {difficulty} · {questions_answered} Questions</p>
         <p className="text-xs text-slate-600 mt-1">Avg score per question: <span className="text-white font-bold">{avg_score}/10</span></p>
       </div>
-
       {/* Question-wise scores */}
       {answers.length > 0 && (
         <div className="bg-slate-900/40 border border-slate-800/70 rounded-3xl p-6 backdrop-blur-md">
@@ -49,7 +44,6 @@ const VivaSummary = ({ subject, difficulty, total_score, max_possible, avg_score
           </div>
         </div>
       )}
-
       {/* Strengths & Weaknesses */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {strengths.length > 0 && (
@@ -71,7 +65,6 @@ const VivaSummary = ({ subject, difficulty, total_score, max_possible, avg_score
           </div>
         )}
       </div>
-
       {/* Missing concepts */}
       {missing_concepts.length > 0 && (
         <div className="bg-amber-500/6 border border-amber-500/15 rounded-2xl p-4">
@@ -89,5 +82,4 @@ const VivaSummary = ({ subject, difficulty, total_score, max_possible, avg_score
     </div>
   );
 };
-
 export default VivaSummary;

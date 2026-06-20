@@ -1,5 +1,3 @@
-import React from 'react';
-
 // Reusable animated progress ring
 const ProgressRing = ({ score = 0, size = 80, strokeWidth = 8, color = '#6366f1', label, sublabel, animate = true }) => {
   const radius = (size - strokeWidth) / 2;
@@ -30,5 +28,4 @@ const ProgressRing = ({ score = 0, size = 80, strokeWidth = 8, color = '#6366f1'
     </div>
   );
 };
-
 export default ProgressRing;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,17 +14,14 @@ import QuizAttempt from './pages/QuizAttempt';
 import QuizResult from './pages/QuizResult';
 import QuizHistory from './pages/QuizHistory';
 import LearningDNA from './pages/LearningDNA';
-
 import MockViva from './pages/MockViva';
 import VivaSession from './pages/VivaSession';
 import VivaResults from './pages/VivaResults';
 import VivaHistory from './pages/VivaHistory';
 import './App.css';
-
 // Public routes wrapper to redirect logged-in users away from auth pages
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col items-center justify-center space-y-4">
@@ -43,14 +39,11 @@ const PublicRoute = ({ children }) => {
       </div>
     );
   }
-
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
-
   return children;
 };
-
 function AppRoutes() {
   return (
     <Routes>
@@ -87,7 +80,6 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
-
       {/* Protected Dashboard Route */}
       <Route
         path="/dashboard"
@@ -146,7 +138,6 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       {/* Mastery & Insights Tabbed Dashboard */}
       <Route
         path="/dna"
@@ -156,25 +147,20 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-
       {/* Redirect old routes to the tabbed Mastery & Insights view */}
       <Route path="/revision" element={<Navigate to="/dna?tab=revision" replace />} />
       <Route path="/revision/history" element={<Navigate to="/dna?tab=revision&sub=history" replace />} />
       <Route path="/readiness" element={<Navigate to="/dna?tab=readiness" replace />} />
-
-
       {/* Mock Viva Routes */}
       <Route path="/viva" element={<ProtectedRoute><MockViva /></ProtectedRoute>} />
       <Route path="/viva/session" element={<ProtectedRoute><VivaSession /></ProtectedRoute>} />
       <Route path="/viva/results" element={<ProtectedRoute><VivaResults /></ProtectedRoute>} />
       <Route path="/viva/history" element={<ProtectedRoute><VivaHistory /></ProtectedRoute>} />
-
       {/* Fallback redirect */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }
-
 function App() {
   return (
     <AuthProvider>
@@ -184,5 +170,4 @@ function App() {
     </AuthProvider>
   );
 }
-
 export default App;

@@ -1,15 +1,10 @@
-import React from 'react';
-import { BookOpen } from 'lucide-react';
-
 const STATUS_CONFIG = {
   'Ready':            { bar: 'from-emerald-500 to-teal-400', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' },
   'Good':             { bar: 'from-cyan-500 to-indigo-500',  badge: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20' },
   'Needs Improvement':{ bar: 'from-amber-500 to-yellow-400', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/20' },
   'High Risk':        { bar: 'from-red-500 to-rose-400',     badge: 'bg-red-500/15 text-red-400 border-red-500/20' },
 };
-
 const getStatusConfig = s => STATUS_CONFIG[s] || STATUS_CONFIG['Needs Improvement'];
-
 const SubjectReadinessCard = ({ subject, readiness_score = 0, status, quiz_avg, retention_avg, quiz_attempts, rank }) => {
   const cfg = getStatusConfig(status);
   return (
@@ -26,7 +21,6 @@ const SubjectReadinessCard = ({ subject, readiness_score = 0, status, quiz_avg, 
         </div>
         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${cfg.badge}`}>{status}</span>
       </div>
-
       {/* Score */}
       <div className="flex items-end justify-between mb-2">
         <span className="text-2xl font-extrabold text-white">{readiness_score.toFixed(0)}<span className="text-sm text-slate-500 font-medium">%</span></span>
@@ -35,7 +29,6 @@ const SubjectReadinessCard = ({ subject, readiness_score = 0, status, quiz_avg, 
           <div>Retention: <span className="text-slate-300 font-bold">{retention_avg?.toFixed(0) ?? '—'}%</span></div>
         </div>
       </div>
-
       {/* Bar */}
       <div className="h-2 bg-slate-800/60 rounded-full overflow-hidden">
         <div className={`h-full bg-gradient-to-r ${cfg.bar} rounded-full transition-all duration-700`}
@@ -44,5 +37,4 @@ const SubjectReadinessCard = ({ subject, readiness_score = 0, status, quiz_avg, 
     </div>
   );
 };
-
 export default SubjectReadinessCard;

@@ -1,6 +1,4 @@
-import React from 'react';
 import { Activity, Clock, BookOpen, MessageCircle, FileText } from 'lucide-react';
-
 const StatRow = ({ icon: Icon, label, value, color }) => (
   <div className="flex items-center justify-between py-2.5 border-b border-slate-800/40 last:border-0">
     <div className="flex items-center gap-2.5">
@@ -12,7 +10,6 @@ const StatRow = ({ icon: Icon, label, value, color }) => (
     <span className="text-sm font-bold text-white">{value}</span>
   </div>
 );
-
 const ProgressInsights = ({ activity = {} }) => {
   const {
     total_sessions = 0,
@@ -21,7 +18,6 @@ const ProgressInsights = ({ activity = {} }) => {
     questions_asked = 0,
     active_days = 0,
   } = activity;
-
   // Calculate a "progress score" for the radial gauge
   const progressScore = Math.min(
     Math.round(
@@ -31,18 +27,15 @@ const ProgressInsights = ({ activity = {} }) => {
     ),
     100
   );
-
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const dashoffset = circumference - (progressScore / 100) * circumference;
-
   return (
     <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 shadow-xs backdrop-blur-md">
       <div className="flex items-center gap-2 mb-5">
         <Activity className="h-4.5 w-4.5 text-cyan-400" />
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Study Activity Insights</h3>
       </div>
-
       {/* Mini radial progress + stats split layout */}
       <div className="flex gap-4 items-start">
         {/* Mini Radial */}
@@ -77,7 +70,6 @@ const ProgressInsights = ({ activity = {} }) => {
             Study progress index
           </span>
         </div>
-
         {/* Stat Rows */}
         <div className="flex-1 min-w-0">
           <StatRow
@@ -115,5 +107,4 @@ const ProgressInsights = ({ activity = {} }) => {
     </div>
   );
 };
-
 export default ProgressInsights;

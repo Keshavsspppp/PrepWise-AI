@@ -13,8 +13,8 @@ export const useCountUp = (end, { duration = 900, start = 0, decimals = 0, trigg
     if (!trigger || end == null || Number.isNaN(Number(end))) return;
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setValue(Number(end));
-      return;
+      const animId = requestAnimationFrame(() => setValue(Number(end)));
+      return () => cancelAnimationFrame(animId);
     }
 
     const from = start;

@@ -1,6 +1,4 @@
-import React from 'react';
 import { AlertTriangle, TrendingUp, CheckCircle2, Minus } from 'lucide-react';
-
 const CONFIGS = {
   'High Risk':         { icon: AlertTriangle, color: 'text-red-400',    bg: 'bg-red-500/10',    border: 'border-red-500/20',    dot: 'bg-red-400',    barGrad: 'from-red-500 to-rose-400' },
   'Moderate Risk':     { icon: AlertTriangle, color: 'text-amber-400',  bg: 'bg-amber-500/10',  border: 'border-amber-500/20',  dot: 'bg-amber-400',  barGrad: 'from-amber-500 to-yellow-400' },
@@ -8,7 +6,6 @@ const CONFIGS = {
   'Exam Ready':        { icon: CheckCircle2,  color: 'text-emerald-400',bg: 'bg-emerald-500/10',border: 'border-emerald-500/20',dot: 'bg-emerald-400',barGrad: 'from-emerald-500 to-teal-400' },
   'default':           { icon: Minus,         color: 'text-slate-400',  bg: 'bg-slate-800/30',  border: 'border-slate-700/30',  dot: 'bg-slate-500',  barGrad: 'from-slate-500 to-slate-400' },
 };
-
 const RiskIndicator = ({ score = 0, label, status }) => {
   const cfg = CONFIGS[status] || CONFIGS['default'];
   const Icon = cfg.icon;
@@ -29,5 +26,4 @@ const RiskIndicator = ({ score = 0, label, status }) => {
     </div>
   );
 };
-
 export default RiskIndicator;

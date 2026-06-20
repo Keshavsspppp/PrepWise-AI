@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import ReadinessScoreCard from '../components/ReadinessScoreCard';
@@ -13,9 +13,9 @@ const Toast = ({ msg, type }) => (
   <div style={{
     position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 99,
     padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', fontWeight: 600,
-    background: type === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
-    border: `1px solid ${type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
-    color: type === 'error' ? '#f87171' : '#34d399',
+    background: 'var(--bg-card)',
+    border: `1px solid ${type === 'error' ? 'var(--color-danger)' : 'var(--color-success)'}`,
+    color: type === 'error' ? 'var(--color-danger)' : 'var(--color-success)',
     backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
   }}>{msg}</div>
 );
@@ -32,7 +32,7 @@ const StatCard = ({ label, value, sub, col = 'var(--text-primary)' }) => (
   </div>
 );
 
-const retColor = (p) => p >= 75 ? 'var(--teal)' : p >= 50 ? 'var(--amber)' : '#ef4444';
+const retColor = (p) => p >= 75 ? 'var(--teal)' : p >= 50 ? 'var(--amber)' : 'var(--color-danger)';
 
 export const ExamReadinessContent = () => {
   const [data, setData] = useState(null);
@@ -53,7 +53,10 @@ export const ExamReadinessContent = () => {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    const t = setTimeout(fetchData, 0);
+    return () => clearTimeout(t);
+  }, [fetchData]);
 
   const handleRecalculate = async () => {
     try {
@@ -101,7 +104,7 @@ export const ExamReadinessContent = () => {
       {error && (
         <div className="alert alert-error">
           <AlertCircle size={15} style={{ flexShrink: 0 }} /> {error}
-          <button onClick={fetchData} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', textDecoration: 'underline', fontSize: '0.8rem' }}>Retry</button>
+          <button onClick={fetchData} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', textDecoration: 'underline', fontSize: '0.8rem' }}>Retry</button>
         </div>
       )}
 
@@ -121,7 +124,7 @@ export const ExamReadinessContent = () => {
               <StatCard label="Exam Prediction" value={data?.prediction_status || '—'} col="var(--teal)" />
             </Reveal>
             <Reveal variant="pop" delay={150} style={{ width: '100%' }}>
-              <StatCard label="High Risk Subjects" value={highRisk.length} sub={highRisk.map(s => s.subject).join(', ') || 'None'} col="#f87171" />
+              <StatCard label="High Risk Subjects" value={highRisk.length} sub={highRisk.map(s => s.subject).join(', ') || 'None'} col="var(--color-danger)" />
             </Reveal>
             <Reveal variant="pop" delay={200} style={{ width: '100%' }}>
               <StatCard label="Exam Ready" value={ready.length} sub={`out of ${subjects.length} subjects`} col="var(--teal)" />

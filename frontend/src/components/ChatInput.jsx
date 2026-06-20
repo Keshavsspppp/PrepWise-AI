@@ -1,9 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { Send, CornerDownLeft } from 'lucide-react';
-
 const ChatInput = ({ value, onChange, onSubmit, loading, placeholder = "Ask a question about your study notes..." }) => {
   const textareaRef = useRef(null);
-
   // Auto grow height handler
   useEffect(() => {
     if (textareaRef.current) {
@@ -11,7 +9,6 @@ const ChatInput = ({ value, onChange, onSubmit, loading, placeholder = "Ask a qu
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
     }
   }, [value]);
-
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -20,7 +17,6 @@ const ChatInput = ({ value, onChange, onSubmit, loading, placeholder = "Ask a qu
       }
     }
   };
-
   return (
     <form 
       onSubmit={(e) => { 
@@ -55,5 +51,4 @@ const ChatInput = ({ value, onChange, onSubmit, loading, placeholder = "Ask a qu
     </form>
   );
 };
-
 export default ChatInput;

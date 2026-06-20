@@ -1,22 +1,17 @@
-import React from 'react';
 import { Calendar, Clock, CalendarDays, CheckCircle2 } from 'lucide-react';
-
 const BUCKET_CONFIG = {
   today:     { icon: Clock,        label: 'Today',     color: 'text-red-400',    bg: 'bg-red-500/8',    border: 'border-red-500/20' },
   tomorrow:  { icon: Calendar,     label: 'Tomorrow',  color: 'text-amber-400',  bg: 'bg-amber-500/8',  border: 'border-amber-500/20' },
   this_week: { icon: CalendarDays, label: 'This Week', color: 'text-indigo-400', bg: 'bg-indigo-500/8', border: 'border-indigo-500/20' },
 };
-
-const TimelineItem = ({ topic, subject, retention_score, risk_level, next_revision, bucket, onRevise, markingId, topicId }) => {
+const TimelineItem = ({ topic, subject, retention_score, risk_level, next_revision, onRevise, markingId, topicId }) => {
   const isLoading = markingId === topicId;
   const riskColor = risk_level === 'High' ? 'text-red-400' : risk_level === 'Medium' ? 'text-amber-400' : 'text-emerald-400';
   const dotColor  = risk_level === 'High' ? 'bg-red-400'  : risk_level === 'Medium' ? 'bg-amber-400'  : 'bg-emerald-400';
-
   return (
     <div className="flex items-start gap-3 py-2.5 border-b border-slate-800/40 last:border-0 group">
       {/* Timeline dot */}
       <div className={`flex-shrink-0 h-2.5 w-2.5 rounded-full mt-1.5 ${dotColor} shadow-sm`} style={{ boxShadow: `0 0 6px currentColor` }} />
-
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -33,6 +28,7 @@ const TimelineItem = ({ topic, subject, retention_score, risk_level, next_revisi
               disabled={isLoading}
               title="Mark revision complete"
               className="flex items-center justify-center h-6 w-6 rounded-lg bg-slate-800/70 hover:bg-emerald-500/20 border border-slate-700/50 hover:border-emerald-500/30 text-slate-500 hover:text-emerald-400 transition-all duration-150 cursor-pointer disabled:opacity-40"
+              aria-label="Mark revision complete"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
             </button>
@@ -42,7 +38,6 @@ const TimelineItem = ({ topic, subject, retention_score, risk_level, next_revisi
     </div>
   );
 };
-
 const RevisionTimeline = ({ upcoming = [], onRevise, markingId }) => {
   // Group by bucket
   const groups = { today: [], tomorrow: [], this_week: [] };
@@ -51,16 +46,13 @@ const RevisionTimeline = ({ upcoming = [], onRevise, markingId }) => {
       groups[item.bucket].push(item);
     }
   }
-
   const hasAny = Object.values(groups).some(g => g.length > 0);
-
   return (
     <div className="bg-slate-900/40 border border-slate-800/70 rounded-3xl p-6 backdrop-blur-md shadow-xs">
       <div className="flex items-center gap-2 mb-5">
         <CalendarDays className="h-4 w-4 text-indigo-400" />
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Revision Schedule</h3>
       </div>
-
       {!hasAny ? (
         <div className="py-8 flex flex-col items-center text-center">
           <CheckCircle2 className="h-8 w-8 text-emerald-400 mb-2" />
@@ -99,5 +91,4 @@ const RevisionTimeline = ({ upcoming = [], onRevise, markingId }) => {
     </div>
   );
 };
-
 export default RevisionTimeline;

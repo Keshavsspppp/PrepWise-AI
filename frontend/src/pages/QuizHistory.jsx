@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, FileText, Sparkles, AlertCircle } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
@@ -21,7 +21,10 @@ const QuizHistory = () => {
     catch { setError('Failed to load quiz history. Please reload.'); }
     finally { setLoading(false); }
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const t = setTimeout(load, 0);
+    return () => clearTimeout(t);
+  }, []);
 
   const filtered = history.filter(h =>
     h.topic.toLowerCase().includes(search.toLowerCase()) && (sub === 'All' || h.subject === sub)

@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import VivaSummary from '../components/VivaSummary';
 import { ArrowLeft, RotateCcw, History } from 'lucide-react';
-
 const VivaResults = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -12,7 +11,6 @@ const VivaResults = () => {
   const [results, setResults] = useState(state?.results || null);
   const [loading, setLoading] = useState(!results && !!state?.vivaId);
   const [error, setError] = useState(null);
-
   useEffect(() => {
     if (!results && state?.vivaId) {
       API.get(`/viva/results/${state.vivaId}`)
@@ -22,8 +20,7 @@ const VivaResults = () => {
     } else if (!results && !state?.vivaId) {
       navigate('/viva');
     }
-  }, []);
-
+  }, [results, state?.vivaId, navigate]);
   if (loading) return (
     <DashboardLayout currentPage="Viva Results">
       <div style={{ padding: '6rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
@@ -32,14 +29,13 @@ const VivaResults = () => {
       </div>
     </DashboardLayout>
   );
-
   return (
     <DashboardLayout currentPage="Viva Results">
       <div style={{ maxWidth: '42rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-            <button onClick={() => navigate('/viva')} className="btn btn-ghost btn-sm" style={{ padding: '0.375rem' }}>
+            <button onClick={() => navigate('/viva')} className="btn btn-ghost btn-sm" style={{ padding: '0.375rem' }} aria-label="Back to mock viva">
               <ArrowLeft size={15} />
             </button>
             <div>
@@ -56,15 +52,12 @@ const VivaResults = () => {
             </button>
           </div>
         </div>
-
         {error && (
           <div className="alert alert-error">{error}</div>
         )}
-
         {results && <VivaSummary {...results} />}
       </div>
     </DashboardLayout>
   );
 };
-
 export default VivaResults;

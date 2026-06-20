@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, BrainCircuit, Play, AlertCircle, ChevronRight, History } from 'lucide-react';
+import { Sparkles, BrainCircuit, Play, AlertCircle, History } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import API from '../api/axios';
 import Reveal from '../components/Reveal';
-
 const SUBJECTS = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
 const DIFFICULTIES = [
   { label: 'Easy',   desc: 'Basic recall', col: 'var(--teal)' },
@@ -18,9 +17,6 @@ const TYPES = [
   { value: 'Mixed',        label: 'Mixed Mode',    icon: '⚡', desc: 'MCQ + Short hybrid' },
 ];
 const STEPS = ['Searching ChromaDB…', 'Extracting context…', 'Consulting Gemini…', 'Building questions…', 'Saving to DB…'];
-
-const Spinner = () => <span style={{ width: '1rem', height: '1rem', border: '2px solid rgba(10,10,15,0.25)', borderTop: '2px solid #0a0a0f', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />;
-
 const SelBtn = ({ active, onClick, children, col }) => (
   <button onClick={onClick} style={{
     padding: '0.625rem 0.75rem', borderRadius: 'var(--radius-md)', border: `1px solid ${active ? col || 'var(--amber)' : 'var(--border-strong)'}`,
@@ -32,7 +28,6 @@ const SelBtn = ({ active, onClick, children, col }) => (
     {children}
   </button>
 );
-
 const QuizGenerator = () => {
   const [subject, setSubject] = useState('DSA');
   const [topic, setTopic] = useState('');
@@ -43,13 +38,17 @@ const QuizGenerator = () => {
   const [step, setStep] = useState(0);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
-  React.useEffect(() => {
+  useEffect(() => {
     let iv;
-    if (loading) { setStep(0); iv = setInterval(() => setStep(p => (p + 1) % STEPS.length), 2400); }
-    return () => clearInterval(iv);
+    if (loading) {
+      const t = setTimeout(() => setStep(0), 0);
+      iv = setInterval(() => setStep(p => (p + 1) % STEPS.length), 2400);
+      return () => {
+        clearTimeout(t);
+        clearInterval(iv);
+      };
+    }
   }, [loading]);
-
   const generate = async (e) => {
     e.preventDefault();
     if (!topic.trim()) { setError('Please enter a topic.'); return; }
@@ -61,9 +60,6 @@ const QuizGenerator = () => {
       setError(err.response?.data?.detail || 'Quiz generation failed. Please try again.');
     } finally { setLoading(false); }
   };
-
-  const diff = DIFFICULTIES.find(d => d.label === difficulty);
-
   return (
     <DashboardLayout currentPage="Quiz Generator">
       <div style={{ maxWidth: '38rem', margin: '0 auto' }}>
@@ -83,7 +79,6 @@ const QuizGenerator = () => {
               <History size={13} /> History
             </a>
           </div>
-
           {loading ? (
             <div style={{ padding: '4rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', textAlign: 'center' }}>
               <div className="animate-float" style={{ position: 'relative' }}>
@@ -111,7 +106,6 @@ const QuizGenerator = () => {
                   <AlertCircle size={15} style={{ flexShrink: 0 }} /> {error}
                 </div>
               )}
-
               {/* Subject + Topic */}
               <Reveal variant="up" delay={50}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -127,7 +121,6 @@ const QuizGenerator = () => {
                   </div>
                 </div>
               </Reveal>
-
               {/* Difficulty */}
               <Reveal variant="up" delay={100}>
                 <div>
@@ -142,7 +135,6 @@ const QuizGenerator = () => {
                   </div>
                 </div>
               </Reveal>
-
               {/* Count */}
               <Reveal variant="up" delay={150}>
                 <div>
@@ -156,7 +148,6 @@ const QuizGenerator = () => {
                   </div>
                 </div>
               </Reveal>
-
               {/* Quiz Type */}
               <Reveal variant="up" delay={200}>
                 <div>
@@ -172,7 +163,6 @@ const QuizGenerator = () => {
                   </div>
                 </div>
               </Reveal>
-
               <div className="divider" />
               <Reveal variant="up" delay={250}>
                 <button type="submit" className="btn btn-primary btn-block btn-lg">
@@ -186,5 +176,4 @@ const QuizGenerator = () => {
     </DashboardLayout>
   );
 };
-
 export default QuizGenerator;

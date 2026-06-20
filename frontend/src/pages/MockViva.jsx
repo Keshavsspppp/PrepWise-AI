@@ -1,24 +1,21 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { Mic, BookOpen, BarChart3, AlertCircle, ChevronRight, Clock, History, Zap } from 'lucide-react';
 import Reveal from '../components/Reveal';
-
 const SUBJECTS = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
 const DIFFICULTIES = [
   { label: 'Easy',   desc: 'Foundational recall',      color: 'var(--teal)' },
   { label: 'Medium', desc: 'Conceptual understanding', color: 'var(--amber)' },
-  { label: 'Hard',   desc: 'Analysis & edge cases',    color: '#f87171' },
+  { label: 'Hard',   desc: 'Analysis & edge cases',    color: 'var(--color-danger)' },
 ];
 const COUNTS = [5, 10, 15];
-
 const HOW = [
   { icon: BookOpen, label: 'RAG Retrieval',   desc: 'Questions from your notes via semantic search', col: 'var(--amber)' },
   { icon: Mic,      label: 'AI Evaluation',   desc: 'Gemini grades your answers in real-time',       col: 'var(--teal)' },
-  { icon: BarChart3,label: 'Detailed Report', desc: 'Score, feedback & improvement suggestions',     col: '#818cf8' },
+  { icon: BarChart3,label: 'Detailed Report', desc: 'Score, feedback & improvement suggestions',     col: 'var(--color-purple)' },
 ];
-
 const Pill = ({ active, col, onClick, children }) => (
   <button onClick={onClick} style={{
     padding: '0.5rem 0.875rem', borderRadius: 'var(--radius-md)',
@@ -29,7 +26,6 @@ const Pill = ({ active, col, onClick, children }) => (
     cursor: 'pointer', transition: 'all var(--transition)',
   }}>{children}</button>
 );
-
 const MockViva = () => {
   const navigate = useNavigate();
   const [subject, setSubject] = useState('DSA');
@@ -37,7 +33,6 @@ const MockViva = () => {
   const [questionCount, setQuestionCount] = useState(5);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const start = async () => {
     try {
       setLoading(true); setError(null);
@@ -48,13 +43,9 @@ const MockViva = () => {
     } catch (err) { setError(err.response?.data?.detail || 'Failed to start. Upload notes for this subject first.'); }
     finally { setLoading(false); }
   };
-
-  const diff = DIFFICULTIES.find(d => d.label === difficulty);
-
   return (
     <DashboardLayout currentPage="AI Mock Viva">
       <div style={{ maxWidth: '36rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-
         {/* Header card */}
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
           <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--teal-dim) 0%, transparent 70%)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifycontent: 'space-between' }}>
@@ -71,7 +62,6 @@ const MockViva = () => {
               <History size={13} /> History
             </button>
           </div>
-
           {/* How it works */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid var(--border)' }}>
             {HOW.map(h => (
@@ -85,7 +75,6 @@ const MockViva = () => {
             ))}
           </div>
         </div>
-
         {/* Config */}
         <Reveal variant="up" delay={50}>
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -96,7 +85,6 @@ const MockViva = () => {
                 {SUBJECTS.map(s => <Pill key={s} active={subject === s} col="var(--teal)" onClick={() => setSubject(s)}>{s}</Pill>)}
               </div>
             </div>
-
             {/* Difficulty */}
             <div>
               <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><Zap size={12} /> Difficulty</label>
@@ -114,7 +102,6 @@ const MockViva = () => {
                 ))}
               </div>
             </div>
-
             {/* Count */}
             <div>
               <label className="label" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.625rem' }}><Clock size={12} /> Questions</label>
@@ -124,7 +111,6 @@ const MockViva = () => {
             </div>
           </div>
         </Reveal>
-
         {/* Preview */}
         <Reveal variant="up" delay={100}>
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--teal-border)', borderRadius: 'var(--radius-lg)', padding: '1.125rem 1.25rem' }}>
@@ -144,9 +130,7 @@ const MockViva = () => {
             </div>
           </div>
         </Reveal>
-
         {error && <div className="alert alert-error"><AlertCircle size={15} style={{ flexShrink: 0 }} />{error}</div>}
-
         <Reveal variant="up" delay={150}>
           <button id="start-viva-btn" onClick={start} disabled={loading} className="btn btn-xl btn-block"
             style={{ background: 'linear-gradient(135deg, var(--teal), #0d9488)', color: '#0a0a0f', border: 'none', fontWeight: 800 }}
@@ -164,5 +148,4 @@ const MockViva = () => {
     </DashboardLayout>
   );
 };
-
 export default MockViva;

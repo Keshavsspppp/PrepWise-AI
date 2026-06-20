@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { History, ArrowLeft, Mic, BarChart3, Search, Calendar, Inbox } from 'lucide-react';
 import Reveal from '../components/Reveal';
-
 const GRADE = (avg) => {
   if (avg === null || avg === undefined) return { label: 'Pending',          col: 'var(--text-muted)', dim: 'var(--border)', border: 'var(--border-strong)' };
   if (avg >= 8.5) return { label: 'Distinction',    col: 'var(--teal)',  dim: 'var(--teal-dim)',  border: 'var(--teal-border)' };
@@ -12,30 +11,25 @@ const GRADE = (avg) => {
   if (avg >= 5.0) return { label: 'Pass',            col: '#818cf8', dim: 'rgba(129,140,248,0.1)', border: 'rgba(129,140,248,0.25)' };
   return            { label: 'Needs Improvement', col: '#f87171', dim: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)' };
 };
-
 const VivaHistory = () => {
   const navigate = useNavigate();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-
   useEffect(() => {
     API.get('/viva/history')
       .then(res => setHistory(res.data || []))
       .catch(err => setError(err.response?.data?.detail || 'Failed to load viva history.'))
       .finally(() => setLoading(false));
   }, []);
-
   const filtered = history.filter(h =>
     h.subject.toLowerCase().includes(search.toLowerCase()) ||
     h.difficulty.toLowerCase().includes(search.toLowerCase())
   );
-
   const avgScore = history.filter(h => h.avg_score !== null).length
     ? (history.reduce((s, h) => s + (h.avg_score || 0), 0) / history.filter(h => h.avg_score !== null).length).toFixed(1)
     : '—';
-
   return (
     <DashboardLayout currentPage="Viva History">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -57,7 +51,6 @@ const VivaHistory = () => {
             <Mic size={13} /> New Viva
           </button>
         </div>
-
         {/* Summary */}
         {!loading && history.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
@@ -75,7 +68,6 @@ const VivaHistory = () => {
             ))}
           </div>
         )}
-
         {/* Search */}
         {!loading && history.length > 0 && (
           <Reveal variant="up" delay={180}>
@@ -85,9 +77,7 @@ const VivaHistory = () => {
             </div>
           </Reveal>
         )}
-
         {error && <div className="alert alert-error">{error}</div>}
-
         {loading ? (
           <div style={{ padding: '4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             <div style={{ width: '2rem', height: '2rem', border: '2px solid var(--teal-dim)', borderTop: '2px solid var(--teal)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -131,7 +121,6 @@ const VivaHistory = () => {
                     <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: 'var(--radius-md)', background: 'var(--teal-dim)', border: '1px solid var(--teal-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Mic size={14} style={{ color: 'var(--teal)' }} />
                     </div>
-
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
@@ -144,7 +133,6 @@ const VivaHistory = () => {
                         <span>{session.question_count} Questions</span>
                       </div>
                     </div>
-
                     {/* Score */}
                     {pct !== null && (
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -152,7 +140,6 @@ const VivaHistory = () => {
                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{session.avg_score}/10 avg</div>
                       </div>
                     )}
-
                     <BarChart3 size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
                   </div>
                 </Reveal>
@@ -164,5 +151,4 @@ const VivaHistory = () => {
     </DashboardLayout>
   );
 };
-
 export default VivaHistory;

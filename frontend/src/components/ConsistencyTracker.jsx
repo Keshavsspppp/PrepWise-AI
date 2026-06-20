@@ -1,6 +1,4 @@
-import React from 'react';
-import { Flame, Calendar, CheckCircle2, XCircle } from 'lucide-react';
-
+import { Flame, Calendar, CheckCircle2 } from 'lucide-react';
 // Generate last N days as date strings for tracking
 const getLastNDays = (n) => {
   const days = [];
@@ -11,18 +9,14 @@ const getLastNDays = (n) => {
   }
   return days;
 };
-
 const ConsistencyTracker = ({ streak = 0, consistency_score = 0, active_days_list = [] }) => {
   const last28Days = getLastNDays(28);
   const activeDaySet = new Set(active_days_list);
-
   // Day labels: Mon, Tue, Wed, Thu, Fri, Sat, Sun headers
   const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
   // Streak fire color logic
   const streakColor = streak >= 7 ? 'text-amber-400' : streak >= 3 ? 'text-orange-400' : 'text-slate-500';
   const streakBg = streak >= 7 ? 'bg-amber-500/10 border-amber-500/20' : streak >= 3 ? 'bg-orange-500/10 border-orange-500/20' : 'bg-slate-800/30 border-slate-700/30';
-
   return (
     <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 shadow-xs backdrop-blur-md">
       <div className="flex items-center justify-between mb-5">
@@ -36,7 +30,6 @@ const ConsistencyTracker = ({ streak = 0, consistency_score = 0, active_days_lis
           <span className={`text-xs font-extrabold ${streakColor}`}>{streak} day streak</span>
         </div>
       </div>
-
       {/* Consistency Heatmap Grid — last 28 days */}
       <div className="mb-5">
         <div className="flex gap-1.5 justify-between mb-2">
@@ -82,7 +75,6 @@ const ConsistencyTracker = ({ streak = 0, consistency_score = 0, active_days_lis
           </div>
         </div>
       </div>
-
       {/* Consistency Score Bar */}
       <div className="space-y-2">
         <div className="flex justify-between items-center">
@@ -100,7 +92,6 @@ const ConsistencyTracker = ({ streak = 0, consistency_score = 0, active_days_lis
           <span>Consistent Learner</span>
         </div>
       </div>
-
       {/* Status Pills */}
       <div className="flex gap-2 mt-4 flex-wrap">
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold
@@ -117,5 +108,4 @@ const ConsistencyTracker = ({ streak = 0, consistency_score = 0, active_days_lis
     </div>
   );
 };
-
 export default ConsistencyTracker;

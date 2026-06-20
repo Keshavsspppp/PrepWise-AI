@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, FileText, Trash2, Download, Calendar, HardDrive, Inbox, Plus, AlertCircle, Upload, CheckCircle2, X, CloudUpload } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import API from '../api/axios';
@@ -30,7 +30,15 @@ const NotesList = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
   const limit = 12;
-  const navigate = useNavigate();
+
+  // Custom Modal/Toast states
+  const [noteToDelete, setNoteToDelete] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   // Integrated Upload States
   const [showUpload, setShowUpload] = useState(searchParams.get('upload') === 'true');
@@ -45,7 +53,7 @@ const NotesList = () => {
   const [uploadSuccess, setUploadSuccess] = useState('');
   const fileRef = useRef(null);
 
-  const fetch = async () => {
+  const fetch = useCallback(async () => {
     setLoading(true); setError('');
     try { 
       const r = await API.get('/notes', { params: { q: search, subject, page, limit } }); 
@@ -59,20 +67,35 @@ const NotesList = () => {
     }
     catch { setError('Failed to load notes. Please check your connection.'); }
     finally { setLoading(false); }
+  }, [search, subject, page]);
+
+  useEffect(() => { const t = setTimeout(fetch, 300); return () => clearTimeout(t); }, [fetch]);
+
+  const closeUpload = () => {
+    setShowUpload(false);
+    setSearchParams({});
   };
 
-  useEffect(() => {
-    setPage(1);
-  }, [search, subject]);
+  const startDelete = (note) => {
+    setNoteToDelete(note);
+  };
 
-  useEffect(() => { const t = setTimeout(fetch, 300); return () => clearTimeout(t); }, [search, subject, page]);
-
-  const del = async (id) => {
-    if (!window.confirm('Delete this note? This cannot be undone.')) return;
+  const confirmDelete = async () => {
+    if (!noteToDelete) return;
+    const id = noteToDelete.id;
+    setNoteToDelete(null);
     setDeleting(id);
-    try { await API.delete(`/notes/${id}`); setNotes(p => p.filter(n => n.id !== id)); }
-    catch (err) { alert(err.response?.data?.detail || 'Failed to delete.'); }
-    finally { setDeleting(null); }
+    try {
+      await API.delete(`/notes/${id}`);
+      setNotes(p => p.filter(n => n.id !== id));
+      showToast('Document deleted successfully.');
+    }
+    catch (err) {
+      showToast(err.response?.data?.detail || 'Failed to delete.', 'error');
+    }
+    finally {
+      setDeleting(null);
+    }
   };
 
   const dl = async (id, filename) => {
@@ -81,7 +104,9 @@ const NotesList = () => {
       const url = URL.createObjectURL(new Blob([r.data]));
       const a = document.createElement('a'); a.href = url; a.setAttribute('download', filename);
       document.body.appendChild(a); a.click(); a.remove();
-    } catch { alert('Download failed.'); }
+    } catch {
+      showToast('Download failed.', 'error');
+    }
   };
 
   // Upload Handlers
@@ -111,7 +136,7 @@ const NotesList = () => {
       setUploadSuccess('Notes uploaded and indexed successfully!');
       setUploadTitle(''); setUploadFile(null);
       setTimeout(() => {
-        setShowUpload(false);
+        closeUpload();
         setUploadSuccess('');
         fetch();
       }, 1500);
@@ -245,7 +270,7 @@ const NotesList = () => {
         {/* Subject filter */}
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {SUBJECTS.map(s => (
-            <button key={s} onClick={() => setSubject(s)}
+            <button key={s} onClick={() => { setSubject(s); setPage(1); }}
               className={subject === s ? '' : 'tag'}
               style={subject === s ? {
                 padding: '0.25rem 0.75rem', borderRadius: '100px', fontSize: '0.8rem',
@@ -275,7 +300,7 @@ const NotesList = () => {
               </p>
             </div>
             {!search && subject === 'All' && (
-              <button onClick={() => setShowUpload(true)} className="btn btn-primary">
+              <button onClick={() => setShowUpload(true)} className="btn btn-primary" aria-label="Upload document now">
                 <Plus size={14} /> Upload Now
               </button>
             )}
@@ -313,10 +338,10 @@ const NotesList = () => {
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><HardDrive size={11} />{fmtBytes(note.filesize)}</span>
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                        <button onClick={() => dl(note.id, note.filename)} className="btn btn-ghost btn-sm" style={{ justifyContent: 'center' }}>
+                        <button onClick={() => dl(note.id, note.filename)} className="btn btn-ghost btn-sm" style={{ justifyContent: 'center' }} aria-label={`Download ${note.title}`}>
                           <Download size={13} /> Download
                         </button>
-                        <button onClick={() => del(note.id)} disabled={deleting === note.id} className="btn btn-danger btn-sm" style={{ justifyContent: 'center' }}>
+                        <button onClick={() => startDelete(note)} disabled={deleting === note.id} className="btn btn-danger btn-sm" style={{ justifyContent: 'center' }} aria-label={`Delete ${note.title}`}>
                           {deleting === note.id
                             ? <span style={{ width: '12px', height: '12px', border: '2px solid rgba(248,113,113,0.3)', borderTop: '2px solid #f87171', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
                             : <Trash2 size={13} />} Delete
@@ -338,6 +363,7 @@ const NotesList = () => {
                 onClick={() => setPage(p => Math.max(1, p - 1))} 
                 className="btn btn-ghost btn-sm"
                 style={{ cursor: page === 1 ? 'not-allowed' : 'pointer' }}
+                aria-label="Previous page"
               >
                 Previous
               </button>
@@ -349,6 +375,7 @@ const NotesList = () => {
                 onClick={() => setPage(p => p + 1)} 
                 className="btn btn-ghost btn-sm"
                 style={{ cursor: page >= Math.ceil(totalCount / limit) ? 'not-allowed' : 'pointer' }}
+                aria-label="Next page"
               >
                 Next
               </button>
@@ -357,6 +384,48 @@ const NotesList = () => {
               Showing {notes.length} of {totalCount} {totalCount === 1 ? 'document' : 'documents'}{subject !== 'All' ? ` in ${subject}` : ''}
             </p>
           </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {noteToDelete && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(8px)'
+          }}>
+            <div className="card animate-fade-up" style={{ width: '100%', maxWidth: '24rem', border: '1px solid rgba(239, 68, 68, 0.25)', background: 'var(--bg-card)' }}>
+              <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: 'var(--radius-md)', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f87171' }}>
+                    <AlertCircle size={16} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', color: 'var(--text-primary)' }}>Delete Document?</h3>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>This action cannot be undone.</p>
+                  </div>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Are you sure you want to delete <strong>{noteToDelete.title}</strong>?
+                </p>
+                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setNoteToDelete(null)} className="btn btn-ghost btn-sm" aria-label="Cancel deletion">Cancel</button>
+                  <button onClick={confirmDelete} className="btn btn-danger btn-sm" aria-label="Confirm deletion">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Toast Messages */}
+        {toast && (
+          <div className="animate-fade-in" style={{
+            position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 99,
+            padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', fontWeight: 600,
+            background: toast.type === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+            border: `1px solid ${toast.type === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
+            color: toast.type === 'error' ? '#f87171' : '#34d399',
+            backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          }}>{toast.msg}</div>
         )}
       </div>
     </DashboardLayout>

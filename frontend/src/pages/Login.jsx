@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
 const S = {
   page: { minHeight: '100vh', display: 'flex', background: 'var(--bg-base)', fontFamily: 'var(--font-body)' },
   side: {
@@ -15,14 +14,12 @@ const S = {
   panel: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' },
   wrap: { width: '100%', maxWidth: '22rem' },
 };
-
 const features = [
   { icon: '🧠', label: 'AI-powered answers from your own notes' },
   { icon: '📊', label: 'Learning DNA mastery tracking' },
   { icon: '🔁', label: 'Forgetting curve revision engine' },
   { icon: '🎤', label: 'AI Mock Viva with live scoring' },
 ];
-
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,7 +28,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
-
   const submit = async (e) => {
     e.preventDefault();
     if (!email || !password) { setError('Please fill in all fields.'); return; }
@@ -41,7 +37,6 @@ const Login = () => {
     if (r.success) navigate('/dashboard');
     else setError(r.error);
   };
-
   return (
     <div style={S.page}>
       {/* Feature side — hidden on small screens */}
@@ -53,7 +48,6 @@ const Login = () => {
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.125rem', color: 'var(--text-primary)' }}>PrepWise AI</span>
         </div>
-
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 800, lineHeight: 1.15, marginBottom: '0.75rem' }}>
             Study smarter,<br />
@@ -63,7 +57,6 @@ const Login = () => {
             Your AI companion that learns how <em>you</em> learn.
           </p>
         </div>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
           {features.map(f => (
             <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', padding: '0.875rem 1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
@@ -72,10 +65,8 @@ const Login = () => {
             </div>
           ))}
         </div>
-
         <p style={{ marginTop: 'auto', paddingTop: '2rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>© 2025 PrepWise AI · Gemini 2.5 Flash</p>
       </div>
-
       {/* Form panel */}
       <div style={S.panel}>
         <div style={S.wrap}>
@@ -83,14 +74,12 @@ const Login = () => {
             <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.375rem' }}>Welcome back</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Sign in to continue your learning journey.</p>
           </div>
-
           {error && (
             <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
               <AlertCircle size={16} style={{ flexShrink: 0 }} />
               {error}
             </div>
           )}
-
           <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
             {/* Email */}
             <div>
@@ -100,7 +89,6 @@ const Login = () => {
                 <input id="login-email" type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" className="input-field" />
               </div>
             </div>
-
             {/* Password */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -115,12 +103,10 @@ const Login = () => {
                 </button>
               </div>
             </div>
-
             <button id="login-submit" type="submit" disabled={loading} className="btn btn-primary btn-block" style={{ marginTop: '0.5rem', padding: '0.875rem' }}>
               {loading ? <><Spinner /> Signing in…</> : <>Sign In <ArrowRight size={15} /></>}
             </button>
           </form>
-
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
             New to PrepWise?{' '}
             <a href="#/register" style={{ color: 'var(--amber)', fontWeight: 600 }}>Create account</a>
@@ -130,7 +116,6 @@ const Login = () => {
     </div>
   );
 };
-
 const Spinner = () => (
   <span style={{
     width: '1rem', height: '1rem', border: '2px solid rgba(10,10,15,0.3)',
@@ -138,5 +123,4 @@ const Spinner = () => (
     display: 'inline-block', animation: 'spin 0.8s linear infinite',
   }} />
 );
-
 export default Login;

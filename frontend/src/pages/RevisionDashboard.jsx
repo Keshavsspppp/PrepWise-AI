@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
 import API from '../api/axios';
 import DashboardLayout from '../layouts/DashboardLayout';
 import MemoryHealthCard from '../components/MemoryHealthCard';
@@ -70,10 +69,14 @@ export const RevisionDashboardContent = ({ initialShowHistory = false }) => {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    const t = setTimeout(fetchAll, 0);
+    return () => clearTimeout(t);
+  }, [fetchAll]);
 
   useEffect(() => {
-    setShowHistory(initialShowHistory);
+    const t = setTimeout(() => setShowHistory(initialShowHistory), 0);
+    return () => clearTimeout(t);
   }, [initialShowHistory]);
 
   const handleRecalculate = async () => {

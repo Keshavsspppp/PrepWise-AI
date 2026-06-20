@@ -1,11 +1,9 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, FileText, CheckCircle2, AlertCircle, X, CloudUpload } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import API from '../api/axios';
-
 const SUBJECTS = ['DSA', 'DBMS', 'Operating Systems', 'Computer Networks', 'Aptitude', 'Other'];
-
 const UploadNotes = () => {
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('DSA');
@@ -17,7 +15,6 @@ const UploadNotes = () => {
   const [success, setSuccess] = useState('');
   const fileRef = useRef(null);
   const navigate = useNavigate();
-
   const validate = (f) => {
     setError(''); setSuccess('');
     if (!f) return false;
@@ -28,7 +25,6 @@ const UploadNotes = () => {
   const pick = (f) => { if (validate(f)) { setFile(f); if (!title) setTitle(f.name.replace(/\.[^/.]+$/, '')); } };
   const onDrag = (e) => { e.preventDefault(); setDrag(e.type === 'dragenter' || e.type === 'dragover'); };
   const onDrop = (e) => { e.preventDefault(); setDrag(false); if (e.dataTransfer.files[0]) pick(e.dataTransfer.files[0]); };
-
   const submit = async (e) => {
     e.preventDefault();
     if (!title.trim()) { setError('Please provide a title.'); return; }
@@ -48,7 +44,6 @@ const UploadNotes = () => {
       setError(err.response?.data?.detail || 'Upload failed. Please try again.');
     } finally { setUploading(false); }
   };
-
   return (
     <DashboardLayout currentPage="Upload Notes">
       <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
@@ -63,11 +58,9 @@ const UploadNotes = () => {
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>PDF documents are indexed for AI-grounded Q&A and quizzes</p>
             </div>
           </div>
-
           <form onSubmit={submit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {error && <div className="alert alert-error"><AlertCircle size={15} style={{ flexShrink: 0 }} />{error}</div>}
             {success && <div className="alert alert-success"><CheckCircle2 size={15} style={{ flexShrink: 0 }} />{success}</div>}
-
             {/* Title + Subject */}
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.875rem' }}>
               <div>
@@ -81,7 +74,6 @@ const UploadNotes = () => {
                 </select>
               </div>
             </div>
-
             {/* Drop zone */}
             <div>
               <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>PDF File</label>
@@ -128,7 +120,6 @@ const UploadNotes = () => {
                 </div>
               )}
             </div>
-
             {/* Progress */}
             {uploading && (
               <div>
@@ -141,7 +132,6 @@ const UploadNotes = () => {
                 </div>
               </div>
             )}
-
             <div className="divider" />
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button type="button" disabled={uploading} onClick={() => navigate('/notes/list')} className="btn btn-ghost">Cancel</button>
@@ -155,5 +145,4 @@ const UploadNotes = () => {
     </DashboardLayout>
   );
 };
-
 export default UploadNotes;

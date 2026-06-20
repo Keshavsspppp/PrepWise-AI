@@ -1,12 +1,9 @@
-import React from 'react';
 import { CheckCircle2, XCircle, Award } from 'lucide-react';
-
 const ScoreCard = ({ score, total, percentage }) => {
   const wrong = total - score;
   const radius = 46;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Circle percentage */}
@@ -48,7 +45,6 @@ const ScoreCard = ({ score, total, percentage }) => {
           </div>
         </div>
       </div>
-
       {/* Numerical score details */}
       <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 flex flex-col justify-between shadow-sm backdrop-blur-md">
         <div className="space-y-1">
@@ -63,7 +59,6 @@ const ScoreCard = ({ score, total, percentage }) => {
           <span>Performance Rank</span>
         </div>
       </div>
-
       {/* Correct vs wrong breakout */}
       <div className="bg-slate-900/30 border border-slate-800/80 rounded-3xl p-6 flex flex-col justify-between shadow-sm backdrop-blur-md">
         <div className="space-y-4">
@@ -89,5 +84,4 @@ const ScoreCard = ({ score, total, percentage }) => {
     </div>
   );
 };
-
 export default ScoreCard;

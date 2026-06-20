@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AlertCircle, Clock, ChevronLeft, ChevronRight, Send, CheckCircle2 } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
@@ -29,9 +29,11 @@ const QuizAttempt = () => {
     })();
   }, [id]);
 
+  const formatTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+
   const submitRef = useRef();
   
-  const submit = async (timeout = false) => {
+  const submit = async () => {
     if (!quiz || submitting) return;
     setSubmitting(true); setError('');
     const payload = quiz.questions.map(q => ({ question_id: q.question_id, selected_answer: answers[q.question_id] || '' }));
@@ -45,16 +47,23 @@ const QuizAttempt = () => {
     }
   };
 
-  submitRef.current = submit;
+  useEffect(() => {
+    submitRef.current = submit;
+  });
+
+  const timeLeftRef = useRef(timeLeft);
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
 
   useEffect(() => {
-    if (loading || !quiz || timeLeft <= 0 || submitting) return;
+    if (loading || !quiz || timeLeftRef.current <= 0 || submitting) return;
     const timer = setInterval(() => {
       setTimeLeft(p => {
         if (p <= 1) {
           clearInterval(timer);
           if (submitRef.current) {
-            submitRef.current(true);
+            submitRef.current();
           }
           return 0;
         }
@@ -63,8 +72,6 @@ const QuizAttempt = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [loading, quiz, submitting]);
-
-  const formatTime = (s) => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
 
   if (loading) return (
     <DashboardLayout currentPage="Quiz Attempt">

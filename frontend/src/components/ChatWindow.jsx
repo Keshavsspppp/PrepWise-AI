@@ -1,7 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import MessageBubble from './MessageBubble';
 import { BrainCircuit } from 'lucide-react';
-
 const ChatWindow = ({ messages, loading }) => {
   const bottomRef = useRef(null);
   useEffect(() => {
@@ -53,5 +52,4 @@ const ChatWindow = ({ messages, loading }) => {
     </div>
   );
 };
-
 export default ChatWindow;
