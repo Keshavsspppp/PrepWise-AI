@@ -13,5 +13,6 @@ chromadb>=0.5.0
 sentence-transformers>=2.7.0
 google-genai
 slowapi>=0.1.9
-python-magic-bin>=0.4.14
+python-magic-bin>=0.4.14; platform_system == "Windows"
+python-magic>=0.4.27; platform_system != "Windows"
 langchain-text-splitters>=1.1.2
