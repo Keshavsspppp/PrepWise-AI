@@ -1,379 +1,405 @@
-# PrepWise AI — Intelligent Study Assistant Platform
+# PrepWise AI
 
-> An AI-powered full-stack study platform that helps students prepare smarter using RAG-based note analysis, personalized quizzes, forgetting curve revision scheduling, learning DNA profiling, exam readiness scoring, and AI mock viva examinations.
+PrepWise AI is an AI-powered study platform that turns static PDF notes into an active learning workspace. It combines note-grounded Q&A, auto-generated quizzes, revision planning, learning analytics, readiness scoring, and mock viva practice in one full-stack application.
 
----
+## Overview
 
-## ✨ Features at a Glance
+Most study apps stop at storage or flashcards. PrepWise AI is built around a richer loop:
 
-| Module | Description |
-|--------|-------------|
-| 📚 **Notes Manager** | Upload PDF study notes, auto-index into ChromaDB via RAG |
-| 🤖 **AI Study Assistant** | Ask questions from your notes — Gemini answers grounded in your content |
-| 🎯 **AI Quiz Generator** | Auto-generate MCQ / Short Answer / Mixed quizzes from uploaded notes |
-| 🧬 **Learning DNA** | Behavioral profiling — consistency, retention, study discipline scores |
-| 🔁 **Smart Revision Engine** | Ebbinghaus Forgetting Curve — predicts knowledge decay & schedules revisions |
-| 🎓 **Exam Readiness** | Multi-factor weighted score predicting exam preparedness |
-| 🎤 **AI Mock Viva** | RAG-powered oral examination with real-time Gemini answer evaluation |
+1. upload notes
+2. index them for semantic search
+3. ask grounded questions
+4. generate quizzes from your own material
+5. track retention and study behaviour
+6. estimate exam readiness
+7. practise viva-style responses with AI feedback
 
----
+The result is a system that treats your notes as a living knowledge base instead of a passive document archive.
 
-## 🛠️ Tech Stack
+## Features
 
-### Backend
-- **[FastAPI](https://fastapi.tiangolo.com/)** — Async Python web framework
-- **[MongoDB](https://www.mongodb.com/)** + **[Motor](https://motor.readthedocs.io/)** — Async NoSQL database
-- **[ChromaDB](https://www.trychroma.com/)** — Persistent vector store for RAG
-- **[Sentence Transformers](https://www.sbert.net/)** — `all-MiniLM-L6-v2` embeddings
-- **[Google Gemini 2.5 Flash](https://ai.google.dev/)** — LLM for answers, quiz, evaluation, recommendations
-- **[PyPDF](https://pypdf.readthedocs.io/)** — PDF text extraction
-- **[LangChain](https://www.langchain.com/)** — Text chunking pipeline
-- **JWT** — Authentication via `PyJWT`
-- **Pydantic v2** — Request/response validation
+| Module | What it does |
+| --- | --- |
+| Notes manager | Upload, list, download, and delete PDF study notes |
+| Ask AI | Answers questions using retrieved content from uploaded notes |
+| Quiz engine | Generates `MCQ`, `Short Answer`, and `Mixed` quizzes from note context |
+| Learning DNA | Builds a behaviour-based study profile from activity and performance history |
+| Smart revision | Estimates topic retention with an Ebbinghaus-style forgetting curve |
+| Exam readiness | Calculates a weighted readiness score across multiple study signals |
+| Mock viva | Runs viva-style question sessions and evaluates answers with AI |
+
+## Product flow
+
+```mermaid
+flowchart LR
+    A[Upload PDF Notes] --> B[Index Text + Embeddings]
+    B --> C[Ask AI]
+    B --> D[Generate Quiz]
+    D --> E[Quiz Results]
+    E --> F[Learning DNA]
+    E --> G[Smart Revision]
+    F --> H[Exam Readiness]
+    G --> H
+    B --> I[Mock Viva]
+```
+
+## Architecture
+
+```text
+React SPA
+   ↓
+FastAPI backend
+   ├── MongoDB      -> users, notes, results, analytics, revision, readiness, viva
+   ├── ChromaDB     -> note chunk embeddings for retrieval
+   ├── Local disk   -> uploaded PDFs
+   ├── Gemini       -> generation, evaluation, recommendations
+   └── MiniLM       -> embedding model
+```
+
+For a deeper design write-up, see [`SYSTEM_ARCHITECTURE.md`](./SYSTEM_ARCHITECTURE.md).
+
+## Tech stack
 
 ### Frontend
-- **[React 18](https://react.dev/)** + **[Vite](https://vitejs.dev/)** — Modern SPA framework
-- **[Tailwind CSS](https://tailwindcss.com/)** — Utility-first dark theme styling
-- **[React Router v6](https://reactrouter.com/)** — Hash-based client-side routing
-- **[Axios](https://axios-http.com/)** — HTTP client with JWT interceptor
-- **[Lucide React](https://lucide.dev/)** — Icon library
-- **Custom SVG Charts** — Zero-dependency retention, readiness, DNA charts
 
----
+- `React 19`
+- `Vite 8`
+- `react-router-dom 7`
+- `axios`
+- `Tailwind CSS 4`
+- `lucide-react`
 
-## 📁 Project Structure
+### Backend
 
-```
+- `FastAPI`
+- `MongoDB` with `motor`
+- `ChromaDB`
+- `sentence-transformers/all-MiniLM-L6-v2`
+- `google-genai`
+- `PyPDF`
+- `langchain-text-splitters`
+- `PyJWT`
+- `slowapi`
+
+## Project structure
+
+```text
 aihelper/
 ├── backend/
 │   ├── app/
-│   │   ├── core/
-│   │   │   ├── config.py          # Pydantic settings (env vars)
-│   │   │   ├── rag.py             # ChromaDB + Gemini RAG pipeline
-│   │   │   └── security.py        # JWT helpers
-│   │   ├── db/
-│   │   │   └── mongodb.py         # Motor async MongoDB connection
-│   │   ├── models/
-│   │   │   └── user.py            # Pydantic user schemas
-│   │   └── routes/
-│   │       ├── auth.py            # Register / Login / Profile
-│   │       ├── notes.py           # Upload notes, RAG indexing
-│   │       ├── ai.py              # RAG Q&A chat endpoint
-│   │       ├── quiz.py            # Quiz generation & results
-│   │       ├── learning_dna.py    # Learning DNA engine
-│   │       ├── revision.py        # Ebbinghaus forgetting curve engine
-│   │       ├── readiness.py       # Exam readiness calculator
-│   │       └── viva.py            # AI Mock Viva assistant
-│   ├── .env                       # Environment variables (not committed)
-│   ├── .gitignore
-│   └── requirements.txt
-│
-└── frontend/
-    ├── src/
-    │   ├── api/
-    │   │   └── axios.js           # Axios instance with JWT interceptor
-    │   ├── context/
-    │   │   └── AuthContext.jsx    # Global auth state
-    │   ├── layouts/
-    │   │   └── DashboardLayout.jsx
-    │   ├── pages/
-    │   │   ├── Dashboard.jsx
-    │   │   ├── Login.jsx / Register.jsx
-    │   │   ├── UploadNotes.jsx / NotesList.jsx
-    │   │   ├── AskAI.jsx
-    │   │   ├── QuizGenerator.jsx / QuizAttempt.jsx / QuizResult.jsx / QuizHistory.jsx
-    │   │   ├── LearningDNA.jsx
-    │   │   ├── RevisionDashboard.jsx / RevisionHistory.jsx
-    │   │   ├── ExamReadiness.jsx
-    │   │   └── MockViva.jsx / VivaSession.jsx / VivaResults.jsx / VivaHistory.jsx
-    │   └── components/            # 35 reusable UI components
-    ├── .gitignore
-    ├── package.json
-    └── vite.config.js
+│   │   ├── core/          # config, security, storage, RAG, Gemini, rate limiting
+│   │   ├── db/            # MongoDB connection and activity logging
+│   │   ├── models/        # Pydantic schemas
+│   │   ├── routes/        # feature routes
+│   │   └── main.py        # FastAPI entrypoint
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── layouts/
+│   │   └── pages/
+│   ├── package.json
+│   └── .env.example
+├── SYSTEM_ARCHITECTURE.md
+└── README.md
 ```
 
----
-
-## 🚀 Getting Started
+## Local setup
 
 ### Prerequisites
 
-- Python 3.10+
-- Node.js 18+
-- MongoDB running locally on port `27017`
-- A [Google Gemini API Key](https://aistudio.google.com/app/apikey)
+- Python `3.11` recommended
+- Node.js `18+`
+- MongoDB running locally
+- Gemini API key
 
----
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/<your-username>/prepwise-ai.git
-cd prepwise-ai
-```
-
----
-
-### 2. Backend Setup
+### Backend setup
 
 ```bash
 cd backend
-
-# Create and activate virtual environment
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # Mac/Linux
-
-# Install dependencies
+.venv\Scripts\activate
 pip install -r requirements.txt
+copy .env.example .env
 ```
 
-Create a `.env` file in the `backend/` directory:
+Set the required values in `backend/.env`:
 
 ```env
-MONGO_URI=mongodb://localhost:27017/studygenie
-JWT_SECRET=your_super_secret_jwt_key_here
-GEMINI_API_KEY=your_gemini_api_key_here
-CHROMA_PERSIST_DIR=chroma_db
+PROJECT_NAME="PrepWise AI"
+DEBUG=true
+MONGO_URI="mongodb://localhost:27017/studygenie"
+JWT_SECRET="replace-with-a-long-random-secret"
+GEMINI_API_KEY="replace-with-your-api-key"
+CHROMA_PERSIST_DIR="chroma_db"
+ALLOWED_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
 ```
 
-Start the backend server:
+Run the backend:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-The API will be available at **`http://localhost:8000`**  
-Interactive docs: **`http://localhost:8000/docs`**
+Useful backend URLs:
 
----
+- API root: `http://localhost:8000/`
+- Swagger docs: `http://localhost:8000/docs`
 
-### 3. Frontend Setup
+### Frontend setup
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
+copy .env.example .env
 npm run dev
 ```
 
-The app will be available at **`http://localhost:5173`**
+Default `frontend/.env`:
 
----
-
-## 🔑 Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/studygenie` |
-| `JWT_SECRET` | Secret key for JWT signing | *(required)* |
-| `GEMINI_API_KEY` | Google Gemini API key | *(required)* |
-| `CHROMA_PERSIST_DIR` | ChromaDB storage directory | `chroma_db` |
-
----
-
-## 📡 API Overview
-
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/auth/register` | Register a new user |
-| `POST` | `/auth/login` | Login and receive JWT |
-| `GET`  | `/auth/profile` | Get current user profile |
-
-### Notes & RAG
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/notes/upload` | Upload PDF note (auto-indexed in ChromaDB) |
-| `GET`  | `/notes/` | List all user notes |
-| `DELETE` | `/notes/{id}` | Delete note and purge vectors |
-| `POST` | `/ai/chat` | Ask questions from uploaded notes (RAG) |
-
-### Quiz System
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/quiz/generate` | Generate quiz from notes |
-| `POST` | `/quiz/submit` | Submit quiz answers |
-| `GET`  | `/quiz/history` | Past quiz sessions |
-| `GET`  | `/quiz/results/{id}` | Detailed quiz result |
-
-### Learning DNA
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET`  | `/learning-dna` | Get learning profile |
-| `GET`  | `/learning-dna/analytics` | Activity analytics |
-| `POST` | `/learning-dna/recalculate` | Force recalculate DNA |
-
-### Smart Revision (Forgetting Curve)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET`  | `/revision/retention` | Retention scores for all topics |
-| `GET`  | `/revision/recommendations` | Prioritized revision list |
-| `GET`  | `/revision/upcoming` | Today / Tomorrow / This Week schedule |
-| `GET`  | `/revision/history` | Revision completion log |
-| `POST` | `/revision/complete` | Mark topic revision done |
-| `POST` | `/revision/recalculate` | Refresh scores + Gemini AI tips |
-
-### Exam Readiness
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET`  | `/readiness/overall` | Full readiness profile |
-| `GET`  | `/readiness/subjects` | Subject-wise scores |
-| `GET`  | `/readiness/topics` | Topic-wise scores |
-| `POST` | `/readiness/recalculate` | Recalculate + Gemini recommendations |
-
-### AI Mock Viva
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/viva/start` | Start session, get first question |
-| `POST` | `/viva/answer` | Submit answer, get evaluation + next question |
-| `POST` | `/viva/complete` | End session, generate report |
-| `GET`  | `/viva/results/{id}` | Full session results |
-| `GET`  | `/viva/history` | Past viva sessions |
-
----
-
-## 🧠 Core Algorithms
-
-### RAG Pipeline
-1. Upload PDF → extract text with PyPDF
-2. Chunk text (size: 1000, overlap: 200)
-3. Embed with `sentence-transformers/all-MiniLM-L6-v2`
-4. Store in **ChromaDB** with user/note metadata
-5. Query: embed question → cosine similarity search → top-5 chunks → Gemini answers strictly from context
-
-### Ebbinghaus Forgetting Curve
-```
-R = 100 × e^(−t / S)
-```
-- `R` = retention percentage
-- `t` = days elapsed since last study/revision  
-- `S` = stability (increases with each revision and quiz score)
-- Stability table: `[1, 3, 7, 14, 21, 30]` days × score modifier `[0.6–1.6]`
-
-### Exam Readiness Score
-```
-Score = 0.30 × Quiz Performance
-      + 0.20 × Retention Score
-      + 0.15 × Study Consistency
-      + 0.15 × Revision Completion
-      + 0.10 × Subject Coverage
-      + 0.10 × Learning DNA Score
+```env
+VITE_API_URL=http://localhost:8000
 ```
 
----
+Frontend URL:
 
-## 🗄️ MongoDB Collections
+- `http://localhost:5173`
 
-| Collection | Purpose |
-|-----------|---------|
-| `users` | User accounts |
-| `notes` | Uploaded note metadata |
-| `quizzes` | Generated quiz documents |
-| `quiz_results` | Student quiz submissions |
-| `user_activities` | Study activity log |
-| `learning_dna` | Learning DNA profiles |
-| `topic_retention` | Ebbinghaus retention scores per topic |
-| `revision_history` | Completed revision log |
-| `revision_ai_recommendations` | Gemini revision tips |
-| `exam_readiness` | Readiness score cache |
-| `viva_sessions` | Mock viva session state |
-| `viva_results` | Viva evaluation results |
+## Environment variables
 
----
+### Backend
 
-## 📦 Requirements
-
-### Backend (`requirements.txt`)
-
-```
-fastapi
-uvicorn[standard]
-motor
-pydantic[email]
-pydantic-settings
-pyjwt
-passlib[bcrypt]
-python-multipart
-pypdf
-chromadb
-sentence-transformers
-google-generativeai
-python-dotenv
-```
+| Variable | Required | Description |
+| --- | --- | --- |
+| `PROJECT_NAME` | No | FastAPI application title |
+| `DEBUG` | No | Enables detailed error output |
+| `MONGO_URI` | Yes | MongoDB connection string |
+| `JWT_SECRET` | Yes | JWT signing secret |
+| `JWT_ALGORITHM` | No | Token algorithm, default `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | Access token lifetime |
+| `GEMINI_API_KEY` | Yes | Gemini API key |
+| `GEMINI_MODEL` | No | Model name, default `gemini-2.5-flash` |
+| `CHROMA_PERSIST_DIR` | No | Chroma persistence path |
+| `ALLOWED_ORIGINS` | No | Comma-separated CORS origins |
 
 ### Frontend
 
-```json
-{
-  "dependencies": {
-    "react": "^18.x",
-    "react-dom": "^18.x",
-    "react-router-dom": "^6.x",
-    "axios": "^1.x",
-    "lucide-react": "^0.x"
-  },
-  "devDependencies": {
-    "vite": "^6.x",
-    "@vitejs/plugin-react": "^4.x",
-    "tailwindcss": "^3.x"
-  }
-}
+| Variable | Required | Description |
+| --- | --- | --- |
+| `VITE_API_URL` | Yes in production | Backend base URL |
+
+## API summary
+
+### Auth
+
+| Method | Endpoint |
+| --- | --- |
+| `POST` | `/auth/register` |
+| `POST` | `/auth/login` |
+| `POST` | `/auth/refresh` |
+| `GET` | `/auth/profile` |
+| `POST` | `/auth/logout` |
+| `POST` | `/auth/forgot-password` |
+| `POST` | `/auth/reset-password` |
+
+### Notes and AI
+
+| Method | Endpoint |
+| --- | --- |
+| `POST` | `/notes/upload` |
+| `GET` | `/notes` |
+| `DELETE` | `/notes/{id}` |
+| `GET` | `/notes/{id}/download` |
+| `POST` | `/ai/chat` |
+
+### Quiz
+
+| Method | Endpoint |
+| --- | --- |
+| `POST` | `/quiz/generate` |
+| `GET` | `/quiz/{quiz_id}` |
+| `POST` | `/quiz/submit` |
+| `GET` | `/quiz/result/{result_id}` |
+| `GET` | `/quiz/history` |
+
+### Learning analytics
+
+| Method | Endpoint |
+| --- | --- |
+| `GET` | `/learning-dna` |
+| `POST` | `/learning-dna/recalculate` |
+| `GET` | `/learning-dna/recommendations` |
+| `GET` | `/learning-dna/analytics` |
+
+### Revision
+
+| Method | Endpoint |
+| --- | --- |
+| `GET` | `/revision/retention` |
+| `GET` | `/revision/recommendations` |
+| `GET` | `/revision/upcoming` |
+| `GET` | `/revision/history` |
+| `POST` | `/revision/complete` |
+| `POST` | `/revision/recalculate` |
+| `GET` | `/revision/ai-tips` |
+
+### Readiness
+
+| Method | Endpoint |
+| --- | --- |
+| `GET` | `/readiness/overall` |
+| `GET` | `/readiness/subjects` |
+| `GET` | `/readiness/topics` |
+| `GET` | `/readiness/recommendations` |
+| `POST` | `/readiness/recalculate` |
+
+### Viva
+
+| Method | Endpoint |
+| --- | --- |
+| `POST` | `/viva/start` |
+| `POST` | `/viva/answer` |
+| `POST` | `/viva/complete` |
+| `GET` | `/viva/results/{viva_id}` |
+| `GET` | `/viva/history` |
+
+## Frontend routes
+
+| Route | Purpose |
+| --- | --- |
+| `#/login` | Login page |
+| `#/register` | Registration page |
+| `#/dashboard` | Main dashboard |
+| `#/notes/list` | Notes management |
+| `#/ai/ask` | Grounded Q&A |
+| `#/quiz/generator` | Quiz generation |
+| `#/quiz/attempt/:id` | Quiz session |
+| `#/quiz/result/:resultId` | Quiz results |
+| `#/quiz/history` | Quiz history |
+| `#/dna` | Learning DNA, revision, and readiness hub |
+| `#/viva` | Viva setup |
+| `#/viva/session` | Active viva session |
+| `#/viva/results` | Viva results page |
+| `#/viva/history` | Viva history |
+
+## Data model
+
+Main MongoDB collections currently used by the application:
+
+- `users`
+- `notes`
+- `quizzes`
+- `quiz_results`
+- `user_activities`
+- `learning_dna`
+- `topic_retention`
+- `revision_history`
+- `revision_ai_recommendations`
+- `exam_readiness`
+- `viva_sessions`
+- `viva_results`
+- `password_resets`
+- `token_blocklist`
+
+## Core design ideas
+
+### RAG over personal notes
+
+PrepWise AI does not treat AI as a generic chatbot. The core learning experience is grounded in the student’s own uploaded notes. That makes the system more useful for revision, less likely to drift into unrelated answers, and easier to align with course-specific material.
+
+### Derived learning analytics
+
+The platform calculates learning state from actual user behaviour:
+
+- quiz attempts
+- activity history
+- revision records
+- subject coverage
+- note usage
+
+This lets the product build Learning DNA, retention estimates, and readiness scores without forcing the user to manually maintain study logs.
+
+### Retrieval plus generation
+
+The system works because retrieval and generation are used together:
+
+- ChromaDB retrieves relevant note chunks
+- Gemini explains, evaluates, summarizes, and recommends
+
+That combination powers Q&A, quizzes, viva grading, and personalised recommendations.
+
+## Quality checks
+
+Available checks in the repository:
+
+```bash
+# frontend
+npm run lint
+npm run build
+
+# backend
+ruff check app
+python -m pytest
 ```
 
----
+These checks are run locally in the current repository snapshot. A committed GitHub Actions workflow is not included.
 
-## 🖥️ Pages & Navigation
+## Security
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/dashboard` | Dashboard | Overview stats and quick actions |
-| `/notes/upload` | Upload Notes | PDF upload with subject tagging |
-| `/notes/list` | Notes Manager | View, manage, delete uploaded notes |
-| `/ai/ask` | AI Study Assistant | RAG-powered chat from your notes |
-| `/quiz/generator` | Quiz Generator | Configure and generate quizzes |
-| `/quiz/attempt/:id` | Quiz Attempt | Live quiz interface |
-| `/quiz/result` | Quiz Results | Score analysis and feedback |
-| `/quiz/history` | Quiz History | All past quiz sessions |
-| `/dna` | Learning DNA | Behavioral learning profile |
-| `/revision` | Smart Revision | Forgetting curve dashboard |
-| `/revision/history` | Revision History | Completed revision log |
-| `/readiness` | Exam Readiness | Multi-factor readiness score |
-| `/viva` | Mock Viva Setup | Configure and start viva |
-| `/viva/session` | Viva Session | Live Q&A with AI evaluation |
-| `/viva/results` | Viva Results | Score, grade, and feedback report |
-| `/viva/history` | Viva History | All past viva sessions |
+- JWT-based authentication is used for protected API routes.
+- Passwords are hashed with `bcrypt`.
+- Uploaded note retrieval is scoped by user in ChromaDB.
+- Several endpoints are protected with rate limiting.
+- PDF upload validation checks extension, size, and file signature.
 
----
+## Current limitations
 
-## 🔒 Security
+- Backend automated tests are still minimal.
+- Uploaded files are stored on local disk.
+- ChromaDB persistence is local-state based.
+- Password reset currently logs reset links to the backend console instead of sending email.
+- The project does not yet include a production deployment setup such as Docker, object storage, or background workers.
 
-- All routes (except `/auth/register` and `/auth/login`) are **JWT-protected**
-- Passwords are **bcrypt-hashed** before storage
-- CORS is configured for `localhost:5173` (update for production)
-- ChromaDB queries are scoped by `user_id` to prevent data leakage between users
+## Troubleshooting
 
----
+### `VITE_API_URL` is missing in production
 
-## 📄 License
+The frontend intentionally shows a visible error banner if `VITE_API_URL` is not defined in a production build. Set it to the deployed backend URL before releasing.
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+### AI says it cannot find the answer
 
----
+This usually means:
 
-## 🤝 Contributing
+- the note is still indexing
+- the PDF has little or no extractable text
+- the question does not match the uploaded note content closely enough
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m "feat: add my feature"`
-4. Push to the branch: `git push origin feature/my-feature`
-5. Open a Pull Request
+### Password reset appears not to work
 
----
+In the current implementation, the reset link is printed to the backend console for development use. It is not emailed automatically.
 
-## 👨‍💻 Author
+## Roadmap
 
-Built with ❤️ using FastAPI + React + Google Gemini AI
+Suggested next improvements for the project:
+
+- add real backend test coverage for main flows
+- move file storage to object storage
+- add background workers for indexing and long AI tasks
+- add Docker-based local and deployment setup
+- improve production observability and caching
+
+## Contributing
+
+If you want to extend the project:
+
+1. create a feature branch
+2. make focused changes
+3. run lint and test checks
+4. open a pull request with a clear summary
+
+## License
+
+No license file is currently present in the repository. Add one before public redistribution if you want the project to have an explicit usage license.

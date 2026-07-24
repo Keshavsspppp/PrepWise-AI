@@ -382,6 +382,7 @@ Current security controls include:
 - AI dependencies are synchronous external calls in critical paths
 - backend automated tests are minimal
 - some analytics are heuristic rather than validated against educational benchmarks
+- repository automation is intentionally lightweight in this snapshot; there is no committed GitHub Actions pipeline
 
 ## Scalability considerations
 
