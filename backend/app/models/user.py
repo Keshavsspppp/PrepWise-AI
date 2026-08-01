@@ -52,6 +52,10 @@ class Token(BaseModel):
 class RefreshRequest(BaseModel):
     refresh_token: str
 
+class LogoutRequest(BaseModel):
+    # Optional: clients that send it get their refresh token revoked as well.
+    refresh_token: Optional[str] = None
+
 class TokenData(BaseModel):
     email: Optional[str] = None
     user_id: Optional[str] = None

@@ -12,10 +12,9 @@ from bson import ObjectId
 
 from app.db.mongodb import get_db
 from app.routes.auth import get_current_user
-from app.core.gemini import gemini_client
+from app.core.gemini import generate as gemini_generate
 from google.genai import types
 from app.core.limiter import limiter
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -105,10 +104,11 @@ async def calculate_readiness(user_id: str, db) -> dict:
     # 5. SUBJECT COVERAGE (10%)
     notes_count = await db["notes"].count_documents({"user_id": uid})
     subjects_with_notes = await db["notes"].distinct("subject", {"user_id": uid})
-    all_system_subjects = await db["notes"].distinct("subject")
+    # Scope the syllabus to this user's own subjects; an unscoped distinct() would let
+    # other users' uploads inflate the denominator and move this user's coverage score.
     default_subjects = {"DSA", "DBMS", "Operating Systems", "Computer Networks", "Aptitude"}
-    all_subjects = set(all_system_subjects) | default_subjects
-    covered = len(set(subjects_with_notes) & all_subjects)
+    all_subjects = set(subjects_with_notes) | default_subjects
+    covered = len(set(subjects_with_notes))
     total_subjects = len(all_subjects)
     coverage_score = min(100.0, (covered / max(total_subjects, 1)) * 100 + (notes_count * 5))
 
@@ -367,8 +367,7 @@ Each recommendation must be 1-2 concise sentences. Be specific, motivating, and 
 
     recommendations = []
     try:
-        response = gemini_client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+        response = await gemini_generate(
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.6,

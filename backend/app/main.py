@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 import traceback
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.db.mongodb import connect_to_mongo, close_mongo_connection
+from app.db.mongodb import connect_to_mongo, close_mongo_connection, db_manager
 from app.routes import auth, notes, ai, quiz, learning_dna, revision, readiness, viva
 from app.core.limiter import limiter
 from slowapi.errors import RateLimitExceeded
@@ -43,7 +43,7 @@ async def catch_exceptions_middleware(request: Request, call_next):
         response = await call_next(request)
         return response
     except Exception as e:
-        logger.error(f"Unhandled exception occurred: {e}\n{traceback.format_exc()}")
+        logger.exception("Unhandled exception occurred")
         origin = request.headers.get("origin")
         headers = {}
         if origin:
@@ -75,6 +75,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Total-Count"],
 )
 
 # Include Routes
@@ -89,9 +90,27 @@ app.include_router(viva.router)
 
 @app.get("/", tags=["Health"])
 async def root():
-    """Basic health check endpoint."""
+    """Health check. Reports the real database state, not just that a URI was configured.
+
+    Container healthchecks and load balancer probes hit this, so it must fail when the
+    app cannot serve requests — otherwise traffic gets routed to a broken instance.
+    """
+    try:
+        await db_manager.client.admin.command("ping")
+        database = "connected"
+    except Exception as e:
+        logger.error(f"Health check: MongoDB ping failed: {e}")
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "project": settings.PROJECT_NAME,
+                "database": "unreachable",
+            },
+        )
+
     return {
         "status": "healthy",
         "project": settings.PROJECT_NAME,
-        "database": "MongoDB Connection Configured"
+        "database": database,
     }

@@ -4,9 +4,10 @@ from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 import secrets
 from app.db.mongodb import get_db
-from app.models.user import UserRegister, UserLogin, UserResponse, Token, RefreshRequest, ForgotPasswordRequest, ResetPasswordRequest
+from app.models.user import UserRegister, UserLogin, UserResponse, Token, RefreshRequest, LogoutRequest, ForgotPasswordRequest, ResetPasswordRequest
 from app.core.security import get_password_hash, verify_password, create_access_token, decode_access_token, create_refresh_token, decode_refresh_token
 from app.core.limiter import limiter
+from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -101,18 +102,35 @@ async def login(request: Request, credentials: UserLogin, db=Depends(get_db)):
         "token_type": "bearer"
     }
 
+async def blocklist_token(db, token: str, payload: dict | None = None):
+    """Record a token as revoked until its own expiry (a TTL index clears it after)."""
+    exp = (payload or {}).get("exp")
+    expires_at = (
+        datetime.fromtimestamp(exp, tz=timezone.utc) if exp
+        else datetime.now(timezone.utc) + timedelta(days=7)
+    )
+    await db["token_blocklist"].update_one(
+        {"token": token},
+        {"$set": {"token": token, "expires_at": expires_at, "blacklisted_at": datetime.now(timezone.utc)}},
+        upsert=True
+    )
+
+
 @router.post("/refresh", response_model=Token)
 @limiter.limit("5/minute")
 async def refresh(request: Request, payload: RefreshRequest, db=Depends(get_db)):
     """Refresh JWT access token using refresh token."""
     token_data = decode_refresh_token(payload.refresh_token)
+    # A refresh token surrendered at logout must not be usable to mint new sessions.
+    if token_data and await db["token_blocklist"].find_one({"token": payload.refresh_token}):
+        token_data = None
     if not token_data:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # Generate new access and refresh tokens
     new_access = create_access_token(
         data={"sub": token_data["sub"], "user_id": token_data["user_id"]}
@@ -134,23 +152,25 @@ async def get_profile(current_user: dict = Depends(get_current_user)):
 @router.post("/logout")
 async def logout(
     request: Request,
+    payload: LogoutRequest | None = None,
     current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
-    """Logout current user and invalidate access token."""
+    """Logout current user, revoking both the access token and the refresh token."""
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ")[1]
-        payload = decode_access_token(token)
-        if payload:
-            exp = payload.get("exp")
-            # Convert epoch to datetime
-            expires_at = datetime.fromtimestamp(exp, tz=timezone.utc) if exp else datetime.now(timezone.utc) + timedelta(hours=1)
-            await db["token_blocklist"].update_one(
-                {"token": token},
-                {"$set": {"token": token, "expires_at": expires_at, "blacklisted_at": datetime.now(timezone.utc)}},
-                upsert=True
-            )
+        decoded = decode_access_token(token)
+        if decoded:
+            await blocklist_token(db, token, decoded)
+
+    # Revoke the refresh token too. Skipping it would leave the session resumable
+    # for the full 7-day refresh lifetime despite the user having logged out.
+    if payload and payload.refresh_token:
+        decoded_refresh = decode_refresh_token(payload.refresh_token)
+        if decoded_refresh:
+            await blocklist_token(db, payload.refresh_token, decoded_refresh)
+
     return {"message": "Successfully logged out"}
 
 @router.post("/forgot-password")
@@ -175,7 +195,7 @@ async def forgot_password(
         )
         
         # Construct and log reset link
-        reset_link = f"http://localhost:5173/#/reset-password?token={token}&email={payload.email}"
+        reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/#/reset-password?token={token}&email={payload.email}"
         print("\n" + "="*80)
         print(f" PASSWORD RESET REQUEST RECEIVED FOR: {payload.email}")
         print(f" RESET LINK: {reset_link}")
@@ -221,7 +241,6 @@ async def reset_password(
     # Wait, ResetPasswordRequest does not inherit from UserRegister but we can validate it manually or enforce it!
     # Let's validate it using the classmethod validator manually:
     try:
-        from app.models.user import UserRegister
         UserRegister.validate_password(payload.new_password)
     except ValueError as ve:
         raise HTTPException(

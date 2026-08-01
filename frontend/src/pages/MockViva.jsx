@@ -53,9 +53,9 @@ const MockViva = () => {
       <div style={{ maxWidth: '36rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {/* Header card */}
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', overflow: 'hidden' }}>
-          <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--color-accent-dim) 0%, transparent 70%)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifycontent: 'space-between' }}>
+          <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--color-accent-dim) 0%, transparent 70%)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-              <div className="animate-float" style={{ width: '3rem', height: '3rem', borderRadius: 'var(--radius-md)', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifycontent: 'center' }}>
+              <div className="animate-float" style={{ width: '3rem', height: '3rem', borderRadius: 'var(--radius-md)', background: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Mic size={18} color="var(--btn-primary-text)" />
               </div>
               <div>
@@ -71,7 +71,7 @@ const MockViva = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderBottom: '1px solid var(--border)' }}>
             {HOW.map(h => (
               <div key={h.label} style={{ padding: '1.125rem 0.875rem', textAlign: 'center', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: h.dim, border: `1px solid ${h.border}`, display: 'flex', alignItems: 'center', justifycontent: 'center' }}>
+                <div style={{ width: '2rem', height: '2rem', borderRadius: 'var(--radius-sm)', background: h.dim, border: `1px solid ${h.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <h.icon size={13} style={{ color: h.col }} />
                 </div>
                 <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-primary)' }}>{h.label}</div>

@@ -1,0 +1,23 @@
+# Secrets — every .env stays local, only the .example templates are tracked
+.env
+.env.*
+!.env.example
+
+# Runtime state
+uploads/
+.uploads/
+chroma_db/
+*.log
+
+# Caches
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+node_modules/
+dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

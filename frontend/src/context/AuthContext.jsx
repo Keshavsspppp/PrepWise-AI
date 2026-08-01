@@ -71,8 +71,16 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: message };
     }
   };
-  // Logout action
-  const logout = () => {
+  // Logout action — tell the backend first so the access token is blocklisted,
+  // then clear locally regardless of whether that call succeeded.
+  const logout = async () => {
+    try {
+      if (localStorage.getItem('token')) {
+        await API.post('/auth/logout', { refresh_token: localStorage.getItem('refresh_token') });
+      }
+    } catch (error) {
+      console.error("Server logout failed, clearing session locally:", error);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     setUser(null);

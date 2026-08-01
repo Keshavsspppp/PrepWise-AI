@@ -38,6 +38,9 @@ const VivaSession = () => {
       setPhase('feedback');
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to submit answer. Please try again.');
+      // The answer was not graded, so resume the clock and let them submit again
+      // rather than leaving the session frozen on a paused timer.
+      setTimerPaused(false);
     } finally { setSubmitting(false); }
   };
   const handleNextQuestion = () => {

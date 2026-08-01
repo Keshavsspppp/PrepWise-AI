@@ -14,10 +14,9 @@ from bson import ObjectId
 
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
-from app.core.gemini import gemini_client
+from app.core.gemini import generate as gemini_generate
 from google.genai import types
 from app.core.limiter import limiter
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -561,8 +560,7 @@ Topics:
 High-risk topics needing immediate attention: {', '.join(d['topic'] for d in high_risk) or 'None'}
 Medium-risk topics: {', '.join(d['topic'] for d in medium_risk) or 'None'}
 """
-        response = gemini_client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+        response = await gemini_generate(
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.7,

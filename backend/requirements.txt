@@ -1,6 +1,7 @@
 fastapi>=0.111.0
 uvicorn[standard]>=0.30.0
 motor>=3.3.0
+certifi>=2024.2.2
 pydantic[email]>=2.7.0
 pydantic-settings>=2.2.0
 passlib[bcrypt]>=1.7.4
@@ -9,8 +10,10 @@ pyjwt>=2.8.0
 python-multipart>=0.0.9
 python-dotenv>=1.0.1
 pypdf>=4.2.0
-chromadb>=0.5.0
-sentence-transformers>=2.7.0
+# fastembed runs all-MiniLM-L6-v2 through ONNX Runtime. sentence-transformers would pull
+# in PyTorch (~2GB) for the same weights, which will not fit a free 512MB instance.
+fastembed>=0.4.0
+numpy>=1.26.0
 google-genai
 slowapi>=0.1.9
 python-magic-bin>=0.4.14; platform_system == "Windows"

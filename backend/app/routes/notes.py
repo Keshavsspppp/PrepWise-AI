@@ -1,7 +1,6 @@
 import os
 import uuid
 import logging
-import asyncio
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, BackgroundTasks, Response
 from fastapi.responses import FileResponse
@@ -17,37 +16,45 @@ router = APIRouter(prefix="/notes", tags=["Notes Management"])
 
 UPLOAD_DIR = "uploads"
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB in bytes
+CHUNK_SIZE = 1024 * 1024  # read uploads a megabyte at a time
 
 # Ensure upload directory exists
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 async def bg_index_note(user_id: str, note_id: str, filename: str, subject: str, filepath: str):
-    """Background task to extract, chunk, embed, and index a PDF note."""
+    """Background task to extract, chunk, embed, and index a PDF note.
+
+    The note's `status` field is the only way the user learns how this turned out, since
+    the upload request has already returned 202 by the time this runs.
+    """
     db = get_db()
     try:
-        # Since index_note is CPU/IO-bound and synchronous, run it in a separate thread
-        await asyncio.to_thread(
-            index_note,
+        await index_note(
+            db,
             user_id=user_id,
             note_id=note_id,
             filename=filename,
             subject=subject,
             filepath=filepath
         )
+        await db["notes"].update_one(
+            {"_id": ObjectId(note_id)},
+            {"$set": {"status": "ready", "status_detail": None}}
+        )
         # Log user study activity on success
         await log_activity(db, user_id, "upload_note")
     except Exception as e:
         logger.error(f"Background indexing failed for note {note_id}: {e}")
-        # Rollback metadata from MongoDB
+        # Keep the note and its file, and record why it failed. Deleting them here would
+        # make the upload silently vanish from the UI with no explanation, and the most
+        # common cause — a scanned PDF with no extractable text — is user-fixable.
         try:
-            await db["notes"].delete_one({"_id": ObjectId(note_id)})
+            await db["notes"].update_one(
+                {"_id": ObjectId(note_id)},
+                {"$set": {"status": "failed", "status_detail": str(e)[:300]}}
+            )
         except Exception as db_err:
-            logger.error(f"Failed to rollback note metadata for {note_id}: {db_err}")
-        # Rollback local file from storage
-        try:
-            storage_backend.delete_file(filepath)
-        except Exception as file_err:
-            logger.error(f"Failed to rollback note file {filepath}: {file_err}")
+            logger.error(f"Failed to record indexing failure for note {note_id}: {db_err}")
 
 @router.post("/upload", status_code=status.HTTP_202_ACCEPTED)
 async def upload_note(
@@ -66,19 +73,29 @@ async def upload_note(
             detail="Only PDF files are allowed"
         )
         
-    # 2. Validation: Check file size dynamically
-    # Read content to check size
-    contents = await file.read()
-    file_size = len(contents)
-    
-    if file_size > MAX_FILE_SIZE:
+    # 2. Validation: enforce the size cap while reading, not after.
+    # Reading the whole upload first would let a multi-gigabyte request exhaust server
+    # memory before the limit is ever checked, so bail as soon as the cap is passed.
+    chunks = []
+    file_size = 0
+    while True:
+        chunk = await file.read(CHUNK_SIZE)
+        if not chunk:
+            break
+        file_size += len(chunk)
+        if file_size > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="File exceeds the maximum size limit of 20MB."
+            )
+        chunks.append(chunk)
+    contents = b"".join(chunks)
+
+    if not contents:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File exceeds maximum size limit of 20MB. Uploaded: {file_size / (1024 * 1024):.2f}MB"
+            detail="Uploaded file is empty."
         )
-        
-    # Reset read pointer in case we need it later
-    await file.seek(0)
 
     # 3. Validate MIME type using python-magic with a robust fallback to magic bytes
     is_pdf = False
@@ -129,6 +146,8 @@ async def upload_note(
         "filename": safe_filename,
         "filepath": filepath,
         "filesize": file_size,
+        "status": "indexing",
+        "status_detail": None,
         "upload_date": datetime.now(timezone.utc)
     }
     
@@ -201,9 +220,9 @@ async def get_notes(
         else:
             notes_list = await cursor.to_list(length=100)
             
+        # X-Total-Count is made readable cross-origin via CORS expose_headers in main.py
         if response and page is not None and limit is not None:
             response.headers["X-Total-Count"] = str(total_count)
-            response.headers["Access-Control-Expose-Headers"] = "X-Total-Count"
         
         # Format response objects
         response_data = []
@@ -215,6 +234,9 @@ async def get_notes(
                 "subject": note["subject"],
                 "filename": note["filename"],
                 "filesize": note["filesize"],
+                # Notes uploaded before status tracking existed are already indexed.
+                "status": note.get("status", "ready"),
+                "status_detail": note.get("status_detail"),
                 "upload_date": note["upload_date"].isoformat()
             })
         return response_data
@@ -263,23 +285,21 @@ async def delete_note(
             detail="Failed to delete note metadata from database"
         )
         
-    # Delete matching vectors from ChromaDB (using user partitioned collection)
+    # Delete this note's stored vector chunks
     try:
-        delete_note_embeddings(current_user["_id"], id)
+        await delete_note_embeddings(db, id)
     except Exception as e:
         logger.error(f"Failed to delete matching vectors for note {id}: {e}")
         
-    # Delete physical file using storage_backend
+    # Delete physical file using storage_backend.
+    # A failure here is logged rather than raised: the database record is already gone,
+    # so the caller's delete succeeded and only an orphan file needs admin attention.
     filepath = note["filepath"]
     try:
         storage_backend.delete_file(filepath)
     except Exception as e:
         logger.error(f"Failed to delete physical file {filepath}: {e}")
-            
-    return {"message": "Note deleted successfully", "id": id}
-            # We don't raise an exception here because the database record is already gone,
-            # but we log it for admin investigation of orphan files.
-            
+
     return {"message": "Note deleted successfully", "id": id}
 
 

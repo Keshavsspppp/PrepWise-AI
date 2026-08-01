@@ -16,9 +16,9 @@ from bson import ObjectId
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
 from app.core.rag import query_notes
+from app.core.gemini import generate as gemini_generate, AIUnavailable
 from google.genai import types
 from app.core.limiter import limiter
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ async def generate_viva_questions(
 
     # Retrieve relevant chunks from student's notes
     query = f"{subject} concepts definitions theory applications"
-    chunks = query_notes(user_id=user_id, question=query, limit=20)
+    chunks = await query_notes(db, user_id=user_id, question=query, limit=20)
 
     context_block = "No notes available."
     if chunks:
@@ -94,6 +94,11 @@ Question types to mix:
 - Scenario: "Given this situation, what would you do?"
 - Application: "How would you apply X to solve Y?"
 
+Ask about the subject matter itself, never about the document. Do not reference "the notes",
+"the book", "the provided text", page numbers, or the author, and do not ask what an acronym
+in the title stands for. An examiner who had never seen these notes should be able to ask the
+same question, and a student who knows the topic should be able to answer it without them.
+
 For each question provide:
 - question: the viva question (natural, conversational tone)
 - question_type: one of [Definition, Conceptual, Scenario, Application]
@@ -106,9 +111,7 @@ Context from Student Notes:
 Generate {count} questions now."""
 
     try:
-        from app.core.gemini import gemini_client
-        response = gemini_client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+        response = await gemini_generate(
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.4,
@@ -218,9 +221,7 @@ List 1-2 strengths if applicable.
 Provide a 1-sentence correctness_summary."""
 
     try:
-        from app.core.gemini import gemini_client
-        response = gemini_client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+        response = await gemini_generate(
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.2,
@@ -237,19 +238,12 @@ Provide a 1-sentence correctness_summary."""
             "correctness_summary": data.get("correctness_summary", ""),
             "is_correct": int(data.get("score", 0)) >= 6
         }
-    except Exception as e:
-        logger.error(f"Viva: Evaluation failed: {e}")
-        # Keyword-based fallback scoring
-        answer_lower = student_answer.lower()
-        matched = sum(1 for kc in key_concepts if kc.lower() in answer_lower)
-        fallback_score = min(10, round((matched / max(len(key_concepts), 1)) * 10))
-        return {
-            "score": fallback_score,
-            "feedback": f"Your answer mentioned {matched}/{len(key_concepts)} key concepts. AI evaluation was unavailable — please review the reference answer.",
-            "missing_concepts": [kc for kc in key_concepts if kc.lower() not in answer_lower],
-            "strengths": ["Attempted the question"] if student_answer.strip() else [],
-            "is_correct": fallback_score >= 6
-        }
+    except AIUnavailable:
+        # Deliberately no keyword-match fallback. Counting how many key terms appear in
+        # the text produced a number that looked like a real grade but was not one, and
+        # it got stored in the session and averaged into the final viva result. Let the
+        # caller turn this into a retryable error instead of inventing a score.
+        raise
 
 
 # ─── API Endpoints ─────────────────────────────────────────────────────────────
@@ -283,9 +277,9 @@ async def start_viva(
     # Create viva session document
     viva_doc = {
         "user_id": ObjectId(uid),
-        "subject": request.subject,
-        "difficulty": request.difficulty,
-        "question_count": request.question_count,
+        "subject": viva_request.subject,
+        "difficulty": viva_request.difficulty,
+        "question_count": viva_request.question_count,
         "questions": questions,
         "answers": [],
         "status": "active",
@@ -303,8 +297,8 @@ async def start_viva(
     first_q = questions[0]
     return {
         "viva_id": viva_id,
-        "subject": request.subject,
-        "difficulty": request.difficulty,
+        "subject": viva_request.subject,
+        "difficulty": viva_request.difficulty,
         "total_questions": len(questions),
         "current_question_number": 1,
         "first_question": {
@@ -346,22 +340,39 @@ async def submit_answer(
     if not question_doc:
         raise HTTPException(status_code=404, detail="Question not found in session.")
 
-    # Evaluate answer
-    evaluation = await evaluate_answer(
-        question=question_doc["question"],
-        reference_answer=question_doc["reference_answer"],
-        key_concepts=question_doc["key_concepts"],
-        student_answer=answer_request.answer,
-        subject=session["subject"],
-        difficulty=session["difficulty"]
-    )
+    # Reject a repeat answer for the same question. Without this, a double click or a
+    # client retry pushes a second answer record, double-increments the question index
+    # (skipping a question), and counts the same question twice in the final score.
+    if any(a.get("question_id") == answer_request.question_id for a in session.get("answers", [])):
+        raise HTTPException(status_code=409, detail="This question has already been answered.")
+
+    # Evaluate answer. If the grader is unavailable, report it rather than recording a
+    # made-up score: the answer is not stored, so the student can simply submit again.
+    try:
+        evaluation = await evaluate_answer(
+            question=question_doc["question"],
+            reference_answer=question_doc["reference_answer"],
+            key_concepts=question_doc["key_concepts"],
+            student_answer=answer_request.answer,
+            subject=session["subject"],
+            difficulty=session["difficulty"]
+        )
+    except AIUnavailable as e:
+        logger.error(f"Viva: answer evaluation unavailable: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "The AI examiner is temporarily unavailable, so your answer was not graded. "
+                "Nothing was lost — please submit it again in a moment."
+            )
+        )
 
     # Store answer + evaluation
     answer_record = {
-        "question_id": request.question_id,
+        "question_id": answer_request.question_id,
         "question": question_doc["question"],
         "question_type": question_doc["question_type"],
-        "student_answer": request.answer,
+        "student_answer": answer_request.answer,
         "reference_answer": question_doc["reference_answer"],
         "key_concepts": question_doc["key_concepts"],
         **evaluation,
@@ -472,7 +483,13 @@ async def complete_viva(
         "completed_at": datetime.now(timezone.utc)
     }
 
-    await db["viva_results"].insert_one(result_doc)
+    # Upsert on viva_id: the UI can reach /complete twice (the "end session early" link
+    # and the final button), and insert_one would leave two results for one session.
+    await db["viva_results"].update_one(
+        {"viva_id": ObjectId(viva_id), "user_id": ObjectId(uid)},
+        {"$set": result_doc},
+        upsert=True
+    )
     await db["viva_sessions"].update_one(
         {"_id": ObjectId(viva_id)},
         {"$set": {

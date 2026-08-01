@@ -10,10 +10,9 @@ from bson import ObjectId
 from app.db.mongodb import get_db, log_activity
 from app.routes.auth import get_current_user
 from app.core.rag import query_notes
-from app.core.gemini import gemini_client
+from app.core.gemini import generate as gemini_generate, AIUnavailable
 from google.genai import types
 from app.core.limiter import limiter
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +106,7 @@ async def generate_quiz(
     # 1. Query ChromaDB for notes context matching topic and subject
     # Increase retrieve limit for larger question counts
     retrieve_limit = 12 if count == 5 else (18 if count == 10 else 25)
-    context_chunks = query_notes(user_id=user_id, question=topic, limit=retrieve_limit)
+    context_chunks = await query_notes(db, user_id=user_id, question=topic, limit=retrieve_limit)
 
     # Verify context is not empty (satisfies 'No notes uploaded' and 'Empty retrieval results')
     if not context_chunks:
@@ -164,6 +163,10 @@ Instructions:
 5. Question difficulty should match '{difficulty}'.
 6. The questions must be conceptual or application-based and sound like realistic exam questions.
 7. Provide a detailed 'explanation' for each correct answer.
+8. Test the subject matter, not the document. Never phrase a question with "according to the
+   notes", "in the provided text", "as the book states", or similar; a student who learned this
+   topic elsewhere should be able to answer every question. The explanation may cite the notes,
+   but the question itself must stand on its own.
 
 Retrieved Context:
 {context_block}
@@ -172,8 +175,7 @@ Retrieved Context:
     logger.info(f"Quiz Gen: Requesting {count} questions for user {user_id} using gemini-2.5-flash...")
 
     try:
-        response = gemini_client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+        response = await gemini_generate(
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.2,  # Low temperature for factual consistency
@@ -293,7 +295,6 @@ async def submit_quiz(
     for q in questions:
         q_id = q["question_id"]
         options = q["options"]
-        q["correct_answer"]
         submitted = submissions.get(q_id, "").strip()
         
         is_mcq = len(options) > 0
@@ -321,6 +322,10 @@ async def submit_quiz(
             "explanation": q["explanation"]
         }
 
+    # Set when the grading call also returns the overall summary, so we can skip a
+    # second Gemini request below.
+    ai_feedback = ""
+
     # Evaluate Short Answers using Gemini AI for semantic matching
     if shorts_to_eval:
         logger.info(f"Quiz Submit: Evaluating {len(shorts_to_eval)} short answers via Gemini...")
@@ -335,6 +340,9 @@ async def submit_quiz(
                 "student_answer": submitted
             })
             
+        # The overall summary rides along with the grades. Asking for it separately would
+        # double the number of Gemini requests per submission, and the free tier allows
+        # only a handful per minute.
         grading_schema = {
             "type": "OBJECT",
             "properties": {
@@ -349,21 +357,25 @@ async def submit_quiz(
                         },
                         "required": ["question_id", "is_correct", "feedback"]
                     }
-                }
+                },
+                "overall_feedback": {"type": "STRING"}
             },
-            "required": ["grades"]
+            "required": ["grades", "overall_feedback"]
         }
 
         grading_prompt = f"""You are a strict teacher grading short answer questions. Compare the student's answer against the reference correct answer.
 Decide if the answer is correct (true) or wrong (false). Allow semantic matches that express the correct technical concepts even if phrased differently.
 If the student answer is empty or completely off-topic, mark it false.
+For each question also give one sentence of specific feedback explaining the grade.
+
+Then write 'overall_feedback': an encouraging 3-sentence study summary for this attempt on
+{quiz['topic']} ({quiz['subject']}, {quiz['difficulty']} difficulty), naming what to revise next.
 
 Questions to grade:
 {json.dumps(grading_items, indent=2)}
 """
         try:
-            response = gemini_client.models.generate_content(
-                model=settings.GEMINI_MODEL,
+            response = await gemini_generate(
                 contents=grading_prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.0,
@@ -375,26 +387,32 @@ Questions to grade:
             grades_data = json.loads(response.text.strip())
             grades_list = grades_data.get("grades", [])
             grades_map = {g["question_id"]: g for g in grades_list}
-            
-        except Exception as e:
-            logger.error(f"Quiz Submit: Gemini short-answer evaluation failed: {e}")
-            # Fallback to simple matching if Gemini fails
-            grades_map = {}
+            ai_feedback = (grades_data.get("overall_feedback") or "").strip()
+
+        except AIUnavailable as e:
+            # Do NOT invent a score. The old fallback marked every short answer wrong
+            # unless it happened to be a substring of the reference answer, which handed
+            # the student a 0% for correct work and then wrote that fiction into
+            # quiz_results, poisoning Learning DNA, retention and readiness downstream.
+            # Failing the submit keeps their answers intact so they can retry.
+            logger.error(f"Quiz Submit: short-answer grading unavailable: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=(
+                    "The AI grader is temporarily unavailable, so this quiz was not scored. "
+                    "Your answers were not lost — please submit again in a moment."
+                )
+            )
 
         # Fill in Short Answer evaluations
         for q, submitted in shorts_to_eval:
             q_id = q["question_id"]
-            ai_grade = grades_map.get(q_id, {"is_correct": False, "feedback": "AI evaluation failed. Fallback default."})
-            is_correct = ai_grade["is_correct"]
-            
-            # Simple substring fallback if AI fail occurred
-            if q_id not in grades_map and submitted:
-                # If submitted answer is long enough and shares key terms, mark correct or false
-                is_correct = q["correct_answer"].lower() in submitted.lower() or submitted.lower() in q["correct_answer"].lower()
+            ai_grade = grades_map.get(q_id, {"is_correct": False, "feedback": "Not graded."})
+            is_correct = bool(ai_grade.get("is_correct"))
 
             if is_correct:
                 score += 1
-                
+
             evaluations[q_id] = {
                 "question_id": q_id,
                 "question": q["question"],
@@ -426,24 +444,24 @@ Questions to grade:
 
     percentage = round((score / total) * 100, 2) if total > 0 else 0.0
 
-    # 3. Generate summary feedback using Gemini
-    feedback = ""
-    try:
-        feedback_prompt = f"""Write a concise study evaluation feedback summary (3 sentences max) for a student who scored {score}/{total} ({percentage}%) on a quiz.
+    # 3. Summary feedback. Short-answer quizzes already got one alongside the grades, so
+    # only MCQ-only quizzes need a request here. Feedback is presentational, so a failure
+    # falls back to a plain summary rather than failing the submission.
+    feedback = ai_feedback
+    if not feedback:
+        try:
+            feedback_prompt = f"""Write a concise study evaluation feedback summary (3 sentences max) for a student who scored {score}/{total} ({percentage}%) on a quiz.
 Subject: {quiz['subject']}
 Topic: {quiz['topic']}
 Difficulty: {quiz['difficulty']}
 
 Acknowledge their strengths, note weak areas if applicable, and recommend study focuses. Keep it encouraging and direct.
 """
-        response = gemini_client.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=feedback_prompt
-        )
-        feedback = response.text.strip()
-    except Exception as e:
-        logger.error(f"Quiz Submit: Feedback generation failed: {e}")
-        feedback = f"You completed the quiz in {quiz['topic']} at {quiz['difficulty']} difficulty. You scored {score} out of {total} ({percentage}%)."
+            response = await gemini_generate(contents=feedback_prompt)
+            feedback = response.text.strip()
+        except AIUnavailable as e:
+            logger.error(f"Quiz Submit: Feedback generation failed: {e}")
+            feedback = f"You completed the quiz in {quiz['topic']} at {quiz['difficulty']} difficulty. You scored {score} out of {total} ({percentage}%)."
 
     # 4. Save Quiz Result in MongoDB
     result_doc = {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, FileText, Trash2, Download, Calendar, HardDrive, Inbox, Plus, AlertCircle, Upload, CheckCircle2, X, CloudUpload } from 'lucide-react';
+import { Search, FileText, Trash2, Download, Calendar, HardDrive, Inbox, Plus, AlertCircle, Upload, CheckCircle2, X, CloudUpload, CircleX, Loader2 } from 'lucide-react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import API from '../api/axios';
 import Reveal from '../components/Reveal';
@@ -18,6 +18,27 @@ const SUBJECT_COLORS = {
 
 const fmtBytes = (b) => { if (!b) return '0 B'; const k = 1024; const s = ['B','KB','MB','GB']; const i = Math.floor(Math.log(b)/Math.log(k)); return `${(b/Math.pow(k,i)).toFixed(1)} ${s[i]}`; };
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+// A note is only answerable by Ask AI once indexing succeeds, so surface the outcome
+// instead of leaving a failed upload looking identical to a working one.
+const IndexStatus = ({ status, detail }) => {
+  if (!status || status === 'ready') return null;
+  const failed = status === 'failed';
+  return (
+    <p
+      title={failed ? (detail || 'Indexing failed.') : undefined}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.5rem',
+        fontSize: '0.68rem', fontWeight: 600,
+        color: failed ? 'var(--color-danger)' : 'var(--text-muted)',
+      }}
+    >
+      {failed
+        ? <><CircleX size={11} style={{ flexShrink: 0 }} /> Indexing failed — not searchable</>
+        : <><Loader2 size={11} className="animate-spin" style={{ flexShrink: 0 }} /> Indexing…</>}
+    </p>
+  );
+};
 
 const NotesList = () => {
   const [notes, setNotes] = useState([]);
@@ -133,7 +154,8 @@ const NotesList = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: ev => setProgress(Math.round((ev.loaded * 100) / ev.total)),
       });
-      setUploadSuccess('Notes uploaded and indexed successfully!');
+      // Indexing runs in the background after the 202, so do not claim it finished.
+      setUploadSuccess('Uploaded. Indexing now — it will be searchable shortly.');
       setUploadTitle(''); setUploadFile(null);
       setTimeout(() => {
         closeUpload();
@@ -154,7 +176,7 @@ const NotesList = () => {
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="input-icon" style={{ flex: 1, minWidth: '12rem', maxWidth: '20rem' }}>
             <Search size={15} className="icon" />
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search notes…" className="input-field" />
+            <input type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder="Search notes…" className="input-field" />
           </div>
           <button onClick={() => setShowUpload(!showUpload)} className="btn btn-primary">
             {showUpload ? <X size={14} /> : <Plus size={14} />} {showUpload ? 'Close' : 'Upload Notes'}
@@ -330,6 +352,7 @@ const NotesList = () => {
                       </div>
                       <h4 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.9375rem', marginBottom: '0.25rem', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{note.title}</h4>
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{note.filename}</p>
+                      <IndexStatus status={note.status} detail={note.status_detail} />
                     </div>
                     {/* Footer */}
                     <div style={{ padding: '0.75rem 1.125rem', borderTop: '1px solid var(--border)', background: 'rgba(255,255,255,0.015)' }}>

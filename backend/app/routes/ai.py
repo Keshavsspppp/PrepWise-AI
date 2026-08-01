@@ -46,11 +46,11 @@ async def chat_with_notes(
     logger.info(f"AI Chat: Received question from user {user_id}: '{question}'")
 
     try:
-        # 1. Retrieve the top 5 relevant document chunks for this user
-        relevant_chunks = query_notes(user_id=user_id, question=question, limit=5)
-        
+        # 1. Retrieve the top 5 relevant document chunks for this user.
+        relevant_chunks = await query_notes(db, user_id=user_id, question=question, limit=5)
+
         # 2. Feed the chunks and the question into Gemini for grounded answering
-        result = generate_rag_answer(context_chunks=relevant_chunks, question=question)
+        result = await generate_rag_answer(context_chunks=relevant_chunks, question=question)
         
         # Log user activity
         await log_activity(db, user_id, "ask_ai")

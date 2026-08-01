@@ -9,9 +9,8 @@ from bson import ObjectId
 
 from app.db.mongodb import get_db
 from app.routes.auth import get_current_user
-from app.core.gemini import gemini_client
+from app.core.gemini import generate as gemini_generate
 from google.genai import types
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -322,8 +321,7 @@ Profile details:
 {metrics_summary}
 """
     try:
-        response = gemini_client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+        response = await gemini_generate(
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.7,
@@ -446,13 +444,6 @@ async def get_dna_analytics(
             "attempts": subject_counts[sub]
         })
         
-    # If empty, add default subjects
-    if not subject_performances:
-        subject_performances = [
-            {"subject": "DSA", "average_score": 0.0, "attempts": 0},
-            {"subject": "DBMS", "average_score": 0.0, "attempts": 0},
-            {"subject": "Operating Systems", "average_score": 0.0, "attempts": 0}
-        ]
 
     topic_performances = []
     for topic, total_pct in topic_totals.items():
