@@ -45,7 +45,8 @@ services:
   - type: web
     name: prepwise-web
     runtime: static
-    plan: free
+    # No `plan` here on purpose: static sites are CDN-served and have no instance plan,
+    # so Render rejects `plan: free` for runtime: static.
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
